@@ -35,6 +35,9 @@ static const scpi_command_t scpi_commands[] = {
     {"SYSTem:ERRor?", SCPI_SystemErrorNextQ},
     {"SYSTem:ERRor:NEXT?", SCPI_SystemErrorNextQ},
     {"SYSTem:ERRor:COUNt?", SCPI_SystemErrorCountQ},
+    {"SYSTem:LOCal", SCPIMM_system_local},
+    {"SYSTem:REMote", SCPIMM_system_remote},
+    {"SYSTem:RWLock", SCPIMM_system_rwlock},
     {"SYSTem:VERSion?", SCPI_SystemVersionQ},
 
 	{"STATus:QUEStionable?", SCPI_StatusQuestionableEventQ},
@@ -133,13 +136,17 @@ static size_t write(scpi_t* const context, const char* data, size_t len) {
 	return CTX.interface->send((const uint8_t*) data, len);
 }
 
-static scpi_result_t reset(scpi_t* const context) {
+static scpi_result_t reset(scpi_t* context) {
 	(void) context;
 	initialize();
     return SCPI_RES_OK;
 }
 
 static void initialize() {
+	if (CTX.interface->remote) {
+		CTX.interface->remote(FALSE, FALSE);
+	}
+
 	dcvRange = SCPIMM_RANGE_DEF;
 	dcvRatioRange = SCPIMM_RANGE_DEF;
 	acvRange = SCPIMM_RANGE_DEF;

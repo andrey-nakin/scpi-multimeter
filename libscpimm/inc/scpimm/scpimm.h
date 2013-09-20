@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <stdint.h>
+#include <scpi/scpi.h>
 
 /******************************************************************************
   Basic constants
@@ -59,7 +60,7 @@ struct _scpimm_interface_t {
 		Optional
 		Turn "remote control" mode to on/off
 	*/
-	void (*remote)(bool remote);
+	void (*remote)(bool_t remote, bool_t lock);
 
 	/* 
 		Optional
