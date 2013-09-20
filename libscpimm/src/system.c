@@ -22,23 +22,23 @@ scpi_result_t SCPIMM_system_beeper_stateQ(scpi_t* context) {
 }
 
 scpi_result_t SCPIMM_system_local(scpi_t* context) {
-	if (SCPIMM_INTERFACE(context)->remote) {
-		SCPIMM_INTERFACE(context)->remote(FALSE, FALSE);
-	}
+	SCPIMM_set_remote(context, FALSE, FALSE);
     return SCPI_RES_OK;
 }
 
 scpi_result_t SCPIMM_system_remote(scpi_t* context) {
-	if (SCPIMM_INTERFACE(context)->remote) {
-		SCPIMM_INTERFACE(context)->remote(TRUE, FALSE);
-	}
+	SCPIMM_set_remote(context, TRUE, FALSE);
     return SCPI_RES_OK;
 }
 
 scpi_result_t SCPIMM_system_rwlock(scpi_t* context) {
-	if (SCPIMM_INTERFACE(context)->remote) {
-		SCPIMM_INTERFACE(context)->remote(TRUE, TRUE);
-	}
+	SCPIMM_set_remote(context, TRUE, TRUE);
     return SCPI_RES_OK;
+}
+
+void SCPIMM_set_remote(scpi_t* context, bool_t remote, bool_t lock) {
+	if (SCPIMM_INTERFACE(context)->remote) {
+		SCPIMM_INTERFACE(context)->remote(remote, lock);
+	}
 }
 

@@ -74,6 +74,10 @@ typedef struct _scpimm_interface_t scpimm_interface_t;
 struct _scpimm_context_t {
 	const scpimm_interface_t* interface;
 	bool_t beeper_state;
+	float dcv_range;
+	float dcv_ratio_range;
+	float acv_range;
+	float resistance_range;
 };
 
 typedef struct _scpimm_context_t scpimm_context_t;

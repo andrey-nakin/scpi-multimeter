@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <scpi/scpi.h>
 #include <scpimm/scpimm.h>
+#include "utils.h"
 #include "ieee488.h"
 #include "measure.h"
 #include "system.h"
@@ -8,7 +9,6 @@
 /* forward declarations */
 static size_t write(scpi_t * context, const char* data, size_t len);
 static scpi_result_t reset(scpi_t * context);
-static void initialize();
 
 /******************************************************************************
   Constant global variables
@@ -72,9 +72,13 @@ static scpi_interface_t scpi_interface = {
 
 //static scpi_reg_val_t scpi_regs[SCPI_REG_COUNT];
 
-static scpimm_context_t CTX = {
+/******************************************************************************
+  Global variables
+******************************************************************************/
+
+static scpimm_context_t scpimm_context = {
 	NULL,
-	TRUE
+	TRUE,
 };
 
 static scpi_t scpi_context = {
@@ -97,26 +101,17 @@ static scpi_t scpi_context = {
     NULL,
     NULL,
     NULL,
-	&CTX
+	&scpimm_context
 };
-
-/******************************************************************************
-  Global variables
-******************************************************************************/
-
-static float dcvRange;
-static float dcvRatioRange;
-static float acvRange;
-static float resistanceRange;
 
 /******************************************************************************
   Interface functions
 ******************************************************************************/
 
 void SCPIMM_setup(const scpimm_interface_t* i) {
-	CTX.interface = i;
-	initialize();
+	scpimm_context.interface = i;
 	SCPI_Init(&scpi_context);
+	reset(&scpi_context);
 }
 
 void SCPIMM_parseInBuffer(char const* inbuf, size_t avail) {
@@ -132,29 +127,24 @@ void SCPIMM_acceptValue(double) {
 ******************************************************************************/
 
 static size_t write(scpi_t* const context, const char* data, size_t len) {
-	(void) context;
-	return CTX.interface->send((const uint8_t*) data, len);
+	return SCPIMM_INTERFACE(context)->send((const uint8_t*) data, len);
 }
 
 static scpi_result_t reset(scpi_t* context) {
-	(void) context;
-	initialize();
-    return SCPI_RES_OK;
-}
+	scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
 
-static void initialize() {
-	if (CTX.interface->remote) {
-		CTX.interface->remote(FALSE, FALSE);
-	}
+	SCPIMM_set_remote(context, FALSE, FALSE);
 
-	dcvRange = SCPIMM_RANGE_DEF;
-	dcvRatioRange = SCPIMM_RANGE_DEF;
-	acvRange = SCPIMM_RANGE_DEF;
-	resistanceRange = SCPIMM_RANGE_DEF;
+	ctx->dcv_range = SCPIMM_RANGE_DEF;
+	ctx->dcv_ratio_range = SCPIMM_RANGE_DEF;
+	ctx->acv_range = SCPIMM_RANGE_DEF;
+	ctx->resistance_range = SCPIMM_RANGE_DEF;
 
-	CTX.interface->set_mode(SCPIMM_MODE_DCV);
-	SCPIMM_setDCVRange(dcvRange);
+	ctx->interface->set_mode(SCPIMM_MODE_DCV);
+	SCPIMM_setDCVRange(ctx->dcv_range);
 
 	// TODO
+
+    return SCPI_RES_OK;
 }
 
