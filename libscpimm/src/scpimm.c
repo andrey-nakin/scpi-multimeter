@@ -3,10 +3,12 @@
 #include <scpimm/scpimm.h>
 #include "ieee488.h"
 #include "measure.h"
+#include "system.h"
 
 /* forward declarations */
 static size_t write(scpi_t * context, const char* data, size_t len);
 static scpi_result_t reset(scpi_t * context);
+static void initialize();
 
 /******************************************************************************
   Constant global variables
@@ -27,6 +29,9 @@ static const scpi_command_t scpi_commands[] = {
 	{"*TST?", SCPI_CoreTstQ},
 	{"*WAI", SCPI_CoreWai},
 
+    {"SYSTem:BEEPer", SCPIMM_system_beeper},
+    {"SYSTem:BEEPer:STATe", SCPIMM_system_beeper_state},
+    {"SYSTem:BEEPer:STATe?", SCPIMM_system_beeper_stateQ},
     {"SYSTem:ERRor?", SCPI_SystemErrorNextQ},
     {"SYSTem:ERRor:NEXT?", SCPI_SystemErrorNextQ},
     {"SYSTem:ERRor:COUNt?", SCPI_SystemErrorCountQ},
@@ -64,7 +69,9 @@ static scpi_interface_t scpi_interface = {
 
 //static scpi_reg_val_t scpi_regs[SCPI_REG_COUNT];
 
-scpi_t scpi_context = {
+static scpimm_context_t CTX;
+
+static scpi_t scpi_context = {
     scpi_commands,
     {
         SCPI_INPUT_BUFFER_LENGTH,
@@ -76,14 +83,15 @@ scpi_t scpi_context = {
       NULL,
       0
     },
-    &scpi_interface
-/*    0,
+    &scpi_interface,
     0,
     0,
+    false,
     NULL,
-    scpi_regs,
-    scpi_units_def,
-    scpi_special_numbers_def, */
+    NULL,
+    NULL,
+    NULL,
+	&CTX
 };
 
 /******************************************************************************
@@ -99,18 +107,10 @@ static float resistanceRange;
   Interface functions
 ******************************************************************************/
 
-void SCPIMM_setup() {
+void SCPIMM_setup(const scpimm_interface_t* i) {
+	CTX.interface = i;
+	initialize();
 	SCPI_Init(&scpi_context);
-
-	dcvRange = SCPIMM_RANGE_DEF;
-	dcvRatioRange = SCPIMM_RANGE_DEF;
-	acvRange = SCPIMM_RANGE_DEF;
-	resistanceRange = SCPIMM_RANGE_DEF;
-
-	SCPIMM_setMode(SCPIMM_MODE_DCV);
-	SCPIMM_setDCVRange(dcvRange);
-
-	// TODO
 }
 
 void SCPIMM_parseInBuffer(char const* inbuf, size_t avail) {
@@ -127,12 +127,24 @@ void SCPIMM_acceptValue(double) {
 
 static size_t write(scpi_t* const context, const char* data, size_t len) {
 	(void) context;
-	return SCPIMM_send((const uint8_t*) data, len);
+	return CTX.interface->send((const uint8_t*) data, len);
 }
 
 static scpi_result_t reset(scpi_t* const context) {
 	(void) context;
-	SCPIMM_setup();
+	initialize();
     return SCPI_RES_OK;
+}
+
+static void initialize() {
+	dcvRange = SCPIMM_RANGE_DEF;
+	dcvRatioRange = SCPIMM_RANGE_DEF;
+	acvRange = SCPIMM_RANGE_DEF;
+	resistanceRange = SCPIMM_RANGE_DEF;
+
+	CTX.interface->set_mode(SCPIMM_MODE_DCV);
+	SCPIMM_setDCVRange(dcvRange);
+
+	// TODO
 }
 

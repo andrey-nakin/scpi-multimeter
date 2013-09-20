@@ -1,18 +1,8 @@
 #ifndef __EXTERNALS_H_SCPIMM
 #define	__EXTERNALS_H_SCPIMM
 
+#include <stdlib.h>
 #include <stdint.h>
-
-/*
-	Initialize multimeter
-*/
-void SCPIMM_setup();
-
-/*
-	Process value measured
-*/
-void SCPIMM_acceptValue(double value);
-void SCPIMM_parseInBuffer(const char* buf, size_t len);
 
 /******************************************************************************
   Basic constants
@@ -41,16 +31,69 @@ void SCPIMM_parseInBuffer(const char* buf, size_t len);
 #define SCPIMM_RANGE_DEF -3.0
 
 /******************************************************************************
+  Types
+******************************************************************************/
+
+struct _scpimm_interface_t {
+	/* 
+		Mandatory
+		Set multimeter measurement mode
+		<mode> is one of the MM_MODE_XXX constants 
+		Return 0 if mode is set
+	*/
+	int (*set_mode)(uint8_t mode);
+
+	/* 
+		Mandatory
+		Start measurement
+	*/
+	void (*trigger)();
+
+	/* 
+		Mandatory
+		Send response to serial port
+	*/
+	size_t (*send)(const uint8_t* buf, size_t len);
+
+	/* 
+		Optional
+		Turn "remote control" mode to on/off
+	*/
+	void (*remote)(bool remote);
+
+	/* 
+		Optional
+		Issue a short (up to 500 ms) beep
+	*/
+	void (*beep)();
+};
+
+typedef struct _scpimm_interface_t scpimm_interface_t;
+
+struct _scpimm_context_t {
+	const scpimm_interface_t* interface;
+};
+
+typedef struct _scpimm_context_t scpimm_context_t;
+
+/******************************************************************************
+  Public functions
+******************************************************************************/
+/*
+	Initialize multimeter
+*/
+void SCPIMM_setup(const scpimm_interface_t*);
+
+/*
+	Process value measured
+*/
+void SCPIMM_acceptValue(double value);
+void SCPIMM_parseInBuffer(const char* buf, size_t len);
+
+/******************************************************************************
   Following functions must be defined
   in multimeter implementation
 ******************************************************************************/
-
-/* 
-  Set multimeter measurement mode
-  <mode> is one of the MM_MODE_XXX constants 
-  Return 0 if mode is set
-*/
-int SCPIMM_setMode(const uint8_t mode);
 
 /* 
   Set DCV measurement range
@@ -77,26 +120,6 @@ void SCPIMM_setACCRange(const float max);
   Set resistance measurement range
 */
 void SCPIMM_setResistanceRange(const float max);
-
-/* 
-  Start measurement
-*/
-void SCPIMM_triggerMeasurement();
-
-/* 
-  Send response to serial port
-*/
-size_t SCPIMM_send(const uint8_t* buf, size_t len);
-
-/* 
-  Turn "remote control" mode to on/off
-*/
-void SCPIMM_remote(const bool remote);
-
-/* 
-  Issue a short (up to 500 ms) beep
-*/
-void SCPIMM_beep();
 
 #endif	//	__EXTERNALS_H_SCPIMM
 
