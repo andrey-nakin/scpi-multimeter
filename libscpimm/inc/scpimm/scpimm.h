@@ -6,19 +6,19 @@
 /*
 	Process value measured
 */
-void MM_acceptValue(double value);
-void MM_parseInBuffer(const char* buf, size_t len);
+void SCPIMM_acceptValue(double value);
+void SCPIMM_parseInBuffer(const char* buf, size_t len);
 
 /******************************************************************************
   Multimeter mode constants (to use in MM_setMode)
 ******************************************************************************/
 
-#define MM_MODE_DCV	0
-#define MM_MODE_ACV	1
-#define MM_MODE_DCC	0
-#define MM_MODE_ACC	1
-#define MM_MODE_RESISTANCE_2W	2
-#define MM_MODE_RESISTANCE_4W	2
+#define SCPIMM_MODE_DCV	0
+#define SCPIMM_MODE_ACV	1
+#define SCPIMM_MODE_DCC	2
+#define SCPIMM_MODE_ACC	3
+#define SCPIMM_MODE_RESISTANCE_2W	4
+#define SCPIMM_MODE_RESISTANCE_4W	5
 
 /******************************************************************************
   Following functions must be defined
@@ -30,43 +30,43 @@ void MM_parseInBuffer(const char* buf, size_t len);
   <mode> is one of the MM_MODE_XXX constants 
   Return 0 if mode is set
 */
-int MM_setMode(const uint8_t mode);
+int SCPIMM_setMode(const uint8_t mode);
 
 /* 
   Set DCV measurement range
   <mode> is one of the MM_MODE_XXX constants 
 */
-void MM_setDCVRange(const float max);
+void SCPIMM_setDCVRange(const float max);
 
 /* 
   Set ACV measurement range
 */
-void MM_setACVRange(const float max);
+void SCPIMM_setACVRange(const float max);
 
 /* 
   Set DCC measurement range
 */
-void MM_setDCCRange(const float max);
+void SCPIMM_setDCCRange(const float max);
 
 /* 
   Set ACC measurement range
 */
-void MM_setACCRange(const float max);
+void SCPIMM_setACCRange(const float max);
 
 /* 
   Set resistance measurement range
 */
-void MM_setResistanceRange(const float max);
+void SCPIMM_setResistanceRange(const float max);
 
 /* 
   Start measurement
 */
-void MM_triggerMeasurement();
+void SCPIMM_triggerMeasurement();
 
 /* 
   Send response to serial port
 */
-size_t MM_send(const uint8_t* buf, size_t len);
+size_t SCPIMM_send(const uint8_t* buf, size_t len);
 
 #endif	//	__EXTERNALS_H_SCPIMM
 
