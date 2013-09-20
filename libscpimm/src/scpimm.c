@@ -69,7 +69,10 @@ static scpi_interface_t scpi_interface = {
 
 //static scpi_reg_val_t scpi_regs[SCPI_REG_COUNT];
 
-static scpimm_context_t CTX;
+static scpimm_context_t CTX = {
+	NULL,
+	TRUE
+};
 
 static scpi_t scpi_context = {
     scpi_commands,
