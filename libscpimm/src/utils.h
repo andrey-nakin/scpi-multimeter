@@ -1,6 +1,7 @@
 #ifndef __UTILS_H_SCPIMM_
 #define	__UTILS_H_SCPIMM_
 
+#include <stdio.h>
 #include <scpi/scpi.h>
 #include <scpimm/scpimm.h>
 

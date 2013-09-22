@@ -5,6 +5,10 @@
 #include <stdint.h>
 #include <scpi/scpi.h>
 
+#ifdef  __cplusplus
+extern "C" {
+#endif
+
 /******************************************************************************
   Basic constants
 ******************************************************************************/
@@ -42,7 +46,7 @@ struct _scpimm_interface_t {
 		<mode> is one of the MM_MODE_XXX constants 
 		Return 0 if mode is set
 	*/
-	int (*set_mode)(uint8_t mode);
+	int (*set_mode)(uint8_t mode, float range);
 
 	/* 
 		Mandatory
@@ -72,7 +76,7 @@ struct _scpimm_interface_t {
 typedef struct _scpimm_interface_t scpimm_interface_t;
 
 struct _scpimm_context_t {
-	const scpimm_interface_t* interface;
+	scpimm_interface_t* interface;
 	bool_t beeper_state;
 	float dcv_range;
 	float dcv_ratio_range;
@@ -96,36 +100,13 @@ void SCPIMM_setup(const scpimm_interface_t*);
 void SCPIMM_acceptValue(double value);
 void SCPIMM_parseInBuffer(const char* buf, size_t len);
 
-/******************************************************************************
-  Following functions must be defined
-  in multimeter implementation
-******************************************************************************/
+/* For debug purposes */
+scpimm_context_t* SCPIMM_context();
+scpi_t* SCPI_context();
 
-/* 
-  Set DCV measurement range
-  <mode> is one of the MM_MODE_XXX constants 
-*/
-void SCPIMM_setDCVRange(const float max);
-
-/* 
-  Set ACV measurement range
-*/
-void SCPIMM_setACVRange(const float max);
-
-/* 
-  Set DCC measurement range
-*/
-void SCPIMM_setDCCRange(const float max);
-
-/* 
-  Set ACC measurement range
-*/
-void SCPIMM_setACCRange(const float max);
-
-/* 
-  Set resistance measurement range
-*/
-void SCPIMM_setResistanceRange(const float max);
+#ifdef  __cplusplus
+}
+#endif
 
 #endif	//	__EXTERNALS_H_SCPIMM
 

@@ -6,9 +6,18 @@
 #include "measure.h"
 #include "system.h"
 
-/* forward declarations */
+/******************************************************************************
+  Definitions
+******************************************************************************/
+
+#define	VALUE_BUFFER_LENGTH	100
+
+/******************************************************************************
+  Forward declarations
+******************************************************************************/
 static size_t write(scpi_t * context, const char* data, size_t len);
 static scpi_result_t reset(scpi_t * context);
+
 
 /******************************************************************************
   Constant global variables
@@ -67,10 +76,11 @@ static scpi_interface_t scpi_interface = {
     write,
 	NULL,
 	NULL,
-	reset
+	reset,
+	NULL
 };
 
-//static scpi_reg_val_t scpi_regs[SCPI_REG_COUNT];
+/*static scpi_reg_val_t scpi_regs[SCPI_REG_COUNT];*/
 
 /******************************************************************************
   Global variables
@@ -79,6 +89,10 @@ static scpi_interface_t scpi_interface = {
 static scpimm_context_t scpimm_context = {
 	NULL,
 	TRUE,
+	SCPIMM_RANGE_DEF,
+	SCPIMM_RANGE_DEF,
+	SCPIMM_RANGE_DEF,
+	SCPIMM_RANGE_DEF
 };
 
 static scpi_t scpi_context = {
@@ -104,12 +118,15 @@ static scpi_t scpi_context = {
 	&scpimm_context
 };
 
+static float valueBuffer[VALUE_BUFFER_LENGTH];
+static size_t valueCounter = 0;
+
 /******************************************************************************
   Interface functions
 ******************************************************************************/
 
 void SCPIMM_setup(const scpimm_interface_t* i) {
-	scpimm_context.interface = i;
+	scpimm_context.interface = (scpimm_interface_t*) i;
 	SCPI_Init(&scpi_context);
 	reset(&scpi_context);
 }
@@ -118,8 +135,20 @@ void SCPIMM_parseInBuffer(char const* inbuf, size_t avail) {
 	SCPI_Input(&scpi_context, inbuf, avail);
 }
 
-void SCPIMM_acceptValue(double) {
-	// TODO
+void SCPIMM_acceptValue(double v) {
+	if (valueCounter < VALUE_BUFFER_LENGTH) {
+		valueBuffer[valueCounter++] = (float) v;
+	} else {
+		// TODO
+	}
+}
+
+scpimm_context_t* SCPIMM_context() {
+	return &scpimm_context;
+}
+
+scpi_t* SCPI_context() {
+	return &scpi_context;
 }
 
 /******************************************************************************
@@ -140,8 +169,9 @@ static scpi_result_t reset(scpi_t* context) {
 	ctx->acv_range = SCPIMM_RANGE_DEF;
 	ctx->resistance_range = SCPIMM_RANGE_DEF;
 
-	ctx->interface->set_mode(SCPIMM_MODE_DCV);
-	SCPIMM_setDCVRange(ctx->dcv_range);
+	ctx->interface->set_mode(SCPIMM_MODE_DCV, ctx->dcv_range);
+
+	valueCounter = 0;	
 
 	// TODO
 
