@@ -2,6 +2,7 @@
 #include <scpi/scpi.h>
 #include <scpimm/scpimm.h>
 #include "utils.h"
+#include "configure.h"
 #include "ieee488.h"
 #include "measure.h"
 #include "system.h"
@@ -37,6 +38,19 @@ static const scpi_command_t scpi_commands[] = {
 	{"*STB?", SCPI_CoreStbQ},
 	{"*TST?", SCPI_CoreTstQ},
 	{"*WAI", SCPI_CoreWai},
+
+    {"CONFigure?", SCPIMM_configureQ},
+    {"CONFigure:VOLTage:DC", SCPIMM_configure_voltage_dc},
+    {"CONFigure:VOLTage:DC:RATio", SCPIMM_configure_voltage_dc_ratio},
+    {"CONFigure:VOLTage:AC", SCPIMM_configure_voltage_ac},
+    {"CONFigure:CURRent:DC", SCPIMM_configure_current_dc},
+    {"CONFigure:CURRent:AC", SCPIMM_configure_current_ac},
+    {"CONFigure:RESistance", SCPIMM_configure_resistance},
+    {"CONFigure:FRESistance", SCPIMM_configure_fresistance},
+    {"CONFigure:FREQuency", SCPIMM_configure_frequency},
+    {"CONFigure:PERiod", SCPIMM_configure_period},
+    {"CONFigure:CONTinuity", SCPIMM_configure_continuity},
+    {"CONFigure:DIODe", SCPIMM_configure_diode},
 
     {"SYSTem:BEEPer", SCPIMM_system_beeper},
     {"SYSTem:BEEPer:STATe", SCPIMM_system_beeper_state},
@@ -167,9 +181,24 @@ static scpi_result_t reset(scpi_t* context) {
 	ctx->dcv_range = SCPIMM_RANGE_DEF;
 	ctx->dcv_ratio_range = SCPIMM_RANGE_DEF;
 	ctx->acv_range = SCPIMM_RANGE_DEF;
+	ctx->dcc_range = SCPIMM_RANGE_DEF;
+	ctx->acc_range = SCPIMM_RANGE_DEF;
 	ctx->resistance_range = SCPIMM_RANGE_DEF;
+	ctx->fresistance_range = SCPIMM_RANGE_DEF;
+	ctx->frequency_range = SCPIMM_RANGE_DEF;
+	ctx->period_range = SCPIMM_RANGE_DEF;
 
-	ctx->interface->set_mode(SCPIMM_MODE_DCV, ctx->dcv_range);
+	ctx->dcv_resolution = SCPIMM_RESOLUTION_DEF;
+	ctx->dcv_ratio_resolution = SCPIMM_RESOLUTION_DEF;
+	ctx->acv_resolution = SCPIMM_RESOLUTION_DEF;
+	ctx->dcc_resolution = SCPIMM_RESOLUTION_DEF;
+	ctx->acc_resolution = SCPIMM_RESOLUTION_DEF;
+	ctx->resistance_resolution = SCPIMM_RESOLUTION_DEF;
+	ctx->fresistance_resolution = SCPIMM_RESOLUTION_DEF;
+	ctx->frequency_resolution = SCPIMM_RESOLUTION_DEF;
+	ctx->period_resolution = SCPIMM_RESOLUTION_DEF;
+
+	SCPIMM_do_configure(context, SCPIMM_MODE_DCV, ctx->dcv_range, ctx->dcv_resolution);
 
 	valueCounter = 0;	
 

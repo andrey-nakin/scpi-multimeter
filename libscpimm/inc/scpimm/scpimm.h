@@ -26,6 +26,10 @@ extern "C" {
 #define SCPIMM_MODE_ACC	4
 #define SCPIMM_MODE_RESISTANCE_2W	5
 #define SCPIMM_MODE_RESISTANCE_4W	6
+#define SCPIMM_MODE_FREQUENCY	7
+#define SCPIMM_MODE_PERIOD	8
+#define SCPIMM_MODE_CONTINUITY	9
+#define SCPIMM_MODE_DIODE	10
 
 /******************************************************************************
   Range constants
@@ -34,6 +38,10 @@ extern "C" {
 #define SCPIMM_RANGE_MIN -1.0
 #define SCPIMM_RANGE_MAX -2.0
 #define SCPIMM_RANGE_DEF -3.0
+
+#define SCPIMM_RESOLUTION_MIN SCPIMM_RANGE_MIN
+#define SCPIMM_RESOLUTION_MAX SCPIMM_RANGE_MAX
+#define SCPIMM_RESOLUTION_DEF SCPIMM_RANGE_DEF
 
 /******************************************************************************
   Types
@@ -46,7 +54,7 @@ struct _scpimm_interface_t {
 		<mode> is one of the MM_MODE_XXX constants 
 		Return 0 if mode is set
 	*/
-	int (*set_mode)(uint8_t mode, float range);
+	int (*set_mode)(uint8_t mode, float range, float resolution);
 
 	/* 
 		Mandatory
@@ -81,7 +89,22 @@ struct _scpimm_context_t {
 	float dcv_range;
 	float dcv_ratio_range;
 	float acv_range;
+	float dcc_range;
+	float acc_range;
 	float resistance_range;
+	float fresistance_range;
+	float frequency_range;
+	float period_range;
+
+	float dcv_resolution;
+	float dcv_ratio_resolution;
+	float acv_resolution;
+	float dcc_resolution;
+	float acc_resolution;
+	float resistance_resolution;
+	float fresistance_resolution;
+	float frequency_resolution;
+	float period_resolution;
 };
 
 typedef struct _scpimm_context_t scpimm_context_t;
