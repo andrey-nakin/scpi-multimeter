@@ -1,9 +1,10 @@
 #include <string.h>
+#include <stdio.h>
 #include "CUnit/Basic.h"
 #include <scpimm/scpimm.h>
 #include "test_utils.h"
 
-static int set_mode(const uint8_t mode, float range);
+static int set_mode(const uint8_t mode, float range, float resolution);
 static void set_remote(bool_t remote, bool_t lock);
 static size_t send(const uint8_t* data, const size_t len);
 
@@ -59,7 +60,7 @@ void asset_in_bool(bool_t v) {
 	asset_in_data(v ? "1\r\n" : "0\r\n");
 }
 
-static int set_mode(const uint8_t mode, float range) {
+static int set_mode(const uint8_t mode, float range, float resolution) {
 	return 0;	/* stub */
 }
 

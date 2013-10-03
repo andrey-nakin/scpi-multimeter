@@ -19,17 +19,17 @@ extern "C" {
   Multimeter mode constants (to use in MM_setMode)
 ******************************************************************************/
 
-#define SCPIMM_MODE_DCV	0
-#define SCPIMM_MODE_DCV_RATIO	1
-#define SCPIMM_MODE_ACV	2
-#define SCPIMM_MODE_DCC	3
-#define SCPIMM_MODE_ACC	4
-#define SCPIMM_MODE_RESISTANCE_2W	5
-#define SCPIMM_MODE_RESISTANCE_4W	6
-#define SCPIMM_MODE_FREQUENCY	7
-#define SCPIMM_MODE_PERIOD	8
-#define SCPIMM_MODE_CONTINUITY	9
-#define SCPIMM_MODE_DIODE	10
+#define SCPIMM_MODE_DCV	1
+#define SCPIMM_MODE_DCV_RATIO	2
+#define SCPIMM_MODE_ACV	4
+#define SCPIMM_MODE_DCC	8
+#define SCPIMM_MODE_ACC	16
+#define SCPIMM_MODE_RESISTANCE_2W	32
+#define SCPIMM_MODE_RESISTANCE_4W	64
+#define SCPIMM_MODE_FREQUENCY	128
+#define SCPIMM_MODE_PERIOD	256
+#define SCPIMM_MODE_CONTINUITY	512
+#define SCPIMM_MODE_DIODE	1024
 
 /******************************************************************************
   Range constants
@@ -38,10 +38,12 @@ extern "C" {
 #define SCPIMM_RANGE_MIN -1.0
 #define SCPIMM_RANGE_MAX -2.0
 #define SCPIMM_RANGE_DEF -3.0
+#define SCPIMM_RANGE_UNSPECIFIED -4.0
 
 #define SCPIMM_RESOLUTION_MIN SCPIMM_RANGE_MIN
 #define SCPIMM_RESOLUTION_MAX SCPIMM_RANGE_MAX
 #define SCPIMM_RESOLUTION_DEF SCPIMM_RANGE_DEF
+#define SCPIMM_RESOLUTION_UNSPECIFIED SCPIMM_RANGE_UNSPECIFIED
 
 /******************************************************************************
   Types
@@ -86,6 +88,8 @@ typedef struct _scpimm_interface_t scpimm_interface_t;
 struct _scpimm_context_t {
 	scpimm_interface_t* interface;
 	bool_t beeper_state;
+	uint16_t mode;
+
 	float dcv_range;
 	float dcv_ratio_range;
 	float acv_range;

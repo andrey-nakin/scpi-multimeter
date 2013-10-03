@@ -15,7 +15,8 @@
 void SCPIMM_stop_mesurement(void);
 void SCPIMM_clear_return_buffer(void);
 
-/* defined in scpi-parser library */
+bool_t expectNoParams(scpi_t* context);
+
 bool_t matchPattern(const char * pattern, size_t pattern_len, const char * str, size_t str_len);
 size_t strToDouble(const char * str, double * val);
 

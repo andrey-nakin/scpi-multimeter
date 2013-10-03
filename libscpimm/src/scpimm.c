@@ -103,6 +103,7 @@ static scpi_interface_t scpi_interface = {
 static scpimm_context_t scpimm_context = {
 	NULL,
 	TRUE,
+	SCPIMM_MODE_DCV,
 	SCPIMM_RANGE_DEF,
 	SCPIMM_RANGE_DEF,
 	SCPIMM_RANGE_DEF,
