@@ -38,8 +38,14 @@ static bool_t paramResolution(scpi_t* context, float* value, bool_t mandatory) {
 	return paramRange(context, value, mandatory);
 }
 
-static scpi_result_t configure_2arg_impl(scpi_t* context, int mode) {
+static scpi_result_t configure_2arg_impl(scpi_t* context, uint16_t mode) {
     float range = SCPIMM_RANGE_UNSPECIFIED, resolution = SCPIMM_RESOLUTION_UNSPECIFIED;
+
+	if (!(SCPIMM_INTERFACE(context)->supported_modes() & mode)) {
+		/* given mode is not supported */
+	    SCPI_ErrorPush(context, SCPI_ERROR_UNDEFINED_HEADER);
+    	return SCPI_RES_ERR;
+	}
 
     paramRange(context, &range, false);
     paramResolution(context, &resolution, false);
@@ -52,17 +58,23 @@ static scpi_result_t configure_2arg_impl(scpi_t* context, int mode) {
 	return SCPIMM_do_configure(context, mode, range, resolution);
 }
 
-static scpi_result_t configure_noarg_impl(scpi_t* context, int mode) {
+static scpi_result_t configure_noarg_impl(scpi_t* context, uint16_t mode) {
+	if (!(SCPIMM_INTERFACE(context)->supported_modes() & mode)) {
+		/* given mode is not supported */
+	    SCPI_ErrorPush(context, SCPI_ERROR_UNDEFINED_HEADER);
+    	return SCPI_RES_ERR;
+	}
+
 	expectNoParams(context);
 
 	if (context->cmd_error) {
     	return SCPI_RES_ERR;
 	}
 
-	return SCPIMM_do_configure(context, mode, SCPIMM_RANGE_DEF, SCPIMM_RESOLUTION_DEF);
+	return SCPIMM_do_configure(context, mode, SCPIMM_RANGE_UNSPECIFIED, SCPIMM_RESOLUTION_UNSPECIFIED);
 }
 
-scpi_result_t SCPIMM_do_configure(scpi_t* context, int mode, float range, float resolution) {
+scpi_result_t SCPIMM_do_configure(scpi_t* context, uint16_t mode, float range, float resolution) {
 	scpimm_context_t* ctx = SCPIMM_CONTEXT(context);
 	float *rangeVar = NULL, *resolutionVar = NULL;
 
@@ -116,15 +128,15 @@ scpi_result_t SCPIMM_do_configure(scpi_t* context, int mode, float range, float 
 			break;
 	}
 
-	if (SCPIMM_RANGE_UNSPECIFIED == mode && rangeVar) {
+	if (SCPIMM_RANGE_UNSPECIFIED == range && rangeVar) {
 		mode = *rangeVar;
 	}
 	if (SCPIMM_RESOLUTION_UNSPECIFIED == resolution && resolutionVar) {
 		resolution = *resolutionVar;
 	}
 
-	if (0 != SCPIMM_INTERFACE(context)->set_mode(mode, range, resolution)) {
-	    SCPI_ErrorPush(context, SCPI_ERROR_UNDEFINED_HEADER);
+	if (!SCPIMM_INTERFACE(context)->set_mode(mode, range, resolution)) {
+	    SCPI_ErrorPush(context, SCPI_ERROR_UNDEFINED_HEADER);	/* TODO error code ? */
     	return SCPI_RES_ERR;
 	}
 

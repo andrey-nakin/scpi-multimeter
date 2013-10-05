@@ -5,6 +5,12 @@
 #include <scpi/config.h>
 #include "utils.h"
 
+size_t strToDouble(const char * str, double * val);
+size_t patternSeparatorShortPos(const char * pattern, size_t len);
+bool_t compareStr(const char * str1, size_t len1, const char * str2, size_t len2);
+bool_t matchPattern(const char * pattern, size_t pattern_len, const char * str, size_t str_len);
+
+
 void SCPIMM_stop_mesurement(void) {
 	// TODO
 }
@@ -25,6 +31,7 @@ bool_t expectNoParams(scpi_t* context) {
     return TRUE;
 }
 
+/*
 size_t strToDouble(const char * str, double * val) {
     char * endptr;
     *val = strtod(str, &endptr);
@@ -58,4 +65,4 @@ bool_t matchPattern(const char * pattern, size_t pattern_len, const char * str, 
     return compareStr(pattern, pattern_len, str, str_len) ||
             compareStr(pattern, pattern_sep_pos_short, str, str_len);
 }
-
+*/

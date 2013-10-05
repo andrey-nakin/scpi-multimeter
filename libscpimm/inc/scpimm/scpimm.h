@@ -19,6 +19,7 @@ extern "C" {
   Multimeter mode constants (to use in MM_setMode)
 ******************************************************************************/
 
+#define SCPIMM_MODE_UNSPECIFIED	0
 #define SCPIMM_MODE_DCV	1
 #define SCPIMM_MODE_DCV_RATIO	2
 #define SCPIMM_MODE_ACV	4
@@ -50,13 +51,19 @@ extern "C" {
 ******************************************************************************/
 
 struct _scpimm_interface_t {
+	/*
+		Mandatory
+		Return bitwise set of modes suported by underlying implementation
+	*/
+	uint16_t (*supported_modes)(void);
+
 	/* 
 		Mandatory
 		Set multimeter measurement mode
 		<mode> is one of the MM_MODE_XXX constants 
-		Return 0 if mode is set
+		Return TRUE if mode is set
 	*/
-	int (*set_mode)(uint8_t mode, float range, float resolution);
+	bool_t (*set_mode)(uint16_t mode, float range, float resolution);
 
 	/* 
 		Mandatory

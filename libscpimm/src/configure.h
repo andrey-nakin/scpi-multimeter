@@ -3,7 +3,7 @@
 
 #include <scpi/scpi.h>
 
-scpi_result_t SCPIMM_do_configure(scpi_t* context, int mode, float range, float resolution);
+scpi_result_t SCPIMM_do_configure(scpi_t* context, uint16_t mode, float range, float resolution);
 
 scpi_result_t SCPIMM_configureQ(scpi_t* context);
 scpi_result_t SCPIMM_configure_voltage_dc(scpi_t* context);

@@ -8,6 +8,7 @@ void init_test_vars();
 void init_scpimm();
 
 void receive(const char* s);
+void receivef(const char* fmt, ...);
 void dump_in_data();
 
 void clearscpi_errors();

@@ -1,17 +1,21 @@
 #include <string.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include "CUnit/Basic.h"
 #include <scpimm/scpimm.h>
 #include "test_utils.h"
 
-static int set_mode(const uint8_t mode, float range, float resolution);
+static uint16_t supported_modes(void);
+static int set_mode(const uint16_t mode, float range, float resolution);
 static void set_remote(bool_t remote, bool_t lock);
 static size_t send(const uint8_t* data, const size_t len);
+static int scpi_error(scpi_t * context, int_fast16_t error);
 
 static char inbuffer[1024];
 static char* inpuffer_pos = inbuffer;
 
 static scpimm_interface_t scpimm_interface = {
+	.supported_modes = supported_modes,
 	.set_mode = set_mode,
 	.send = send,
 	.remote = set_remote
@@ -28,12 +32,24 @@ void init_test_vars() {
 
 void init_scpimm() {
 	SCPIMM_setup(&scpimm_interface);
+	SCPI_context()->interface->error = scpi_error;
 }
 
 void receive(const char* s) {
 	init_in_buffer();
 	SCPIMM_parseInBuffer(s, strlen(s));
 	SCPIMM_parseInBuffer("\r\n", 2);
+}
+
+void receivef(const char* fmt, ...) {
+	char buf[100];
+	va_list params;
+
+	va_start(params, fmt);
+	vsprintf(buf, fmt, params);
+	va_end(params);
+
+	receive(buf);
 }
 
 void dump_in_data() {
@@ -60,7 +76,12 @@ void asset_in_bool(bool_t v) {
 	asset_in_data(v ? "1\r\n" : "0\r\n");
 }
 
-static int set_mode(const uint8_t mode, float range, float resolution) {
+static uint16_t supported_modes(void) {
+	/* all modes are supported */
+	return (uint16_t) -1;
+}
+
+static int set_mode(const uint16_t mode, float range, float resolution) {
 	return 0;	/* stub */
 }
 
@@ -73,5 +94,9 @@ static size_t send(const uint8_t* data, const size_t len) {
 	inpuffer_pos += len;
 	*inpuffer_pos = '\0';
 	return len;
+}
+
+static int scpi_error(scpi_t * context, int_fast16_t error) {
+	printf("SCPI ERROR %d\n", (int) error);
 }
 
