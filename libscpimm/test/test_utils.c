@@ -6,7 +6,7 @@
 #include "test_utils.h"
 
 static uint16_t supported_modes(void);
-static int set_mode(const uint16_t mode, float range, float resolution);
+static bool_t set_mode(const uint16_t mode, float range, float resolution);
 static void set_remote(bool_t remote, bool_t lock);
 static size_t send(const uint8_t* data, const size_t len);
 static int scpi_error(scpi_t * context, int_fast16_t error);
@@ -81,8 +81,8 @@ static uint16_t supported_modes(void) {
 	return (uint16_t) -1;
 }
 
-static int set_mode(const uint16_t mode, float range, float resolution) {
-	return 0;	/* stub */
+static bool_t set_mode(const uint16_t mode, float range, float resolution) {
+	return TRUE;	/* stub */
 }
 
 static void set_remote(bool_t remote, bool_t lock) {
@@ -97,6 +97,6 @@ static size_t send(const uint8_t* data, const size_t len) {
 }
 
 static int scpi_error(scpi_t * context, int_fast16_t error) {
-	printf("SCPI ERROR %d\n", (int) error);
+//	printf("SCPI ERROR %d\n", (int) error);
 }
 

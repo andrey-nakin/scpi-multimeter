@@ -129,7 +129,7 @@ scpi_result_t SCPIMM_do_configure(scpi_t* context, uint16_t mode, float range, f
 	}
 
 	if (SCPIMM_RANGE_UNSPECIFIED == range && rangeVar) {
-		mode = *rangeVar;
+		range = *rangeVar;
 	}
 	if (SCPIMM_RESOLUTION_UNSPECIFIED == resolution && resolutionVar) {
 		resolution = *resolutionVar;
