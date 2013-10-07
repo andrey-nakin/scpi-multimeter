@@ -1,92 +1,33 @@
-#include <string.h>
 #include <scpimm/scpimm.h>
 #include "configure.h"
 #include "utils.h"
 
-static bool_t paramRange(scpi_t* context, float* value, bool_t mandatory, const char* units) {
-    const char* param;
-    size_t param_len;
-    size_t num_len;
-	double d;
-
-    if (!value) {
-        return FALSE;
-    }
-
-    if (!SCPI_ParamString(context, &param, &param_len, mandatory)) {
-        return FALSE;
-    }
-
-    if (matchPattern("MIN", 3, param, param_len)) {
-        *value = SCPIMM_RANGE_MIN;
-    } else if (matchPattern("MAX", 3, param, param_len)) {
-        *value = SCPIMM_RANGE_MAX;
-    } else if (matchPattern("DEF", 3, param, param_len)) {
-        *value = SCPIMM_RANGE_DEF;
-    } else {
-		bool_t gain_specified = FALSE;
-		double gain = 1.0;
-		const char* const lastptr = param + param_len;
-		char* endptr;
-
-		d = strtod(param, &endptr);
-		while (endptr < lastptr && isspace(*endptr)) {
-			++endptr;
-		}
-		while (endptr < lastptr) {
-			if (!gain_specified && ('k' == *endptr || 'K' == *endptr)) {
-				++endptr;
-				gain = 1.0e3;
-				gain_specified = TRUE;
-			} else if (!gain_specified && ('m' == *endptr || 'M' == *endptr)) {
-				++endptr;
-				gain = 1.0e-3;
-				gain_specified = TRUE;
-			} else if (!gain_specified && ('u' == *endptr || 'U' == *endptr)) {
-				++endptr;
-				gain = 1.0e-6;
-				gain_specified = TRUE;
-			} else if (matchPattern(units, strlen(units), endptr, (lastptr - endptr))) {
-				break;
-			} else {
-				SCPI_ErrorPush(context, SCPI_ERROR_SUFFIX_NOT_ALLOWED);
-				return FALSE;
-			}
-		}
-		*value = (float) (gain * d);
-    }
-
-    return TRUE;
-}
-
-static bool_t paramResolution(scpi_t* context, float* value, bool_t mandatory, const char* units) {
-	return paramRange(context, value, mandatory, units);
-}
-
-static const char* make_units(uint16_t mode) {
-	/* TODO check unit names */
+static scpi_unit_t detect_units(scpimm_mode_t mode) {
 	switch (mode) {
 		case SCPIMM_MODE_DCV:
 		case SCPIMM_MODE_DCV_RATIO:
 		case SCPIMM_MODE_ACV:
-			return "Volt";
+			return SCPI_UNIT_VOLT;
+
 		case SCPIMM_MODE_DCC:
 		case SCPIMM_MODE_ACC:
-			return "Amper";
+			return SCPI_UNIT_AMPER;
+
 		case SCPIMM_MODE_RESISTANCE_2W:
 		case SCPIMM_MODE_RESISTANCE_4W:
-			return "Ohm";
+			return SCPI_UNIT_OHM;
+
 		case SCPIMM_MODE_FREQUENCY:
-			return "Hz";
+			return SCPI_UNIT_HERTZ;
+
 		case SCPIMM_MODE_PERIOD:
-			return "S";
+			return SCPI_UNIT_SECONDS;
 	}
-	return NULL;
+	return SCPI_UNIT_NONE;
 }
 
-static scpi_result_t configure_2arg_impl(scpi_t* context, uint16_t mode) {
-    float range = SCPIMM_RANGE_UNSPECIFIED, resolution = SCPIMM_RESOLUTION_UNSPECIFIED;
-	const char* units = make_units(mode);
+static scpi_result_t configure_2arg_impl(scpi_t* context, scpimm_mode_t mode) {
+    scpi_number_t range, resolution;
 
 	if (!(SCPIMM_INTERFACE(context)->supported_modes() & mode)) {
 		/* given mode is not supported */
@@ -94,18 +35,38 @@ static scpi_result_t configure_2arg_impl(scpi_t* context, uint16_t mode) {
     	return SCPI_RES_ERR;
 	}
 
-    paramRange(context, &range, FALSE, units);
-    paramResolution(context, &resolution, FALSE, units);
+    if (SCPI_ParamNumber(context, &range, FALSE)) {
+		if (range.unit != SCPI_UNIT_NONE && range.unit != detect_units(mode)) {
+			/* invalid units */
+			/* TODO: correct error number */
+			SCPI_ErrorPush(context, SCPI_ERROR_UNDEFINED_HEADER);
+			return SCPI_RES_ERR;
+		}
+	} else {
+		range.type = SCPI_NUM_DEF;
+	}
+
+    if (SCPI_ParamNumber(context, &resolution, FALSE)) {
+		if (resolution.unit != SCPI_UNIT_NONE && resolution.unit != detect_units(mode)) {
+			/* invalid units */
+			/* TODO: correct error number */
+			SCPI_ErrorPush(context, SCPI_ERROR_UNDEFINED_HEADER);
+			return SCPI_RES_ERR;
+		}
+	} else {
+		resolution.type = SCPI_NUM_DEF;
+	}
+
 	expectNoParams(context);
 
 	if (context->cmd_error) {
     	return SCPI_RES_ERR;
 	}
 
-	return SCPIMM_do_configure(context, mode, range, resolution);
+	return SCPIMM_do_configure(context, mode, &range, &resolution);
 }
 
-static scpi_result_t configure_noarg_impl(scpi_t* context, uint16_t mode) {
+static scpi_result_t configure_noarg_impl(scpi_t* context, scpimm_mode_t mode) {
 	if (!(SCPIMM_INTERFACE(context)->supported_modes() & mode)) {
 		/* given mode is not supported */
 	    SCPI_ErrorPush(context, SCPI_ERROR_UNDEFINED_HEADER);
@@ -118,11 +79,12 @@ static scpi_result_t configure_noarg_impl(scpi_t* context, uint16_t mode) {
     	return SCPI_RES_ERR;
 	}
 
-	return SCPIMM_do_configure(context, mode, SCPIMM_RANGE_UNSPECIFIED, SCPIMM_RESOLUTION_UNSPECIFIED);
+	return SCPIMM_do_configure(context, mode, NULL, NULL);
 }
 
-scpi_result_t SCPIMM_do_configure(scpi_t* context, uint16_t mode, float range, float resolution) {
-	scpimm_context_t* ctx = SCPIMM_CONTEXT(context);
+scpi_result_t SCPIMM_do_configure(scpi_t* context, scpimm_mode_t mode, const scpi_number_t* range, const scpi_number_t* resolution) {
+	scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
+	const scpimm_interface_t* const intf = ctx->interface;
 	float *rangeVar = NULL, *resolutionVar = NULL;
 
 	SCPIMM_stop_mesurement();
@@ -175,24 +137,34 @@ scpi_result_t SCPIMM_do_configure(scpi_t* context, uint16_t mode, float range, f
 			break;
 	}
 
+/*
 	if (SCPIMM_RANGE_UNSPECIFIED == range && rangeVar) {
 		range = *rangeVar;
 	}
 	if (SCPIMM_RESOLUTION_UNSPECIFIED == resolution && resolutionVar) {
 		resolution = *resolutionVar;
 	}
+*/
 
-	if (!SCPIMM_INTERFACE(context)->set_mode(mode, range, resolution)) {
+	if (!intf->set_mode(mode)) {
+	    SCPI_ErrorPush(context, SCPI_ERROR_UNDEFINED_HEADER);	/* TODO error code ? */
+    	return SCPI_RES_ERR;
+	}
+	if (intf->set_range && !intf->set_range(mode, range)) {
+	    SCPI_ErrorPush(context, SCPI_ERROR_UNDEFINED_HEADER);	/* TODO error code ? */
+    	return SCPI_RES_ERR;
+	}
+	if (intf->set_resolution && !intf->set_resolution(mode, resolution)) {
 	    SCPI_ErrorPush(context, SCPI_ERROR_UNDEFINED_HEADER);	/* TODO error code ? */
     	return SCPI_RES_ERR;
 	}
 
 	ctx->mode = mode;
 	if (rangeVar) {
-		*rangeVar = range;
+		*rangeVar = range->value;
 	}
 	if (resolutionVar) {
-		*resolutionVar = resolution;
+		*resolutionVar = resolution->value;
 	}
 
 	return SCPI_RES_OK;

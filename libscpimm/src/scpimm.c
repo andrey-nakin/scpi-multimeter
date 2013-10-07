@@ -278,9 +278,9 @@ void SCPIMM_parseInBuffer(char const* inbuf, size_t avail) {
 	SCPI_Input(&scpi_context, inbuf, avail);
 }
 
-void SCPIMM_acceptValue(double v) {
+void SCPIMM_acceptValue(const scpi_number_t* v) {
 	if (valueCounter < VALUE_BUFFER_LENGTH) {
-		valueBuffer[valueCounter++] = (float) v;
+		valueBuffer[valueCounter++] = (float) v->value;
 	} else {
 		// TODO
 	}

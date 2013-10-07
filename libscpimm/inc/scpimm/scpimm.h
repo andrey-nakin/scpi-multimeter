@@ -44,26 +44,36 @@ extern "C" {
 #define SCPIMM_RESOLUTION_MIN SCPIMM_RANGE_MIN
 #define SCPIMM_RESOLUTION_MAX SCPIMM_RANGE_MAX
 #define SCPIMM_RESOLUTION_DEF SCPIMM_RANGE_DEF
-#define SCPIMM_RESOLUTION_UNSPECIFIED SCPIMM_RANGE_UNSPECIFIED
 
 /******************************************************************************
   Types
 ******************************************************************************/
+
+/* See SCPIMM_MODE_xxx constants */
+typedef uint16_t scpimm_mode_t;
 
 struct _scpimm_interface_t {
 	/*
 		Mandatory
 		Return bitwise set of modes suported by underlying implementation
 	*/
-	uint16_t (*supported_modes)(void);
+	scpimm_mode_t (*supported_modes)(void);
 
 	/* 
 		Mandatory
 		Set multimeter measurement mode
-		<mode> is one of the MM_MODE_XXX constants 
+		<mode> is one of the SCPIMM_MODE_XXX constants 
 		Return TRUE if mode is set
 	*/
-	bool_t (*set_mode)(uint16_t mode, float range, float resolution);
+	bool_t (*set_mode)(scpimm_mode_t mode);
+
+	bool_t (*set_range)(scpimm_mode_t mode, const scpi_number_t* range);
+
+	bool_t (*get_range)(scpimm_mode_t mode, scpi_number_t* range);
+
+	bool_t (*set_resolution)(scpimm_mode_t mode, const scpi_number_t* range);
+
+	bool_t (*get_resolution)(scpimm_mode_t mode, scpi_number_t* range);
 
 	/* 
 		Mandatory
@@ -95,7 +105,7 @@ typedef struct _scpimm_interface_t scpimm_interface_t;
 struct _scpimm_context_t {
 	scpimm_interface_t* interface;
 	bool_t beeper_state;
-	uint16_t mode;
+	scpimm_mode_t mode;
 
 	float dcv_range;
 	float dcv_ratio_range;
@@ -131,7 +141,7 @@ void SCPIMM_setup(const scpimm_interface_t*);
 /*
 	Process value measured
 */
-void SCPIMM_acceptValue(double value);
+void SCPIMM_acceptValue(const scpi_number_t* value);
 void SCPIMM_parseInBuffer(const char* buf, size_t len);
 
 /* For debug purposes */
