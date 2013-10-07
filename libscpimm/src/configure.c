@@ -1,3 +1,4 @@
+#include <string.h>
 #include <scpimm/scpimm.h>
 #include "configure.h"
 #include "utils.h"
