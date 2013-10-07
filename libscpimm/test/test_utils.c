@@ -39,6 +39,7 @@ void receive(const char* s) {
 	init_in_buffer();
 	SCPIMM_parseInBuffer(s, strlen(s));
 	SCPIMM_parseInBuffer("\r\n", 2);
+	//printf("%s\n", s);
 }
 
 void receivef(const char* fmt, ...) {

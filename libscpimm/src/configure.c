@@ -2,7 +2,7 @@
 #include "configure.h"
 #include "utils.h"
 
-static bool_t paramRange(scpi_t* context, float* value, bool_t mandatory) {
+static bool_t paramRange(scpi_t* context, float* value, bool_t mandatory, const char* units) {
     const char* param;
     size_t param_len;
     size_t num_len;
@@ -23,23 +23,69 @@ static bool_t paramRange(scpi_t* context, float* value, bool_t mandatory) {
     } else if (matchPattern("DEF", 3, param, param_len)) {
         *value = SCPIMM_RANGE_DEF;
     } else {
-		num_len = strToDouble(param, &d);
-		if (num_len != param_len) {
-		    SCPI_ErrorPush(context, SCPI_ERROR_SUFFIX_NOT_ALLOWED);
-		    return FALSE;
+		bool_t gain_specified = FALSE;
+		double gain = 1.0;
+		const char* const lastptr = param + param_len;
+		char* endptr;
+
+		d = strtod(param, &endptr);
+		while (endptr < lastptr && isspace(*endptr)) {
+			++endptr;
 		}
-		*value = (float) d;
+		while (endptr < lastptr) {
+			if (!gain_specified && ('k' == *endptr || 'K' == *endptr)) {
+				++endptr;
+				gain = 1.0e3;
+				gain_specified = TRUE;
+			} else if (!gain_specified && ('m' == *endptr || 'M' == *endptr)) {
+				++endptr;
+				gain = 1.0e-3;
+				gain_specified = TRUE;
+			} else if (!gain_specified && ('u' == *endptr || 'U' == *endptr)) {
+				++endptr;
+				gain = 1.0e-6;
+				gain_specified = TRUE;
+			} else if (matchPattern(units, strlen(units), endptr, (lastptr - endptr))) {
+				break;
+			} else {
+				SCPI_ErrorPush(context, SCPI_ERROR_SUFFIX_NOT_ALLOWED);
+				return FALSE;
+			}
+		}
+		*value = (float) (gain * d);
     }
 
     return TRUE;
 }
 
-static bool_t paramResolution(scpi_t* context, float* value, bool_t mandatory) {
-	return paramRange(context, value, mandatory);
+static bool_t paramResolution(scpi_t* context, float* value, bool_t mandatory, const char* units) {
+	return paramRange(context, value, mandatory, units);
+}
+
+static const char* make_units(uint16_t mode) {
+	/* TODO check unit names */
+	switch (mode) {
+		case SCPIMM_MODE_DCV:
+		case SCPIMM_MODE_DCV_RATIO:
+		case SCPIMM_MODE_ACV:
+			return "Volt";
+		case SCPIMM_MODE_DCC:
+		case SCPIMM_MODE_ACC:
+			return "Amper";
+		case SCPIMM_MODE_RESISTANCE_2W:
+		case SCPIMM_MODE_RESISTANCE_4W:
+			return "Ohm";
+		case SCPIMM_MODE_FREQUENCY:
+			return "Hz";
+		case SCPIMM_MODE_PERIOD:
+			return "S";
+	}
+	return NULL;
 }
 
 static scpi_result_t configure_2arg_impl(scpi_t* context, uint16_t mode) {
     float range = SCPIMM_RANGE_UNSPECIFIED, resolution = SCPIMM_RESOLUTION_UNSPECIFIED;
+	const char* units = make_units(mode);
 
 	if (!(SCPIMM_INTERFACE(context)->supported_modes() & mode)) {
 		/* given mode is not supported */
@@ -47,8 +93,8 @@ static scpi_result_t configure_2arg_impl(scpi_t* context, uint16_t mode) {
     	return SCPI_RES_ERR;
 	}
 
-    paramRange(context, &range, false);
-    paramResolution(context, &resolution, false);
+    paramRange(context, &range, FALSE, units);
+    paramResolution(context, &resolution, FALSE, units);
 	expectNoParams(context);
 
 	if (context->cmd_error) {
