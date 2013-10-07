@@ -13,13 +13,14 @@
 ******************************************************************************/
 
 #define	VALUE_BUFFER_LENGTH	100
+#define SCPIMM_VERSION "1992.0"
 
 /******************************************************************************
   Forward declarations
 ******************************************************************************/
 static size_t write(scpi_t * context, const char* data, size_t len);
 static scpi_result_t reset(scpi_t * context);
-
+static scpi_result_t system_versionQ(scpi_t* context);
 
 /******************************************************************************
   Constant global variables
@@ -188,7 +189,7 @@ static const scpi_command_t scpi_commands[] = {
     {"SYSTem:LOCal", SCPIMM_system_local},
     {"SYSTem:REMote", SCPIMM_system_remote},
     {"SYSTem:RWLock", SCPIMM_system_rwlock},
-    {"SYSTem:VERSion?", SCPI_SystemVersionQ},
+    {"SYSTem:VERSion?", system_versionQ},
 
 	{"STATus:QUEStionable?", SCPI_StatusQuestionableEventQ},
 	{"STATus:QUEStionable:EVENt?", SCPI_StatusQuestionableEventQ},
@@ -333,5 +334,10 @@ static scpi_result_t reset(scpi_t* context) {
 	// TODO
 
     return SCPI_RES_OK;
+}
+
+static scpi_result_t system_versionQ(scpi_t* context) {
+	SCPI_ResultString(context, SCPIMM_VERSION);
+	return SCPI_RES_OK;
 }
 
