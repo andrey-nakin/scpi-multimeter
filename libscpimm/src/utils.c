@@ -31,7 +31,8 @@ bool_t expectNoParams(scpi_t* context) {
     return TRUE;
 }
 
-/*
+#ifdef	ARDUINO
+
 size_t strToDouble(const char * str, double * val) {
     char * endptr;
     *val = strtod(str, &endptr);
@@ -65,4 +66,6 @@ bool_t matchPattern(const char * pattern, size_t pattern_len, const char * str, 
     return compareStr(pattern, pattern_len, str, str_len) ||
             compareStr(pattern, pattern_sep_pos_short, str, str_len);
 }
-*/
+
+#endif	//	ARDUINO
+
