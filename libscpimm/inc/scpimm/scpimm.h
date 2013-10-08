@@ -33,19 +33,6 @@ extern "C" {
 #define SCPIMM_MODE_DIODE	1024
 
 /******************************************************************************
-  Range constants
-******************************************************************************/
-
-#define SCPIMM_RANGE_MIN -1.0
-#define SCPIMM_RANGE_MAX -2.0
-#define SCPIMM_RANGE_DEF -3.0
-#define SCPIMM_RANGE_UNSPECIFIED -4.0
-
-#define SCPIMM_RESOLUTION_MIN SCPIMM_RANGE_MIN
-#define SCPIMM_RESOLUTION_MAX SCPIMM_RANGE_MAX
-#define SCPIMM_RESOLUTION_DEF SCPIMM_RANGE_DEF
-
-/******************************************************************************
   Types
 ******************************************************************************/
 
@@ -107,25 +94,25 @@ struct _scpimm_context_t {
 	bool_t beeper_state;
 	scpimm_mode_t mode;
 
-	float dcv_range;
-	float dcv_ratio_range;
-	float acv_range;
-	float dcc_range;
-	float acc_range;
-	float resistance_range;
-	float fresistance_range;
-	float frequency_range;
-	float period_range;
+	scpi_number_t dcv_range;
+	scpi_number_t dcv_ratio_range;
+	scpi_number_t acv_range;
+	scpi_number_t dcc_range;
+	scpi_number_t acc_range;
+	scpi_number_t resistance_range;
+	scpi_number_t fresistance_range;
+	scpi_number_t frequency_range;
+	scpi_number_t period_range;
 
-	float dcv_resolution;
-	float dcv_ratio_resolution;
-	float acv_resolution;
-	float dcc_resolution;
-	float acc_resolution;
-	float resistance_resolution;
-	float fresistance_resolution;
-	float frequency_resolution;
-	float period_resolution;
+	scpi_number_t dcv_resolution;
+	scpi_number_t dcv_ratio_resolution;
+	scpi_number_t acv_resolution;
+	scpi_number_t dcc_resolution;
+	scpi_number_t acc_resolution;
+	scpi_number_t resistance_resolution;
+	scpi_number_t fresistance_resolution;
+	scpi_number_t frequency_resolution;
+	scpi_number_t period_resolution;
 };
 
 typedef struct _scpimm_context_t scpimm_context_t;

@@ -26,6 +26,27 @@ static scpi_unit_t detect_units(scpimm_mode_t mode) {
 	return SCPI_UNIT_NONE;
 }
 
+static bool_t validate_number(scpi_t* context, scpimm_mode_t mode, const scpi_number_t* num) {
+	if (	num->type != SCPI_NUM_MIN 
+			&& num->type != SCPI_NUM_MAX
+			&& num->type != SCPI_NUM_DEF
+			&& num->type != SCPI_NUM_NUMBER ) {
+		/* invalid value */
+		/* TODO: correct error number */
+		SCPI_ErrorPush(context, SCPI_ERROR_UNDEFINED_HEADER);
+		return FALSE;
+	}
+		
+	if (num->unit != SCPI_UNIT_NONE && num->unit != detect_units(mode)) {
+		/* invalid units */
+		/* TODO: correct error number */
+		SCPI_ErrorPush(context, SCPI_ERROR_UNDEFINED_HEADER);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
 static scpi_result_t configure_2arg_impl(scpi_t* context, scpimm_mode_t mode) {
     scpi_number_t range, resolution;
 
@@ -36,10 +57,7 @@ static scpi_result_t configure_2arg_impl(scpi_t* context, scpimm_mode_t mode) {
 	}
 
     if (SCPI_ParamNumber(context, &range, FALSE)) {
-		if (range.unit != SCPI_UNIT_NONE && range.unit != detect_units(mode)) {
-			/* invalid units */
-			/* TODO: correct error number */
-			SCPI_ErrorPush(context, SCPI_ERROR_UNDEFINED_HEADER);
+		if (!validate_number(context, mode, &range)) {
 			return SCPI_RES_ERR;
 		}
 	} else {
@@ -47,10 +65,7 @@ static scpi_result_t configure_2arg_impl(scpi_t* context, scpimm_mode_t mode) {
 	}
 
     if (SCPI_ParamNumber(context, &resolution, FALSE)) {
-		if (resolution.unit != SCPI_UNIT_NONE && resolution.unit != detect_units(mode)) {
-			/* invalid units */
-			/* TODO: correct error number */
-			SCPI_ErrorPush(context, SCPI_ERROR_UNDEFINED_HEADER);
+		if (!validate_number(context, mode, &resolution)) {
 			return SCPI_RES_ERR;
 		}
 	} else {
@@ -85,7 +100,7 @@ static scpi_result_t configure_noarg_impl(scpi_t* context, scpimm_mode_t mode) {
 scpi_result_t SCPIMM_do_configure(scpi_t* context, scpimm_mode_t mode, const scpi_number_t* range, const scpi_number_t* resolution) {
 	scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
 	const scpimm_interface_t* const intf = ctx->interface;
-	float *rangeVar = NULL, *resolutionVar = NULL;
+	scpi_number_t *rangeVar = NULL, *resolutionVar = NULL;
 
 	SCPIMM_stop_mesurement();
 	SCPIMM_clear_return_buffer();
@@ -137,40 +152,33 @@ scpi_result_t SCPIMM_do_configure(scpi_t* context, scpimm_mode_t mode, const scp
 			break;
 	}
 
-/*
-	if (SCPIMM_RANGE_UNSPECIFIED == range && rangeVar) {
-		range = *rangeVar;
-	}
-	if (SCPIMM_RESOLUTION_UNSPECIFIED == resolution && resolutionVar) {
-		resolution = *resolutionVar;
-	}
-*/
-
 	if (!intf->set_mode(mode)) {
 	    SCPI_ErrorPush(context, SCPI_ERROR_UNDEFINED_HEADER);	/* TODO error code ? */
     	return SCPI_RES_ERR;
 	}
-	if (intf->set_range && !intf->set_range(mode, range)) {
+	if (range && intf->set_range && !intf->set_range(mode, range)) {
 	    SCPI_ErrorPush(context, SCPI_ERROR_UNDEFINED_HEADER);	/* TODO error code ? */
     	return SCPI_RES_ERR;
 	}
-	if (intf->set_resolution && !intf->set_resolution(mode, resolution)) {
+	if (resolution && intf->set_resolution && !intf->set_resolution(mode, resolution)) {
 	    SCPI_ErrorPush(context, SCPI_ERROR_UNDEFINED_HEADER);	/* TODO error code ? */
     	return SCPI_RES_ERR;
 	}
 
 	ctx->mode = mode;
-	if (rangeVar) {
-		*rangeVar = range->value;
+	if (range && rangeVar) {
+		*rangeVar = *range;
 	}
-	if (resolutionVar) {
-		*resolutionVar = resolution->value;
+	if (resolution && resolutionVar) {
+		*resolutionVar = *resolution;
 	}
 
 	return SCPI_RES_OK;
 }
 
 scpi_result_t SCPIMM_configureQ(scpi_t* context) {
+	(void) context;	
+	/* TODO */
     return SCPI_RES_OK;
 }
 

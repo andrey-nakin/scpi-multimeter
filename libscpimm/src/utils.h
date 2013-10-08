@@ -18,6 +18,7 @@ void SCPIMM_clear_return_buffer(void);
 bool_t expectNoParams(scpi_t* context);
 
 bool_t matchPattern(const char * pattern, size_t pattern_len, const char * str, size_t str_len);
+bool_t matchCommand(const char * pattern, const char * cmd, size_t len);
 size_t strToDouble(const char * str, double * val);
 
 #endif	//	__UTILS_H_SCPIMM_

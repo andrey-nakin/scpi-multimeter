@@ -5,8 +5,8 @@
 #include <scpimm/scpimm.h>
 #include "test_utils.h"
 
-static uint16_t supported_modes(void);
-static bool_t set_mode(const uint16_t mode, float range, float resolution);
+static scpimm_mode_t supported_modes(void);
+static bool_t set_mode(const scpimm_mode_t mode);
 static void set_remote(bool_t remote, bool_t lock);
 static size_t send(const uint8_t* data, const size_t len);
 static int scpi_error(scpi_t * context, int_fast16_t error);
@@ -54,7 +54,7 @@ void receivef(const char* fmt, ...) {
 }
 
 void dump_in_data() {
-	printf("IN DATA [%s] LENGTH [%u]\n", inbuffer, strlen(inbuffer));
+	printf("IN DATA [%s] LENGTH [%u]\n", inbuffer, (unsigned) strlen(inbuffer));
 }
 
 void clearscpi_errors() {
@@ -77,16 +77,19 @@ void asset_in_bool(bool_t v) {
 	asset_in_data(v ? "1\r\n" : "0\r\n");
 }
 
-static uint16_t supported_modes(void) {
+static scpimm_mode_t supported_modes(void) {
 	/* all modes are supported */
-	return (uint16_t) -1;
+	return (scpimm_mode_t) -1;
 }
 
-static bool_t set_mode(const uint16_t mode, float range, float resolution) {
+static bool_t set_mode(const scpimm_mode_t mode) {
+	(void) mode;
 	return TRUE;	/* stub */
 }
 
 static void set_remote(bool_t remote, bool_t lock) {
+	(void) remote;
+	(void) lock;
 	/* stub */
 }
 
@@ -98,6 +101,17 @@ static size_t send(const uint8_t* data, const size_t len) {
 }
 
 static int scpi_error(scpi_t * context, int_fast16_t error) {
+	(void) context;
+	(void) error;
 //	printf("SCPI ERROR %d\n", (int) error);
+	return 0;
+}
+
+void assert_number_equals(const scpi_number_t* v, const scpi_number_t* expected) {
+    CU_ASSERT_EQUAL(v->type, expected->type);
+	if (v->type == expected->type) {
+	    CU_ASSERT_EQUAL(v->unit, expected->unit);
+		CU_ASSERT_DOUBLE_EQUAL(v->value, expected->value, expected->value * FLOAT_DELTA);
+	}
 }
 
