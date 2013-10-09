@@ -37,9 +37,9 @@ void init_scpimm() {
 
 void receive(const char* s) {
 	init_in_buffer();
+//	printf("SEND: %s\n", s);
 	SCPIMM_parseInBuffer(s, strlen(s));
 	SCPIMM_parseInBuffer("\r\n", 2);
-	//printf("%s\n", s);
 }
 
 void receivef(const char* fmt, ...) {
@@ -109,7 +109,7 @@ static int scpi_error(scpi_t * context, int_fast16_t error) {
 
 void assert_number_equals(const scpi_number_t* v, const scpi_number_t* expected) {
     CU_ASSERT_EQUAL(v->type, expected->type);
-	if (v->type == expected->type) {
+	if (v->type == expected->type && v->type == SCPI_NUM_NUMBER) {
 	    CU_ASSERT_EQUAL(v->unit, expected->unit);
 		CU_ASSERT_DOUBLE_EQUAL(v->value, expected->value, expected->value * FLOAT_DELTA);
 	}

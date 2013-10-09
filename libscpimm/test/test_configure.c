@@ -127,25 +127,19 @@ static void test_configure_no_params(const char* function, scpimm_mode_t mode) {
 	const scpi_number_t def = {0.0, SCPI_UNIT_NONE, SCPI_NUM_DEF};
 
 	reset();
+
+	if (rangeVar && resolutionVar) {
+		const scpi_number_t customRange = {1.0, SCPI_UNIT_NONE, SCPI_NUM_NUMBER};
+		const scpi_number_t customResolution = {0.1, SCPI_UNIT_NONE, SCPI_NUM_NUMBER};
+		*rangeVar = customRange;
+		*resolutionVar = customResolution;
+	}
+
 	receivef("CONFIGURE:%s\r\n", function);
 	assert_no_scpi_errors();
 	asset_no_data();
 	check_last_mode(mode, &def, &def);
 
-	if (rangeVar && resolutionVar) {
-		const scpi_number_t customRange = {1.0, SCPI_UNIT_NONE, SCPI_NUM_NUMBER};
-		const scpi_number_t customResolution = {0.1, SCPI_UNIT_NONE, SCPI_NUM_NUMBER};
-
-		reset();
-
-		*rangeVar = customRange;
-		*resolutionVar = customResolution;
-
-		receivef("CONFIGURE:%s\r\n", function);
-		assert_no_scpi_errors();
-		asset_no_data();
-		check_last_mode(mode, &customRange, &customResolution);
-	}
 }
 
 /* configure function with default range and resolution */

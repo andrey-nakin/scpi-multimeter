@@ -3,11 +3,12 @@
 #include "CUnit/Basic.h"
 #include <scpi/scpi.h>
 #include <scpimm/scpimm.h>
+#include "test_utils.h"
 
 #define CONTEXT (SCPIMM_context())
 
-static beeper_counter = 0;
-static remove_counter = 0;
+static unsigned beeper_counter = 0;
+static unsigned remove_counter = 0;
 static bool_t last_remote = 0xff;
 static bool_t last_lock = 0xff;
 

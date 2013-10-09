@@ -37,7 +37,10 @@ static bool_t validate_number(scpi_t* context, scpimm_mode_t mode, const scpi_nu
 		return FALSE;
 	}
 		
-	if (num->unit != SCPI_UNIT_NONE && num->unit != detect_units(mode)) {
+	if (	num->type == SCPI_NUM_NUMBER
+			&& num->unit != SCPI_UNIT_NONE 
+			&& num->unit != detect_units(mode)) {
+
 		/* invalid units */
 		/* TODO: correct error number */
 		SCPI_ErrorPush(context, SCPI_ERROR_UNDEFINED_HEADER);

@@ -252,8 +252,8 @@ static scpi_t scpi_context = {
     false,
     NULL,
     NULL,
-    NULL,
-    NULL,
+    scpi_units_def,
+    scpi_special_numbers_def,
 	&scpimm_context
 };
 
