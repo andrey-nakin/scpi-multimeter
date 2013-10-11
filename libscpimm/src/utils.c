@@ -31,6 +31,11 @@ bool_t expectNoParams(scpi_t* context) {
     return TRUE;
 }
 
+void signalInternalError(scpi_t* context) {
+	/* TODO: signal valid error */
+    SCPI_ErrorPush(context, SCPI_ERROR_INTERNAL);
+}
+
 #ifdef	ARDUINO
 
 static bool_t iscolon(char ch) {

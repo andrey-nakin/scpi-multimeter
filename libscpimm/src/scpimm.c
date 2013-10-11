@@ -7,6 +7,8 @@
 #include "measure.h"
 #include "system.h"
 #include "sense.h"
+#include "route.h"
+#include "input.h"
 
 /******************************************************************************
   Definitions
@@ -53,6 +55,19 @@ static const scpi_command_t scpi_commands[] = {
     {"CONFigure:PERiod", SCPIMM_configure_period},
     {"CONFigure:CONTinuity", SCPIMM_configure_continuity},
     {"CONFigure:DIODe", SCPIMM_configure_diode},
+
+    {"INPut:IMPedance:AUTO", SCPIMM_input_impedance_auto},
+    {"INPut:IMPedance:AUTO?", SCPIMM_input_impedance_autoQ},
+
+    {"MEASure:VOLTage:DC?", SCPIMM_measure_voltage_dcQ},
+    {"MEASure:VOLTage:DC:RATio?", SCPI_StubQ},
+    {"MEASure:VOLTage:AC?", SCPI_StubQ},
+    {"MEASure:CURRent:DC?", SCPI_StubQ},
+    {"MEASure:CURRent:AC?", SCPI_StubQ},
+    {"MEASure:RESistance?", SCPI_StubQ},
+    {"MEASure:FRESistance?", SCPI_StubQ},
+    {"MEASure:FREQuency?", SCPI_StubQ},
+    {"MEASure:PERiod?", SCPI_StubQ},
 
 	{"SENSe:FUNCtion", SCPIMM_sense_function},
 	{"SENSe:FUNCtion?", SCPIMM_sense_functionQ},
@@ -197,15 +212,7 @@ static const scpi_command_t scpi_commands[] = {
 	{"STATus:QUEStionable:ENABle?", SCPI_StatusQuestionableEnableQ},
 	{"STATus:PRESet", SCPI_StatusPreset},
 
-    {"MEASure:VOLTage:DC?", SCPIMM_measure_voltage_dcQ},
-    {"MEASure:VOLTage:DC:RATio?", SCPI_StubQ},
-    {"MEASure:VOLTage:AC?", SCPI_StubQ},
-    {"MEASure:CURRent:DC?", SCPI_StubQ},
-    {"MEASure:CURRent:AC?", SCPI_StubQ},
-    {"MEASure:RESistance?", SCPI_StubQ},
-    {"MEASure:FRESistance?", SCPI_StubQ},
-    {"MEASure:FREQuency?", SCPI_StubQ},
-    {"MEASure:PERiod?", SCPI_StubQ},
+	{"ROUTe:TERMinals?", SCPIMM_route_terminals},
 
 	SCPI_CMD_LIST_END
 };
@@ -302,6 +309,7 @@ static scpi_result_t reset(scpi_t* context) {
 	scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
 
 	SCPIMM_set_remote(context, FALSE, FALSE);
+	SCPIMM_do_set_input_impedance_auto(context, FALSE);
 
 	ctx->dcv_range.type = SCPI_NUM_DEF;
 	ctx->dcv_ratio_range.type = SCPI_NUM_DEF;

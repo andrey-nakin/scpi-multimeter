@@ -15,6 +15,8 @@ extern "C" {
 
 #define SCPIMM_OVERFLOW 9.90000000E+37
 
+#define	SCPI_ERROR_INTERNAL SCPI_ERROR_PARAMETER_NOT_ALLOWED
+
 /******************************************************************************
   Multimeter mode constants (to use in MM_setMode)
 ******************************************************************************/
@@ -35,6 +37,9 @@ extern "C" {
 /******************************************************************************
   Types
 ******************************************************************************/
+
+/* Input terminal type */
+typedef enum {SCPIMM_TERM_FRONT, SCPIMM_TERM_REAR} scpimm_terminal_state_t;
 
 /* See SCPIMM_MODE_xxx constants */
 typedef uint16_t scpimm_mode_t;
@@ -85,6 +90,19 @@ struct _scpimm_interface_t {
 		Issue a short (up to 500 ms) beep
 	*/
 	void (*beep)();
+
+	/*
+		Optional
+		Returns selected input terminal
+	*/
+	bool_t (*get_input_terminal)(scpimm_terminal_state_t* term);
+
+	/*
+		Optional
+		Set state of the automatic input impedance selection
+	*/
+	bool_t (*set_input_impedance_auto)(bool_t state);
+
 };
 
 typedef struct _scpimm_interface_t scpimm_interface_t;
@@ -93,6 +111,7 @@ struct _scpimm_context_t {
 	scpimm_interface_t* interface;
 	bool_t beeper_state;
 	scpimm_mode_t mode;
+	bool_t input_impedance_auto_state;
 
 	scpi_number_t dcv_range;
 	scpi_number_t dcv_ratio_range;

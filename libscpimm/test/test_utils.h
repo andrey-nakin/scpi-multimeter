@@ -16,6 +16,7 @@ void dump_in_data();
 void clearscpi_errors();
 
 void assert_no_scpi_errors();
+void assert_scpi_error(int16_t error);
 void asset_in_data(const char* s);
 void asset_no_data();
 void asset_in_bool(bool_t v);

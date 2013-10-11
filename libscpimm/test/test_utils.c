@@ -33,6 +33,7 @@ void init_test_vars() {
 void init_scpimm() {
 	SCPIMM_setup(&scpimm_interface);
 	SCPI_context()->interface->error = scpi_error;
+	clearscpi_errors();
 }
 
 void receive(const char* s) {
@@ -63,6 +64,11 @@ void clearscpi_errors() {
 
 void assert_no_scpi_errors() {
 	CU_ASSERT_EQUAL(SCPI_ErrorCount(SCPI_context()), 0);
+}
+
+void assert_scpi_error(int16_t error) {
+	CU_ASSERT_EQUAL(SCPI_ErrorCount(SCPI_context()), 1);
+	CU_ASSERT_EQUAL(SCPI_ErrorPop(SCPI_context()), error);
 }
 
 void asset_in_data(const char* s) {
