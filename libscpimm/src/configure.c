@@ -1,5 +1,6 @@
 #include <scpimm/scpimm.h>
 #include "configure.h"
+#include "dmm.h"
 #include "utils.h"
 
 static scpi_unit_t detect_units(scpimm_mode_t mode) {
@@ -176,7 +177,7 @@ scpi_result_t SCPIMM_do_configure(scpi_t* context, scpimm_mode_t mode, const scp
 		*resolutionVar = *resolution;
 	}
 
-	return SCPI_RES_OK;
+	return SCPIMM_measure_preset(context);
 }
 
 scpi_result_t SCPIMM_configureQ(scpi_t* context) {

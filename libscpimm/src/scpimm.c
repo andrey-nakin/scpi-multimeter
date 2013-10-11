@@ -9,6 +9,7 @@
 #include "sense.h"
 #include "route.h"
 #include "input.h"
+#include "dmm.h"
 
 /******************************************************************************
   Definitions
@@ -43,6 +44,10 @@ static const scpi_command_t scpi_commands[] = {
 	{"*TST?", SCPI_CoreTstQ},
 	{"*WAI", SCPI_CoreWai},
 
+    {"FETCh?", SCPIMM_fetchQ},
+    {"INITiate", SCPIMM_initiate},
+    {"READ?", SCPIMM_readQ},
+
     {"CONFigure?", SCPIMM_configureQ},
     {"CONFigure:VOLTage:DC", SCPIMM_configure_voltage_dc},
     {"CONFigure:VOLTage:DC:RATio", SCPIMM_configure_voltage_dc_ratio},
@@ -60,14 +65,16 @@ static const scpi_command_t scpi_commands[] = {
     {"INPut:IMPedance:AUTO?", SCPIMM_input_impedance_autoQ},
 
     {"MEASure:VOLTage:DC?", SCPIMM_measure_voltage_dcQ},
-    {"MEASure:VOLTage:DC:RATio?", SCPI_StubQ},
-    {"MEASure:VOLTage:AC?", SCPI_StubQ},
-    {"MEASure:CURRent:DC?", SCPI_StubQ},
-    {"MEASure:CURRent:AC?", SCPI_StubQ},
-    {"MEASure:RESistance?", SCPI_StubQ},
-    {"MEASure:FRESistance?", SCPI_StubQ},
-    {"MEASure:FREQuency?", SCPI_StubQ},
-    {"MEASure:PERiod?", SCPI_StubQ},
+    {"MEASure:VOLTage:DC:RATio?", SCPIMM_measure_voltage_dc_ratioQ},
+    {"MEASure:VOLTage:AC?", SCPIMM_measure_voltage_acQ},
+    {"MEASure:CURRent:DC?", SCPIMM_measure_current_dcQ},
+    {"MEASure:CURRent:AC?", SCPIMM_measure_current_acQ},
+    {"MEASure:RESistance?", SCPIMM_measure_resistanceQ},
+    {"MEASure:FRESistance?", SCPIMM_measure_fresistanceQ},
+    {"MEASure:FREQuency?", SCPIMM_measure_frequencyQ},
+    {"MEASure:PERiod?", SCPIMM_measure_periodQ},
+    {"MEASure:CONTinuity?", SCPIMM_measure_continuityQ},
+    {"MEASure:DIODe?", SCPIMM_measure_diodeQ},
 
 	{"SENSe:FUNCtion", SCPIMM_sense_function},
 	{"SENSe:FUNCtion?", SCPIMM_sense_functionQ},
@@ -309,7 +316,6 @@ static scpi_result_t reset(scpi_t* context) {
 	scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
 
 	SCPIMM_set_remote(context, FALSE, FALSE);
-	SCPIMM_do_set_input_impedance_auto(context, FALSE);
 
 	ctx->dcv_range.type = SCPI_NUM_DEF;
 	ctx->dcv_ratio_range.type = SCPI_NUM_DEF;

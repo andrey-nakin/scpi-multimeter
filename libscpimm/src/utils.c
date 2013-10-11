@@ -10,7 +10,6 @@ size_t patternSeparatorShortPos(const char * pattern, size_t len);
 bool_t compareStr(const char * str1, size_t len1, const char * str2, size_t len2);
 bool_t matchPattern(const char * pattern, size_t pattern_len, const char * str, size_t str_len);
 
-
 void SCPIMM_stop_mesurement(void) {
 	// TODO
 }

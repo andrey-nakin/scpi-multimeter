@@ -41,6 +41,9 @@ extern "C" {
 /* Input terminal type */
 typedef enum {SCPIMM_TERM_FRONT, SCPIMM_TERM_REAR} scpimm_terminal_state_t;
 
+/* Trigger source type */
+typedef enum {SCPIMM_TRIG_BUS, SCPIMM_TRIG_IMM, SCPIMM_TRIG_EXT} scpimm_trig_src_t;
+
 /* See SCPIMM_MODE_xxx constants */
 typedef uint16_t scpimm_mode_t;
 
@@ -112,6 +115,9 @@ struct _scpimm_context_t {
 	bool_t beeper_state;
 	scpimm_mode_t mode;
 	bool_t input_impedance_auto_state;
+	unsigned sample_count_num, trigger_count_num, sample_count, trigger_count;
+	bool_t infinite_trigger_count;
+	scpimm_trig_src_t trigger_src;
 
 	scpi_number_t dcv_range;
 	scpi_number_t dcv_ratio_range;
