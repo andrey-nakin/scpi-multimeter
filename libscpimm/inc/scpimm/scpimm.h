@@ -17,6 +17,20 @@ extern "C" {
 
 #define	SCPI_ERROR_INTERNAL SCPI_ERROR_PARAMETER_NOT_ALLOWED
 
+#define SCPIMM_BUF_LEN 513
+#define SCPIMM_BUF_CAPACITY (SCPIMM_BUF_LEN - 1)
+
+/******************************************************************************
+  Errot codes
+******************************************************************************/
+
+#define SCPI_ERROR_TRIGGER_IGNORED	-211
+#define SCPI_ERROR_INIT_IGNORED	-213
+#define SCPI_ERROR_TRIGGER_DEADLOCK	-214
+#define SCPI_ERROR_DATA_STALE	-230
+#define SCPI_ERROR_INSUFFICIENT_MEMORY	531
+#define SCPI_ERROR_NOT_ALLOWED_IN_LOCAL	550
+
 /******************************************************************************
   Multimeter mode constants (to use in MM_setMode)
 ******************************************************************************/
@@ -43,6 +57,12 @@ typedef enum {SCPIMM_TERM_FRONT, SCPIMM_TERM_REAR} scpimm_terminal_state_t;
 
 /* Trigger source type */
 typedef enum {SCPIMM_TRIG_BUS, SCPIMM_TRIG_IMM, SCPIMM_TRIG_EXT} scpimm_trig_src_t;
+
+/* Destination of measured values */
+typedef enum {SCPIMM_DST_BUF, SCPIMM_DST_OUT} scpimm_dst_t;
+
+/* Destination of measured values */
+typedef enum {SCPIMM_STATE_IDLE, SCPIMM_STATE_WAIT_FOR_TRIGGER, SCPIMM_STATE_MEASURE} scpimm_state_t;
 
 /* See SCPIMM_MODE_xxx constants */
 typedef uint16_t scpimm_mode_t;
@@ -74,7 +94,7 @@ struct _scpimm_interface_t {
 		Mandatory
 		Start measurement
 	*/
-	void (*trigger)();
+	bool_t (*start_measure)();
 
 	/* 
 		Mandatory
@@ -118,6 +138,10 @@ struct _scpimm_context_t {
 	unsigned sample_count_num, trigger_count_num, sample_count, trigger_count;
 	bool_t infinite_trigger_count;
 	scpimm_trig_src_t trigger_src;
+	scpimm_dst_t dst;
+	double buf[SCPIMM_BUF_LEN];
+	unsigned buf_head, buf_tail;
+	scpimm_state_t state;
 
 	scpi_number_t dcv_range;
 	scpi_number_t dcv_ratio_range;
@@ -153,7 +177,7 @@ void SCPIMM_setup(const scpimm_interface_t*);
 /*
 	Process value measured
 */
-void SCPIMM_acceptValue(const scpi_number_t* value);
+void SCPIMM_read_value(const scpi_number_t* value);
 void SCPIMM_parseInBuffer(const char* buf, size_t len);
 
 /* For debug purposes */

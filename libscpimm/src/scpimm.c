@@ -15,7 +15,6 @@
   Definitions
 ******************************************************************************/
 
-#define	VALUE_BUFFER_LENGTH	100
 #define SCPIMM_VERSION "1992.0"
 
 /******************************************************************************
@@ -41,6 +40,7 @@ static const scpi_command_t scpi_commands[] = {
 	{"*SRE", SCPI_CoreSre},
 	{"*SRE?", SCPI_CoreSreQ},
 	{"*STB?", SCPI_CoreStbQ},
+	{"*TRG", SCPIMM_trg},
 	{"*TST?", SCPI_CoreTstQ},
 	{"*WAI", SCPI_CoreWai},
 
@@ -271,9 +271,6 @@ static scpi_t scpi_context = {
 	&scpimm_context
 };
 
-static float valueBuffer[VALUE_BUFFER_LENGTH];
-static size_t valueCounter = 0;
-
 /******************************************************************************
   Interface functions
 ******************************************************************************/
@@ -286,14 +283,6 @@ void SCPIMM_setup(const scpimm_interface_t* i) {
 
 void SCPIMM_parseInBuffer(char const* inbuf, size_t avail) {
 	SCPI_Input(&scpi_context, inbuf, avail);
-}
-
-void SCPIMM_acceptValue(const scpi_number_t* v) {
-	if (valueCounter < VALUE_BUFFER_LENGTH) {
-		valueBuffer[valueCounter++] = (float) v->value;
-	} else {
-		// TODO
-	}
 }
 
 scpimm_context_t* SCPIMM_context() {
@@ -338,8 +327,6 @@ static scpi_result_t reset(scpi_t* context) {
 	ctx->period_resolution.type = SCPI_NUM_DEF;
 
 	SCPIMM_do_configure(context, SCPIMM_MODE_DCV, &ctx->dcv_range, &ctx->dcv_resolution);
-
-	valueCounter = 0;	
 
 	// TODO
 
