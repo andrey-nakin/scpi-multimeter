@@ -10,6 +10,7 @@
 #include "route.h"
 #include "input.h"
 #include "dmm.h"
+#include "sample.h"
 
 /******************************************************************************
   Definitions
@@ -75,6 +76,9 @@ static const scpi_command_t scpi_commands[] = {
     {"MEASure:PERiod?", SCPIMM_measure_periodQ},
     {"MEASure:CONTinuity?", SCPIMM_measure_continuityQ},
     {"MEASure:DIODe?", SCPIMM_measure_diodeQ},
+
+	{"SAMPle:COUNt", SCPIMM_sample_count},
+	{"SAMPle:COUNt?", SCPIMM_sample_countQ},
 
 	{"SENSe:FUNCtion", SCPIMM_sense_function},
 	{"SENSe:FUNCtion?", SCPIMM_sense_functionQ},
@@ -242,7 +246,7 @@ static scpi_interface_t scpi_interface = {
   Global variables
 ******************************************************************************/
 
-static scpimm_context_t scpimm_context = {
+static volatile scpimm_context_t scpimm_context = {
 	NULL,
 	TRUE,
 	SCPIMM_MODE_DCV
@@ -268,7 +272,7 @@ static scpi_t scpi_context = {
     NULL,
     scpi_units_def,
     scpi_special_numbers_def,
-	&scpimm_context
+	(void*) &scpimm_context
 };
 
 /******************************************************************************
@@ -286,7 +290,7 @@ void SCPIMM_parseInBuffer(char const* inbuf, size_t avail) {
 }
 
 scpimm_context_t* SCPIMM_context() {
-	return &scpimm_context;
+	return (scpimm_context_t*) &scpimm_context;
 }
 
 scpi_t* SCPI_context() {
@@ -302,7 +306,7 @@ static size_t write(scpi_t* const context, const char* data, size_t len) {
 }
 
 static scpi_result_t reset(scpi_t* context) {
-	scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
+	volatile scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
 
 	SCPIMM_set_remote(context, FALSE, FALSE);
 
@@ -326,7 +330,10 @@ static scpi_result_t reset(scpi_t* context) {
 	ctx->frequency_resolution.type = SCPI_NUM_DEF;
 	ctx->period_resolution.type = SCPI_NUM_DEF;
 
-	SCPIMM_do_configure(context, SCPIMM_MODE_DCV, &ctx->dcv_range, &ctx->dcv_resolution);
+	{
+		scpi_number_t def = {0.0, SCPI_UNIT_NONE, SCPI_NUM_DEF};
+		SCPIMM_do_configure(context, SCPIMM_MODE_DCV, &def, &def);
+	}
 
 	// TODO
 

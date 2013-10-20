@@ -20,6 +20,7 @@ void assert_scpi_error(int16_t error);
 void asset_in_data(const char* s);
 void asset_no_data();
 void asset_in_bool(bool_t v);
+void assert_in_int(int v);
 
 void assert_number_equals(const scpi_number_t* v, const scpi_number_t* expected);
 

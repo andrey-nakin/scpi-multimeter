@@ -3,6 +3,8 @@
 #include "utils.h"
 #include "input.h"
 
+#define SCPIMM_OVERFLOW 9.90000000E+37
+
 static scpi_result_t initiate(scpi_t* context, scpimm_dst_t dst) {
 	scpimm_context_t* ctx = SCPIMM_CONTEXT(context);
 
@@ -45,6 +47,7 @@ scpi_result_t SCPIMM_measure_preset(scpi_t* context) {
 	scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
 	scpi_result_t result;
 
+	ctx->state = SCPIMM_STATE_IDLE;
 	ctx->sample_count_num = 1;
 	ctx->trigger_count_num = 1;
 	ctx->infinite_trigger_count = false;
@@ -99,7 +102,7 @@ scpimm_state_t SCPIMM_get_state(scpi_t* context) {
 
 void SCPIMM_read_value(const scpi_number_t* value) {
 	scpi_t* const context = SCPI_context();
-	scpimm_context_t* const ctx = SCPIMM_context();
+	volatile scpimm_context_t* const ctx = SCPIMM_context();
 	if (SCPIMM_STATE_MEASURE != ctx->state) {
 		/* measurement is not expected now */
 		return;

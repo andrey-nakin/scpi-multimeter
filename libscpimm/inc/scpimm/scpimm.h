@@ -13,11 +13,10 @@ extern "C" {
   Basic constants
 ******************************************************************************/
 
-#define SCPIMM_OVERFLOW 9.90000000E+37
-
 #define	SCPI_ERROR_INTERNAL SCPI_ERROR_PARAMETER_NOT_ALLOWED
 
-#define SCPIMM_BUF_LEN 513
+#define SCPIMM_BUF_LEN 11
+//#define SCPIMM_BUF_LEN 513
 #define SCPIMM_BUF_CAPACITY (SCPIMM_BUF_LEN - 1)
 
 /******************************************************************************
@@ -27,6 +26,8 @@ extern "C" {
 #define SCPI_ERROR_TRIGGER_IGNORED	-211
 #define SCPI_ERROR_INIT_IGNORED	-213
 #define SCPI_ERROR_TRIGGER_DEADLOCK	-214
+#define SCPI_ERROR_DATA_OUT_OF_RANGE	-222
+#define SCPI_ERROR_ILLEGAL_PARAMETER_VALUE	-224
 #define SCPI_ERROR_DATA_STALE	-230
 #define SCPI_ERROR_INSUFFICIENT_MEMORY	531
 #define SCPI_ERROR_NOT_ALLOWED_IN_LOCAL	550

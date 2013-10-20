@@ -83,6 +83,12 @@ void asset_in_bool(bool_t v) {
 	asset_in_data(v ? "1\r\n" : "0\r\n");
 }
 
+void assert_in_int(int v) {
+	char buf[32];
+	sprintf(buf, "%d\r\n", v);
+	asset_in_data(buf);
+}
+
 static scpimm_mode_t supported_modes(void) {
 	/* all modes are supported */
 	return (scpimm_mode_t) -1;
