@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <scpi/scpi.h>
 #include <scpimm/scpimm.h>
 #include "utils.h"
@@ -12,6 +13,7 @@
 #include "dmm.h"
 #include "sample.h"
 #include "trigger.h"
+#include "display.h"
 
 /******************************************************************************
   Definitions
@@ -62,6 +64,12 @@ static const scpi_command_t scpi_commands[] = {
     {"CONFigure:PERiod", SCPIMM_configure_period},
     {"CONFigure:CONTinuity", SCPIMM_configure_continuity},
     {"CONFigure:DIODe", SCPIMM_configure_diode},
+
+    {"DISPlay", SCPIMM_display},
+    {"DISPlay?", SCPIMM_displayQ},
+    {"DISPlay:TEXT", SCPIMM_display_text},
+    {"DISPlay:TEXT?", SCPIMM_display_textQ},
+    {"DISPlay:TEXT:CLEar", SCPIMM_display_text_clear},
 
     {"INPut:IMPedance:AUTO", SCPIMM_input_impedance_auto},
     {"INPut:IMPedance:AUTO?", SCPIMM_input_impedance_autoQ},
@@ -318,7 +326,10 @@ static size_t write(scpi_t* const context, const char* data, size_t len) {
 static scpi_result_t reset(scpi_t* context) {
 	volatile scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
 
+//	memset((void*) ctx, 0, sizeof(*ctx));
 	SCPIMM_set_remote(context, FALSE, FALSE);
+	ctx->display = TRUE;
+	ctx->display_text[0] = '\0';
 
 	ctx->dcv_range.type = SCPI_NUM_DEF;
 	ctx->dcv_ratio_range.type = SCPI_NUM_DEF;

@@ -19,6 +19,8 @@ extern "C" {
 //#define SCPIMM_BUF_LEN 513
 #define SCPIMM_BUF_CAPACITY (SCPIMM_BUF_LEN - 1)
 
+#define SCPIMM_DISPLAY_LEN 12
+
 /******************************************************************************
   Errot codes
 ******************************************************************************/
@@ -27,6 +29,7 @@ extern "C" {
 #define SCPI_ERROR_INIT_IGNORED	-213
 #define SCPI_ERROR_TRIGGER_DEADLOCK	-214
 #define SCPI_ERROR_DATA_OUT_OF_RANGE	-222
+#define SCPI_ERROR_TOO_MUCH_DATA	-223
 #define SCPI_ERROR_ILLEGAL_PARAMETER_VALUE	-224
 #define SCPI_ERROR_DATA_STALE	-230
 #define SCPI_ERROR_INSUFFICIENT_MEMORY	531
@@ -145,6 +148,8 @@ struct _scpimm_context_t {
 	double buf[SCPIMM_BUF_LEN];
 	unsigned buf_head, buf_tail;
 	scpimm_state_t state;
+	bool_t display;
+	char display_text[SCPIMM_DISPLAY_LEN + 1];
 
 	scpi_number_t dcv_range;
 	scpi_number_t dcv_ratio_range;
