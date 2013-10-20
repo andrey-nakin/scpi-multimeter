@@ -5,6 +5,8 @@
 #include <scpimm/scpimm.h>
 #include "test_utils.h"
 
+#define DOUBLE_DELTA 1.0e-6
+
 static scpimm_mode_t supported_modes(void);
 static bool_t set_mode(const scpimm_mode_t mode);
 static void set_remote(bool_t remote, bool_t lock);
@@ -87,6 +89,14 @@ void assert_in_int(int v) {
 	char buf[32];
 	sprintf(buf, "%d\r\n", v);
 	asset_in_data(buf);
+}
+
+void assert_in_double(double v) {
+	char* endp;
+	double d;
+	d = strtod(inbuffer, &endp);
+    CU_ASSERT_EQUAL(*endp, '\r');
+	CU_ASSERT_DOUBLE_EQUAL(d, v, v * DOUBLE_DELTA);
 }
 
 static scpimm_mode_t supported_modes(void) {

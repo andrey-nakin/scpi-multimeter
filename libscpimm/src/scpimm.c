@@ -11,6 +11,7 @@
 #include "input.h"
 #include "dmm.h"
 #include "sample.h"
+#include "trigger.h"
 
 /******************************************************************************
   Definitions
@@ -224,6 +225,15 @@ static const scpi_command_t scpi_commands[] = {
 	{"STATus:PRESet", SCPI_StatusPreset},
 
 	{"ROUTe:TERMinals?", SCPIMM_route_terminals},
+
+	{"TRIGger:SOURce", SCPIMM_trigger_source},
+	{"TRIGger:SOURce?", SCPIMM_trigger_sourceQ},
+	{"TRIGger:DELay", SCPIMM_trigger_delay},
+	{"TRIGger:DELay?", SCPIMM_trigger_delayQ},
+	{"TRIGger:DELay:AUTO", SCPIMM_trigger_delay_auto},
+	{"TRIGger:DELay:AUTO?", SCPIMM_trigger_delay_autoQ},
+	{"TRIGger:COUNt", SCPIMM_trigger_count},
+	{"TRIGger:COUNt?", SCPIMM_trigger_countQ},
 
 	SCPI_CMD_LIST_END
 };

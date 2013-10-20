@@ -139,6 +139,8 @@ struct _scpimm_context_t {
 	unsigned sample_count_num, trigger_count_num, sample_count, trigger_count;
 	bool_t infinite_trigger_count;
 	scpimm_trig_src_t trigger_src;
+	float trigger_delay;
+	bool_t trigger_auto_delay;
 	scpimm_dst_t dst;
 	double buf[SCPIMM_BUF_LEN];
 	unsigned buf_head, buf_tail;

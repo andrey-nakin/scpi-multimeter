@@ -50,7 +50,9 @@ scpi_result_t SCPIMM_measure_preset(scpi_t* context) {
 	ctx->state = SCPIMM_STATE_IDLE;
 	ctx->sample_count_num = 1;
 	ctx->trigger_count_num = 1;
-	ctx->infinite_trigger_count = false;
+	ctx->trigger_delay = 0;
+	ctx->trigger_auto_delay = TRUE;
+	ctx->infinite_trigger_count = FALSE;
 	ctx->trigger_src = SCPIMM_TRIG_IMM;
 	ctx->buf_tail = 0;
 	ctx->buf_head = 0;
@@ -60,7 +62,6 @@ AC Filter (DET:BAND)                20 Hz (medium filter)
 Autozero (ZERO:AUTO)                OFF if resolution setting results in NPLC < 1;
                                     ON if resolution setting results in NPLC ≥ 1
                                     OFF (fixed at 10 MΩ for all dc voltage ranges)
-Trigger Delay (TRIG:DEL)            Automatic delay
 Math Function (CALCulate subsystem) OFF
 	*/
 
@@ -126,7 +127,7 @@ void SCPIMM_read_value(const scpi_number_t* value) {
 	}
 
 	if (0 == --ctx->sample_count) {
-		if (0 == --ctx->trigger_count) {
+		if (!ctx->infinite_trigger_count && 0 == --ctx->trigger_count) {
 			SCPIMM_set_state(context, SCPIMM_STATE_IDLE);
 		} else {
 			SCPIMM_set_state(context, SCPIMM_STATE_WAIT_FOR_TRIGGER);
@@ -137,7 +138,8 @@ void SCPIMM_read_value(const scpi_number_t* value) {
 scpi_result_t SCPIMM_initiate(scpi_t* context) {
 	scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
 
-	if (ctx->sample_count_num * ctx->trigger_count_num > SCPIMM_BUF_CAPACITY) {
+	if (	ctx->infinite_trigger_count
+			|| ctx->sample_count_num * ctx->trigger_count_num > SCPIMM_BUF_CAPACITY) {
 	    SCPI_ErrorPush(context, SCPI_ERROR_INSUFFICIENT_MEMORY);
 		return SCPI_RES_ERR;
 	}
