@@ -105,6 +105,7 @@ scpi_result_t SCPIMM_do_configure(scpi_t* context, scpimm_mode_t mode, const scp
 	scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
 	const scpimm_interface_t* const intf = ctx->interface;
 	scpi_number_t *rangeVar = NULL, *resolutionVar = NULL;
+	int16_t err;
 
 	SCPIMM_stop_mesurement();
 	SCPIMM_clear_return_buffer();
@@ -156,18 +157,21 @@ scpi_result_t SCPIMM_do_configure(scpi_t* context, scpimm_mode_t mode, const scp
 			break;
 	}
 
-	if (!intf->set_mode(mode)) {
-	    SCPI_ErrorPush(context, SCPI_ERROR_UNDEFINED_HEADER);	/* TODO error code ? */
+	err = intf->set_mode(mode, range, resolution);
+	if (SCPI_ERROR_OK != err) {
+	    SCPI_ErrorPush(context, err);	/* TODO error code ? */
     	return SCPI_RES_ERR;
 	}
+/* TODO obsolete code
 	if (range && intf->set_range && !intf->set_range(mode, range)) {
-	    SCPI_ErrorPush(context, SCPI_ERROR_UNDEFINED_HEADER);	/* TODO error code ? */
+	    SCPI_ErrorPush(context, SCPI_ERROR_UNDEFINED_HEADER);	// TODO error code ?
     	return SCPI_RES_ERR;
 	}
 	if (resolution && intf->set_resolution && !intf->set_resolution(mode, resolution)) {
-	    SCPI_ErrorPush(context, SCPI_ERROR_UNDEFINED_HEADER);	/* TODO error code ? */
+	    SCPI_ErrorPush(context, SCPI_ERROR_UNDEFINED_HEADER);	// TODO error code ?
     	return SCPI_RES_ERR;
 	}
+*/
 
 	ctx->mode = mode;
 	if (range && rangeVar) {

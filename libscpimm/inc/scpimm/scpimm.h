@@ -25,6 +25,8 @@ extern "C" {
   Errot codes
 ******************************************************************************/
 
+#define SCPI_ERROR_OK	0
+
 #define SCPI_ERROR_TRIGGER_IGNORED	-211
 #define SCPI_ERROR_INIT_IGNORED	-213
 #define SCPI_ERROR_TRIGGER_DEADLOCK	-214
@@ -84,7 +86,7 @@ struct _scpimm_interface_t {
 		<mode> is one of the SCPIMM_MODE_XXX constants 
 		Return TRUE if mode is set
 	*/
-	bool_t (*set_mode)(scpimm_mode_t mode);
+	int16_t (*set_mode)(scpimm_mode_t mode, const scpi_number_t* range, const scpi_number_t* resolution);
 
 	bool_t (*set_range)(scpimm_mode_t mode, const scpi_number_t* range);
 
