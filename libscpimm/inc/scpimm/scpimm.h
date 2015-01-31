@@ -37,6 +37,8 @@ extern "C" {
 #define SCPI_ERROR_INSUFFICIENT_MEMORY	531
 #define SCPI_ERROR_NOT_ALLOWED_IN_LOCAL	550
 
+#define SCPI_ERROR_INTERNAL_START	551
+
 /******************************************************************************
   Multimeter mode constants (to use in MM_setMode)
 ******************************************************************************/
@@ -88,6 +90,8 @@ struct _scpimm_interface_t {
 	*/
 	int16_t (*set_mode)(scpimm_mode_t mode, const scpi_number_t* range, const scpi_number_t* resolution);
 
+	int16_t (*get_mode)(scpimm_mode_t* mode, scpi_number_t* range, scpi_number_t* resolution);
+
 	bool_t (*set_range)(scpimm_mode_t mode, const scpi_number_t* range);
 
 	bool_t (*get_range)(scpimm_mode_t mode, scpi_number_t* range);
@@ -131,6 +135,12 @@ struct _scpimm_interface_t {
 		Set state of the automatic input impedance selection
 	*/
 	bool_t (*set_input_impedance_auto)(bool_t state);
+
+	/*
+		Optional
+		Get text description of non-standard multimeter error
+	*/
+	const char* (*get_error_description)(int16_t error);
 
 };
 

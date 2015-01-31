@@ -159,7 +159,7 @@ scpi_result_t SCPIMM_do_configure(scpi_t* context, scpimm_mode_t mode, const scp
 
 	err = intf->set_mode(mode, range, resolution);
 	if (SCPI_ERROR_OK != err) {
-	    SCPI_ErrorPush(context, err);	/* TODO error code ? */
+	    SCPI_ErrorPush(context, err);
     	return SCPI_RES_ERR;
 	}
 /* TODO obsolete code
