@@ -162,18 +162,7 @@ scpi_result_t SCPIMM_do_configure(scpi_t* context, scpimm_mode_t mode, const scp
 	    SCPI_ErrorPush(context, err);
     	return SCPI_RES_ERR;
 	}
-/* TODO obsolete code
-	if (range && intf->set_range && !intf->set_range(mode, range)) {
-	    SCPI_ErrorPush(context, SCPI_ERROR_UNDEFINED_HEADER);	// TODO error code ?
-    	return SCPI_RES_ERR;
-	}
-	if (resolution && intf->set_resolution && !intf->set_resolution(mode, resolution)) {
-	    SCPI_ErrorPush(context, SCPI_ERROR_UNDEFINED_HEADER);	// TODO error code ?
-    	return SCPI_RES_ERR;
-	}
-*/
 
-	ctx->mode = mode;
 	if (range && rangeVar) {
 		*rangeVar = *range;
 	}

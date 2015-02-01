@@ -45,9 +45,18 @@ scpi_result_t SCPIMM_sense_function(scpi_t* context) {
 }
 
 scpi_result_t SCPIMM_sense_functionQ(scpi_t* context) {
+	scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
+	const scpimm_interface_t* const intf = ctx->interface;
 	const char* res = NULL;
+	scpimm_mode_t mode;
+	const int16_t err = intf->get_mode(&mode, NULL, NULL);
 
-	switch (SCPIMM_CONTEXT(context)->mode) {
+	if (SCPI_ERROR_OK != err) {
+	    SCPI_ErrorPush(context, err);
+    	return SCPI_RES_ERR;
+	}
+
+	switch (mode) {
 		case SCPIMM_MODE_DCV: 
 			res = "VOLTage:DC";
 			break;

@@ -10,27 +10,23 @@ static scpimm_mode_t last_mode, last_range_mode, last_resolution_mode;
 static scpi_number_t last_range;
 static scpi_number_t last_resolution;
 
-static bool_t set_mode(const scpimm_mode_t mode) {
+static int16_t set_mode(scpimm_mode_t mode, const scpi_number_t* range, const scpi_number_t* resolution) {
 	++mode_counter;
 	last_mode = mode;
 
-	return TRUE;
-}
+	if (range) {
+		++range_counter;
+		last_range_mode = mode;
+		last_range = *range;
+	}
 
-static bool_t set_range(const scpimm_mode_t mode, const scpi_number_t* range) {
-	++range_counter;
-	last_range_mode = mode;
-	last_range = *range;
+	if (resolution) {
+		++resolution_counter;
+		last_resolution_mode = mode;
+		last_resolution = *resolution;
+	}
 
-	return TRUE;
-}
-
-static bool_t set_resolution(const scpimm_mode_t mode, const scpi_number_t* resolution) {
-	++resolution_counter;
-	last_resolution_mode = mode;
-	last_resolution = *resolution;
-
-	return TRUE;
+	return SCPI_ERROR_OK;
 }
 
 static void reset_counters() {
@@ -44,8 +40,6 @@ static void reset() {
 	clearscpi_errors();
 	init_test_vars();
 	SCPIMM_context()->interface->set_mode = set_mode;
-	SCPIMM_context()->interface->set_range = set_range;
-	SCPIMM_context()->interface->set_resolution = set_resolution;
 
 	reset_counters();
 	last_mode = 0;
@@ -103,7 +97,6 @@ static void check_last_mode(scpimm_mode_t mode, const scpi_number_t* range, cons
 
     CU_ASSERT_EQUAL(mode_counter, 1);
     CU_ASSERT_EQUAL(last_mode, mode);
-    CU_ASSERT_EQUAL(ctx->mode, mode);
 	
 	if (rangeVar) {
 	    CU_ASSERT_EQUAL(range_counter, 1);

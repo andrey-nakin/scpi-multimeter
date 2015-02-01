@@ -92,14 +92,6 @@ struct _scpimm_interface_t {
 
 	int16_t (*get_mode)(scpimm_mode_t* mode, scpi_number_t* range, scpi_number_t* resolution);
 
-	bool_t (*set_range)(scpimm_mode_t mode, const scpi_number_t* range);
-
-	bool_t (*get_range)(scpimm_mode_t mode, scpi_number_t* range);
-
-	bool_t (*set_resolution)(scpimm_mode_t mode, const scpi_number_t* range);
-
-	bool_t (*get_resolution)(scpimm_mode_t mode, scpi_number_t* range);
-
 	/* 
 		Mandatory
 		Start measurement
@@ -149,7 +141,6 @@ typedef struct _scpimm_interface_t scpimm_interface_t;
 struct _scpimm_context_t {
 	scpimm_interface_t* interface;
 	bool_t beeper_state;
-	scpimm_mode_t mode;
 	bool_t input_impedance_auto_state;
 	unsigned sample_count_num, trigger_count_num, sample_count, trigger_count;
 	bool_t infinite_trigger_count;
