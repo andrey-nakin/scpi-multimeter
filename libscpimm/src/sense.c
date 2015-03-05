@@ -56,6 +56,7 @@ scpi_result_t SCPIMM_sense_functionQ(scpi_t* context) {
     	return SCPI_RES_ERR;
 	}
 
+	/* TODO return valid function codes, e.g. "VOLT" rather than "VOLTage:DC" as well as Agilent 34401A does */
 	switch (mode) {
 		case SCPIMM_MODE_DCV: 
 			res = "VOLTage:DC";
