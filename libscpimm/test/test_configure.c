@@ -10,7 +10,6 @@ static void reset() {
 	init_scpimm();
 	clearscpi_errors();
 	init_test_vars();
-	dm_reset_counters();
 }
 
 /* general checking after CONFIGURE command */
@@ -58,11 +57,11 @@ static void test_configure_no_params(const char* function, const scpimm_mode_t m
 	const bool_t no_params = SCPIMM_MODE_CONTINUITY == mode || SCPIMM_MODE_DIODE == mode;
 
 	reset();
+	dm_reset_counters();
 
 	receivef("CONFIGURE:%s\r\n", function);
 	assert_no_scpi_errors();
 	asset_no_data();
-
 	check_general(mode);
 
 	if (!no_params) {
@@ -74,79 +73,79 @@ static void test_configure_no_params(const char* function, const scpimm_mode_t m
 	}
 }
 
-/* configure function with default range and resolution */
+/* configure function with fixed range and resolution values */
 static void test_configure_fix_params(const char* function, scpimm_mode_t mode) {
-	const scpi_number_t numbers[] = {
-		{0.0, SCPI_UNIT_NONE, SCPI_NUM_MIN}, 
-		{0.0, SCPI_UNIT_NONE, SCPI_NUM_MAX}, 
-		{0.0, SCPI_UNIT_NONE, SCPI_NUM_DEF}
-	};
+	const scpi_special_number_t types[] = {SCPI_NUM_MIN, SCPI_NUM_MAX, SCPI_NUM_DEF};
 	const char* strs[] = {"MIN", "MAX", "DEF"};
-	size_t rangeIndex, resolutionIndex;
-	const scpi_number_t def = {0.0, SCPI_UNIT_NONE, SCPI_NUM_DEF};
+	size_t rangeIndex;
+	double min_range, max_range;
+	double ranges[3];
 
 	reset();
 
-	for (rangeIndex = 0; rangeIndex < sizeof(numbers) / sizeof(numbers[0]); ++rangeIndex) {
-		reset_counters();
+	ASSERT_NO_SCPI_ERROR(scpimm_interface()->get_possible_range(mode, &min_range, &max_range));
+	ranges[0] = min_range; ranges[1] = max_range; ranges[2] = min_range;
+
+	for (rangeIndex = 0; rangeIndex < sizeof(types) / sizeof(types[0]); ++rangeIndex) {
+		size_t resolutionIndex;
+		double min_resolution, max_resolution;
+		double resolutions[3];
+
+		ASSERT_NO_SCPI_ERROR(scpimm_interface()->get_possible_resolution(mode, ranges[rangeIndex], &min_resolution, &max_resolution));
+		resolutions[0] = min_resolution; resolutions[1] = max_resolution; resolutions[2] = min_resolution;
+
+		// CONFIGURE:func <range>
+		dm_reset_counters();
 		receivef("CONFIGURE:%s %s", function, strs[rangeIndex]);
 		assert_no_scpi_errors();
 		asset_no_data();
-//		check_last_mode(mode, &numbers[rangeIndex], &def);
-	}
+		check_general(mode);
+		check_mode_params(ranges[rangeIndex], types[rangeIndex] == SCPI_NUM_DEF, min_resolution);
 
-	for (rangeIndex = 0; rangeIndex < sizeof(numbers) / sizeof(numbers[0]); ++rangeIndex) {
-		for (resolutionIndex = 0; resolutionIndex < sizeof(numbers) / sizeof(numbers[0]); ++resolutionIndex) {
-			reset_counters();
+		for (resolutionIndex = 0; resolutionIndex < sizeof(types) / sizeof(types[0]); ++resolutionIndex) {
+			// CONFIGURE:func <range>,<resolution>
+			dm_reset_counters();
 			receivef("CONFIGURE:%s %s,%s", function, strs[rangeIndex], strs[resolutionIndex]);
 			assert_no_scpi_errors();
 			asset_no_data();
-//			check_last_mode(mode, &numbers[rangeIndex], &numbers[resolutionIndex]);
+			check_general(mode);
+			check_mode_params(ranges[rangeIndex], types[rangeIndex] == SCPI_NUM_DEF, resolutions[resolutionIndex]);
 		}
 	}
 }
 
+/* configure function with arbitrary range and resolution values */
 static void test_configure_custom_params(const char* function, scpimm_mode_t mode) {
-	const scpi_number_t const ranges[] = {
-		{0.001, SCPI_UNIT_NONE, SCPI_NUM_NUMBER},
-		{0.01, SCPI_UNIT_NONE, SCPI_NUM_NUMBER},
-		{0.1, SCPI_UNIT_NONE, SCPI_NUM_NUMBER},
-		{1.0, SCPI_UNIT_NONE, SCPI_NUM_NUMBER},
-		{10.0, SCPI_UNIT_NONE, SCPI_NUM_NUMBER},
-		{100.0, SCPI_UNIT_NONE, SCPI_NUM_NUMBER},
-		{1000.0, SCPI_UNIT_NONE, SCPI_NUM_NUMBER}
-	};
-	const scpi_number_t const resolutions[] = {
-		{1.0e-6, SCPI_UNIT_NONE, SCPI_NUM_NUMBER},
-		{1.0e-5, SCPI_UNIT_NONE, SCPI_NUM_NUMBER},
-		{1.0e-4, SCPI_UNIT_NONE, SCPI_NUM_NUMBER},
-		{1.0e-3, SCPI_UNIT_NONE, SCPI_NUM_NUMBER},
-		{1.0e-2, SCPI_UNIT_NONE, SCPI_NUM_NUMBER},
-		{1.0e-1, SCPI_UNIT_NONE, SCPI_NUM_NUMBER},
-		{1.0e-0, SCPI_UNIT_NONE, SCPI_NUM_NUMBER}
-	};
-	size_t rangeIndex, resolutionIndex;
-	const scpi_number_t def = {0.0, SCPI_UNIT_NONE, SCPI_NUM_DEF};
+	double range, min_range, max_range;
 
 	reset();
 
-	for (rangeIndex = 0; rangeIndex < sizeof(ranges) / sizeof(ranges[0]); ++rangeIndex) {
-		reset_counters();
-		receivef("CONFIGURE:%s %f", function, ranges[rangeIndex].value);
+	ASSERT_NO_SCPI_ERROR(scpimm_interface()->get_possible_range(mode, &min_range, &max_range));
+
+	for (range = min_range; range <= max_range * (1 + FLOAT_DELTA); range *= 10.0) {
+		double resolution, min_resolution, max_resolution;
+
+		ASSERT_NO_SCPI_ERROR(scpimm_interface()->get_possible_resolution(mode, range, &min_resolution, &max_resolution));
+
+		// CONFIGURE:func <range>
+		dm_reset_counters();
+		receivef("CONFIGURE:%s %0.3g", function, range);
 		assert_no_scpi_errors();
 		asset_no_data();
-//		check_last_mode(mode, &ranges[rangeIndex], &def);
-	}
+		check_general(mode);
+		check_mode_params(range, FALSE, min_resolution);
 
-	for (rangeIndex = 0; rangeIndex < sizeof(ranges) / sizeof(ranges[0]); ++rangeIndex) {
-		for (resolutionIndex = 0; resolutionIndex < sizeof(resolutions) / sizeof(resolutions[0]); ++resolutionIndex) {
-			reset_counters();
-			receivef("CONFIGURE:%s %f,%f", function, ranges[rangeIndex].value, resolutions[resolutionIndex].value);
+		for (resolution = min_resolution; resolution <= max_resolution * (1 + FLOAT_DELTA); resolution *= 10.0) {
+			// CONFIGURE:func <range>,<resolution>
+			dm_reset_counters();
+			receivef("CONFIGURE:%s %0.3g,%0.3g", function, range, resolution);
 			assert_no_scpi_errors();
 			asset_no_data();
-//			check_last_mode(mode, &ranges[rangeIndex], &resolutions[resolutionIndex]);
+			check_general(mode);
+			check_mode_params(range, FALSE, resolution);
 		}
 	}
+
 }
 
 #if ddd
@@ -180,8 +179,8 @@ static void test_configure_units(const char* function, scpimm_mode_t mode, const
 static void test_impl(const char* function, scpimm_mode_t mode, const char* units) {
 	test_configure_no_params(function, mode);
 	if (SCPIMM_MODE_CONTINUITY != mode && SCPIMM_MODE_DIODE != mode) {
-//		test_configure_fix_params(function, mode);
-		//test_configure_custom_params(function, mode);
+		test_configure_fix_params(function, mode);
+		test_configure_custom_params(function, mode);
 	}
 	if (units) {
 		//test_configure_units(function, mode, units);
