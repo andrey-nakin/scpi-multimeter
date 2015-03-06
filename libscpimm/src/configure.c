@@ -102,75 +102,19 @@ static scpi_result_t configure_noarg_impl(scpi_t* context, scpimm_mode_t mode) {
 }
 
 scpi_result_t SCPIMM_do_configure(scpi_t* context, scpimm_mode_t mode, const scpi_number_t* range, const scpi_number_t* resolution) {
-	scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
-	const scpimm_interface_t* const intf = ctx->interface;
-	scpi_number_t *rangeVar = NULL, *resolutionVar = NULL;
 	int16_t err;
 
 	SCPIMM_stop_mesurement();
 	SCPIMM_clear_return_buffer();
+	SCPIMM_measure_preset(context);	/* TODO returning error code is not checked */
 
-	switch (mode) {
-		case SCPIMM_MODE_DCV:
-			rangeVar = &ctx->dcv_range;
-			resolutionVar = &ctx->dcv_resolution;
-			break;
-
-		case SCPIMM_MODE_DCV_RATIO:
-			rangeVar = &ctx->dcv_ratio_range;
-			resolutionVar = &ctx->dcv_ratio_resolution;
-			break;
-
-		case SCPIMM_MODE_ACV:
-			rangeVar = &ctx->acv_range;
-			resolutionVar = &ctx->acv_resolution;
-			break;
-
-		case SCPIMM_MODE_DCC:
-			rangeVar = &ctx->dcc_range;
-			resolutionVar = &ctx->dcc_resolution;
-			break;
-
-		case SCPIMM_MODE_ACC:
-			rangeVar = &ctx->acc_range;
-			resolutionVar = &ctx->acc_resolution;
-			break;
-
-		case SCPIMM_MODE_RESISTANCE_2W:
-			rangeVar = &ctx->resistance_range;
-			resolutionVar = &ctx->resistance_resolution;
-			break;
-
-		case SCPIMM_MODE_RESISTANCE_4W:
-			rangeVar = &ctx->fresistance_range;
-			resolutionVar = &ctx->fresistance_resolution;
-			break;
-
-		case SCPIMM_MODE_FREQUENCY:
-			rangeVar = &ctx->frequency_range;
-			resolutionVar = &ctx->frequency_resolution;
-			break;
-
-		case SCPIMM_MODE_PERIOD:
-			rangeVar = &ctx->period_range;
-			resolutionVar = &ctx->period_resolution;
-			break;
-	}
-
-	err = intf->set_mode(mode, range, resolution);
+	err = SCPIMM_set_mode(context, mode, range, TRUE, NULL, resolution);
 	if (SCPI_ERROR_OK != err) {
 	    SCPI_ErrorPush(context, err);
     	return SCPI_RES_ERR;
 	}
 
-	if (range && rangeVar) {
-		*rangeVar = *range;
-	}
-	if (resolution && resolutionVar) {
-		*resolutionVar = *resolution;
-	}
-
-	return SCPIMM_measure_preset(context);
+	return SCPI_RES_OK;
 }
 
 scpi_result_t SCPIMM_configureQ(scpi_t* context) {

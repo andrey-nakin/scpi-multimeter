@@ -4,6 +4,9 @@
 #include "input.h"
 
 #define SCPIMM_OVERFLOW 9.90000000E+37
+#define	DELTA 1.0e-6
+#define INCREASE_DELTA (1 + DELTA)
+#define DECREASE_DELTA (1 - DELTA)
 
 static scpi_result_t initiate(scpi_t* context, scpimm_dst_t dst) {
 	scpimm_context_t* ctx = SCPIMM_CONTEXT(context);
@@ -201,3 +204,130 @@ scpi_result_t SCPIMM_trg(scpi_t* context) {
 	return start_measure(context);
 }
 
+scpimm_mode_params_t* SCPIMM_mode_params(scpimm_context_t* const ctx, const scpimm_mode_t mode) {
+	switch (mode) {
+		case SCPIMM_MODE_DCV:
+			return &ctx->mode_params.dcv;
+
+		case SCPIMM_MODE_DCV_RATIO:
+			return &ctx->mode_params.dcv_ratio;
+
+		case SCPIMM_MODE_ACV:
+			return &ctx->mode_params.acv;
+
+		case SCPIMM_MODE_DCC:
+			return &ctx->mode_params.dcc;
+
+		case SCPIMM_MODE_ACC:
+			return &ctx->mode_params.acc;
+
+		case SCPIMM_MODE_RESISTANCE_2W:
+			return &ctx->mode_params.resistance;
+
+		case SCPIMM_MODE_RESISTANCE_4W:
+			return &ctx->mode_params.fresistance;
+
+		case SCPIMM_MODE_FREQUENCY:
+			return &ctx->mode_params.frequency;
+
+		case SCPIMM_MODE_PERIOD:
+			return &ctx->mode_params.period;
+	}
+
+	return NULL;
+}
+
+int16_t SCPIMM_set_mode(scpi_t* const context, const scpimm_mode_t mode, const scpi_number_t* const range, const bool_t auto_detect_auto_range, const bool_t* const auto_range, const scpi_number_t* const resolution) {
+	scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
+	const scpimm_interface_t* const intf = ctx->interface;
+	scpimm_mode_params_t* const ctx_params = SCPIMM_mode_params(ctx, mode);
+	scpimm_mode_params_t new_params;
+	double min_value, max_value;
+	int16_t err;
+
+	if (ctx_params) {
+		/* given mode needs parameters: range, resolution etc */
+		new_params = *ctx_params;
+
+		if (range) {
+			switch (range->type) {
+			case SCPI_NUM_NUMBER:
+				CHECK_SCPI_ERROR(intf->get_possible_range(mode, &min_value, &max_value));
+				if (range->value < min_value) {
+					new_params.range = min_value;
+				} else if (range->value > max_value * INCREASE_DELTA) {
+					return SCPI_ERROR_DATA_OUT_OF_RANGE;
+				} else {
+					new_params.range = range->value;
+				}
+				if (auto_detect_auto_range) {
+					new_params.auto_range = FALSE;
+				}
+				break;
+
+			case SCPI_NUM_MIN:
+				CHECK_SCPI_ERROR(intf->get_possible_range(mode, &new_params.range, NULL));
+				if (auto_detect_auto_range) {
+					new_params.auto_range = FALSE;
+				}
+				break;
+
+			case SCPI_NUM_MAX:
+				CHECK_SCPI_ERROR(intf->get_possible_range(mode, NULL, &new_params.range));
+				if (auto_detect_auto_range) {
+					new_params.auto_range = FALSE;
+				}
+				break;
+
+			case SCPI_NUM_DEF:
+				CHECK_SCPI_ERROR(intf->get_possible_range(mode, &new_params.range, NULL));
+				new_params.auto_range = TRUE;
+				break;
+
+			default:
+				return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
+			}
+		}
+
+		if (auto_range) {
+			new_params.auto_range = *auto_range;
+		}
+
+		if (resolution) {
+			switch (resolution->type) {
+			case SCPI_NUM_NUMBER:
+				CHECK_SCPI_ERROR(intf->get_possible_resolution(mode, new_params.range, &min_value, &max_value));
+				if (resolution->value < min_value * DECREASE_DELTA) {
+					return SCPI_ERROR_CANNOT_ACHIEVE_REQUESTED_RESOLUTION;
+				} else if (resolution->value > max_value) {
+					new_params.resolution = max_value;
+				} else {
+					new_params.resolution = resolution->value;
+				}
+				break;
+
+			case SCPI_NUM_DEF:
+			case SCPI_NUM_MIN:
+				CHECK_SCPI_ERROR(intf->get_possible_resolution(mode, new_params.range, &new_params.resolution, NULL));
+				break;
+
+			case SCPI_NUM_MAX:
+				CHECK_SCPI_ERROR(intf->get_possible_resolution(mode, new_params.range, NULL, &new_params.resolution));
+				break;
+
+			default:
+				return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
+			}
+		}
+	}
+
+	// set mode and parameters
+	CHECK_SCPI_ERROR(intf->set_mode(mode, ctx_params ? &new_params : NULL));
+
+	if (ctx_params) {
+		// read actual parameters
+		CHECK_SCPI_ERROR(intf->get_mode(NULL, ctx_params));
+	}
+
+	return SCPI_ERROR_OK;
+}

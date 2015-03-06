@@ -35,6 +35,7 @@ extern "C" {
 #define SCPI_ERROR_ILLEGAL_PARAMETER_VALUE	-224
 #define SCPI_ERROR_DATA_STALE	-230
 #define SCPI_ERROR_INSUFFICIENT_MEMORY	531
+#define SCPI_ERROR_CANNOT_ACHIEVE_REQUESTED_RESOLUTION	532
 #define SCPI_ERROR_NOT_ALLOWED_IN_LOCAL	550
 
 #define SCPI_ERROR_INTERNAL_START	551
@@ -75,6 +76,12 @@ typedef enum {SCPIMM_STATE_IDLE, SCPIMM_STATE_WAIT_FOR_TRIGGER, SCPIMM_STATE_MEA
 /* See SCPIMM_MODE_xxx constants */
 typedef uint16_t scpimm_mode_t;
 
+typedef struct _scpimm_mode_params_t {
+	double range;
+	bool_t auto_range;
+	double resolution;
+} scpimm_mode_params_t;
+
 struct _scpimm_interface_t {
 	/*
 		Mandatory
@@ -88,9 +95,18 @@ struct _scpimm_interface_t {
 		<mode> is one of the SCPIMM_MODE_XXX constants 
 		Return TRUE if mode is set
 	*/
-	int16_t (*set_mode)(scpimm_mode_t mode, const scpi_number_t* range, const scpi_number_t* resolution);
+	int16_t (*set_mode)(scpimm_mode_t mode, const scpimm_mode_params_t* params);
 
-	int16_t (*get_mode)(scpimm_mode_t* mode, scpi_number_t* range, scpi_number_t* resolution);
+	/**
+		Mandatory
+	 * Query current mode and its parameters
+	 * mode - variable to put mode into. If NULL, mode is not required by calling side.
+	 * dest - variable to put mode parameters into. If NULL, parameters are not required by calling side.
+	 */
+	int16_t (*get_mode)(scpimm_mode_t* mode, scpimm_mode_params_t* dest);
+
+	int16_t (*get_possible_range)(scpimm_mode_t mode, double* min_range, double* max_range);
+	int16_t (*get_possible_resolution)(scpimm_mode_t mode, double range, double* min_resolution, double* max_resolution);
 
 	/* 
 		Mandatory
@@ -154,25 +170,18 @@ struct _scpimm_context_t {
 	bool_t display;
 	char display_text[SCPIMM_DISPLAY_LEN + 1];
 
-	scpi_number_t dcv_range;
-	scpi_number_t dcv_ratio_range;
-	scpi_number_t acv_range;
-	scpi_number_t dcc_range;
-	scpi_number_t acc_range;
-	scpi_number_t resistance_range;
-	scpi_number_t fresistance_range;
-	scpi_number_t frequency_range;
-	scpi_number_t period_range;
+	struct {
+		scpimm_mode_params_t dcv;
+		scpimm_mode_params_t dcv_ratio;
+		scpimm_mode_params_t acv;
+		scpimm_mode_params_t dcc;
+		scpimm_mode_params_t acc;
+		scpimm_mode_params_t resistance;
+		scpimm_mode_params_t fresistance;
+		scpimm_mode_params_t frequency;
+		scpimm_mode_params_t period;
+	} mode_params;
 
-	scpi_number_t dcv_resolution;
-	scpi_number_t dcv_ratio_resolution;
-	scpi_number_t acv_resolution;
-	scpi_number_t dcc_resolution;
-	scpi_number_t acc_resolution;
-	scpi_number_t resistance_resolution;
-	scpi_number_t fresistance_resolution;
-	scpi_number_t frequency_resolution;
-	scpi_number_t period_resolution;
 };
 
 typedef struct _scpimm_context_t scpimm_context_t;

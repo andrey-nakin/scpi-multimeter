@@ -49,7 +49,7 @@ scpi_result_t SCPIMM_sense_functionQ(scpi_t* context) {
 	const scpimm_interface_t* const intf = ctx->interface;
 	const char* res = NULL;
 	scpimm_mode_t mode;
-	const int16_t err = intf->get_mode(&mode, NULL, NULL);
+	const int16_t err = intf->get_mode(&mode, NULL);
 
 	if (SCPI_ERROR_OK != err) {
 	    SCPI_ErrorPush(context, err);

@@ -8,7 +8,7 @@
 #define DOUBLE_DELTA 1.0e-6
 
 static scpimm_mode_t supported_modes(void);
-static int16_t set_mode(scpimm_mode_t mode, const scpi_number_t* range, const scpi_number_t* resolution);
+static int16_t set_mode(scpimm_mode_t mode, const scpimm_mode_params_t* params);
 static void set_remote(bool_t remote, bool_t lock);
 static size_t send(const uint8_t* data, const size_t len);
 static int scpi_error(scpi_t * context, int_fast16_t error);
@@ -104,10 +104,9 @@ static scpimm_mode_t supported_modes(void) {
 	return (scpimm_mode_t) -1;
 }
 
-static int16_t set_mode(scpimm_mode_t mode, const scpi_number_t* range, const scpi_number_t* resolution) {
+static int16_t set_mode(scpimm_mode_t mode, const scpimm_mode_params_t* params) {
 	(void) mode;
-	(void) range;
-	(void) resolution;
+	(void) params;
 	return SCPI_ERROR_OK;	/* stub */
 }
 

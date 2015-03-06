@@ -12,6 +12,8 @@
 #define SCPIMM_CONTEXT(context) ((scpimm_context_t*) (context)->user_context)
 #define SCPIMM_INTERFACE(context) (SCPIMM_CONTEXT(context)->interface)
 
+#define CHECK_SCPI_ERROR(expr) if (SCPI_ERROR_OK != (err = (expr))) return err
+
 void SCPIMM_stop_mesurement(void);
 void SCPIMM_clear_return_buffer(void);
 

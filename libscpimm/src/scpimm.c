@@ -331,26 +331,6 @@ static scpi_result_t reset(scpi_t* context) {
 	ctx->display = TRUE;
 	ctx->display_text[0] = '\0';
 
-	ctx->dcv_range.type = SCPI_NUM_DEF;
-	ctx->dcv_ratio_range.type = SCPI_NUM_DEF;
-	ctx->acv_range.type = SCPI_NUM_DEF;
-	ctx->dcc_range.type = SCPI_NUM_DEF;
-	ctx->acc_range.type = SCPI_NUM_DEF;
-	ctx->resistance_range.type = SCPI_NUM_DEF;
-	ctx->fresistance_range.type = SCPI_NUM_DEF;
-	ctx->frequency_range.type = SCPI_NUM_DEF;
-	ctx->period_range.type = SCPI_NUM_DEF;
-
-	ctx->dcv_resolution.type = SCPI_NUM_DEF;
-	ctx->dcv_ratio_resolution.type = SCPI_NUM_DEF;
-	ctx->acv_resolution.type = SCPI_NUM_DEF;
-	ctx->dcc_resolution.type = SCPI_NUM_DEF;
-	ctx->acc_resolution.type = SCPI_NUM_DEF;
-	ctx->resistance_resolution.type = SCPI_NUM_DEF;
-	ctx->fresistance_resolution.type = SCPI_NUM_DEF;
-	ctx->frequency_resolution.type = SCPI_NUM_DEF;
-	ctx->period_resolution.type = SCPI_NUM_DEF;
-
 	{
 		scpi_number_t def = {0.0, SCPI_UNIT_NONE, SCPI_NUM_DEF};
 		SCPIMM_do_configure(context, SCPIMM_MODE_DCV, &def, &def);
