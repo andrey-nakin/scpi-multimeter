@@ -53,9 +53,11 @@ static const scpi_command_t scpi_commands[] = {
     {"READ?", SCPIMM_readQ},
 
     {"CONFigure?", SCPIMM_configureQ},
+    {"CONFigure:VOLTage", SCPIMM_configure_voltage_dc},
     {"CONFigure:VOLTage:DC", SCPIMM_configure_voltage_dc},
     {"CONFigure:VOLTage:DC:RATio", SCPIMM_configure_voltage_dc_ratio},
     {"CONFigure:VOLTage:AC", SCPIMM_configure_voltage_ac},
+    {"CONFigure:CURRent", SCPIMM_configure_current_dc},
     {"CONFigure:CURRent:DC", SCPIMM_configure_current_dc},
     {"CONFigure:CURRent:AC", SCPIMM_configure_current_ac},
     {"CONFigure:RESistance", SCPIMM_configure_resistance},

@@ -6,6 +6,11 @@
 #include "test_utils.h"
 #include "default_multimeter.h"
 
+#define	RANGE_UNDERFLOW	0.90
+#define	RANGE_OVERFLOW 1.10
+#define	RESOLUTION_UNDERFLOW RANGE_UNDERFLOW
+#define	RESOLUTION_OVERFLOW RANGE_OVERFLOW
+
 static void reset() {
 	init_scpimm();
 	clearscpi_errors();
@@ -43,7 +48,20 @@ static void check_general(const scpimm_mode_t mode) {
     CU_ASSERT_TRUE(ctx->trigger_auto_delay);
     CU_ASSERT_FALSE(ctx->infinite_trigger_count);
     CU_ASSERT_EQUAL(ctx->trigger_src, SCPIMM_TRIG_IMM);
+}
 
+/* general checking after CONFIGURE command */
+static void check_general_failure() {
+	// check correctness of intf->set_mode call
+    CU_ASSERT_EQUAL(dm_counters.set_mode, NOT_CALLED);
+}
+
+static void configure_with_range(const char* function, const double range) {
+	receivef("CONFIGURE:%s %0.3g", function, range);
+}
+
+static void configure_with_range_and_res(const char* function, const double range, const double resolution) {
+	receivef("CONFIGURE:%s %0.3g,%0.3g", function, range, resolution);
 }
 
 static void check_mode_params(const double range, const bool_t auto_range, const double resolution) {
@@ -129,7 +147,7 @@ static void test_configure_custom_params(const char* function, scpimm_mode_t mod
 
 		// CONFIGURE:func <range>
 		dm_reset_counters();
-		receivef("CONFIGURE:%s %0.3g", function, range);
+		configure_with_range(function, range);
 		assert_no_scpi_errors();
 		asset_no_data();
 		check_general(mode);
@@ -138,7 +156,7 @@ static void test_configure_custom_params(const char* function, scpimm_mode_t mod
 		for (resolution = min_resolution; resolution <= max_resolution * (1 + FLOAT_DELTA); resolution *= 10.0) {
 			// CONFIGURE:func <range>,<resolution>
 			dm_reset_counters();
-			receivef("CONFIGURE:%s %0.3g,%0.3g", function, range, resolution);
+			configure_with_range_and_res(function, range, resolution);
 			assert_no_scpi_errors();
 			asset_no_data();
 			check_general(mode);
@@ -146,6 +164,56 @@ static void test_configure_custom_params(const char* function, scpimm_mode_t mod
 		}
 	}
 
+}
+
+/* configure with range/resolutions out of range */
+static void test_configure_out_of_range(const char* function, scpimm_mode_t mode) {
+	double range, min_range, max_range;
+	double resolution, min_resolution, max_resolution;
+
+	reset();
+
+	ASSERT_NO_SCPI_ERROR(scpimm_interface()->get_possible_range(mode, &min_range, &max_range));
+
+	// range < min range
+	range = min_range * RANGE_UNDERFLOW;
+	ASSERT_NO_SCPI_ERROR(scpimm_interface()->get_possible_resolution(mode, min_range, &min_resolution, &max_resolution));
+	dm_reset_counters();
+	configure_with_range(function, range);
+	assert_no_scpi_errors();
+	asset_no_data();
+	check_general(mode);
+	check_mode_params(min_range, FALSE, min_resolution);
+
+	// range > max range
+	range = max_range * RANGE_OVERFLOW;
+	dm_reset_counters();
+	configure_with_range(function, range);
+	assert_scpi_error(SCPI_ERROR_DATA_OUT_OF_RANGE);
+	asset_no_data();
+	check_general_failure();
+	clearscpi_errors();
+
+	range = min_range;
+	ASSERT_NO_SCPI_ERROR(scpimm_interface()->get_possible_resolution(mode, range, &min_resolution, &max_resolution));
+
+	// resolution < min resolution
+	resolution = min_resolution * RESOLUTION_UNDERFLOW;
+	dm_reset_counters();
+	configure_with_range_and_res(function, range, resolution);
+	assert_scpi_error(SCPI_ERROR_CANNOT_ACHIEVE_REQUESTED_RESOLUTION);
+	asset_no_data();
+	check_general_failure();
+	clearscpi_errors();
+
+	// resolution > max resolution
+	resolution = max_resolution * RESOLUTION_OVERFLOW;
+	dm_reset_counters();
+	configure_with_range_and_res(function, range, resolution);
+	assert_no_scpi_errors();
+	asset_no_data();
+	check_general(mode);
+	check_mode_params(range, FALSE, max_resolution);
 }
 
 #if ddd
@@ -181,8 +249,7 @@ static void test_impl(const char* function, scpimm_mode_t mode, const char* unit
 	if (SCPIMM_MODE_CONTINUITY != mode && SCPIMM_MODE_DIODE != mode) {
 		test_configure_fix_params(function, mode);
 		test_configure_custom_params(function, mode);
-	}
-	if (units) {
+		test_configure_out_of_range(function, mode);
 		//test_configure_units(function, mode, units);
 	}
 }
@@ -196,6 +263,7 @@ int clean_suite(void) {
 }
 
 void test_configure_voltage_dc() {
+	test_impl("VOLTAGE", SCPIMM_MODE_DCV, "V");
 	test_impl("VOLTAGE:DC", SCPIMM_MODE_DCV, "V");
 }
 
@@ -208,6 +276,7 @@ void test_configure_voltage_ac() {
 }
 
 void test_configure_current_dc() {
+	test_impl("CURRENT", SCPIMM_MODE_DCC, "A");
 	test_impl("CURRENT:DC", SCPIMM_MODE_DCC, "A");
 }
 

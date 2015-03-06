@@ -6,6 +6,7 @@
 #define FLOAT_DELTA 1.0e-6
 
 #define	CALLED_ONCE	1
+#define	NOT_CALLED 0
 
 #define ASSERT_NO_SCPI_ERROR(err) CU_ASSERT_EQUAL((err), SCPI_ERROR_OK)
 #define ASSERT_EQUAL_BOOL(a, b) CU_ASSERT_TRUE(((a) && (b)) || (!(a) && !(b)))
