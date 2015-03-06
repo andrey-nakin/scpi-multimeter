@@ -4,167 +4,74 @@
 #include <scpi/scpi.h>
 #include <scpimm/scpimm.h>
 #include "test_utils.h"
-
-static unsigned mode_counter, params_counter;
-static scpimm_mode_t last_mode, last_params_mode;
-static scpi_number_t last_range;
-static scpi_number_t last_resolution;
-static bool_t last_auto_range, last_no_params;
-
-static scpimm_mode_t actual_mode;
-static double actual_range, actual_resolution;
-static bool_t actual_auto_range;
-
-/**
- * Function emulates real multimeter. It attempts to establish desired measurement mode, say VOLT:DC, with given parameters
- */
-static int16_t set_mode(scpimm_mode_t mode, const scpimm_mode_params_t* const params) {
-	double new_range, new_resolution;
-	bool_t new_auto_range;
-
-	last_mode = mode;
-	++mode_counter;
-
-	if (params) {
-		last_no_params = FALSE;
-
-		++params_counter;
-		last_params_mode = mode;
-		last_range = params->range;
-		last_auto_range = params->auto_range;
-		last_resolution = params->resolution;
-
-		switch (params->range.type) {
-		case SCPI_NUM_NUMBER:
-			if (params->range.value < MIN_RANGE) {
-				new_range = MIN_RANGE;
-			} else if (params->range.value > MAX_RANGE * INCREASE_DELTA) {
-				return SCPI_ERROR_DATA_OUT_OF_RANGE;
-			} else {
-				new_range = params->range.value;
-			}
-			break;
-
-		case SCPI_NUM_MIN:
-			new_range = MIN_RANGE;
-			break;
-
-		case SCPI_NUM_MAX:
-			new_range = MAX_RANGE;
-			break;
-
-		case SCPI_NUM_DEF:
-			new_range = MIN_RANGE;
-			break;
-
-		default:
-			return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
-		}
-
-		switch (params->resolution.type) {
-		case SCPI_NUM_NUMBER:
-			if (params->resolution.value > new_range * WORST_RESOLUTION) {
-				new_resolution = new_range * WORST_RESOLUTION;
-			} else if (params->resolution.value < new_range * BEST_RESOLUTION * DECREASE_DELTA) {
-				return SCPI_ERROR_CANNOT_ACHIEVE_REQUESTED_RESOLUTION;
-			} else {
-				new_resolution = params->resolution.value;
-			}
-			break;
-
-		case SCPI_NUM_DEF:
-		case SCPI_NUM_MIN:
-			new_resolution = new_range * BEST_RESOLUTION;
-			break;
-
-		case SCPI_NUM_MAX:
-			new_resolution = new_range * WORST_RESOLUTION;
-			break;
-
-		default:
-			return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
-		}
-
-		new_auto_range = params->auto_range;
-	} else {	//	if (params)
-		last_no_params = TRUE;
-	}	//	if (params)
-
-	actual_mode = last_mode;
-	actual_range = new_range;
-	actual_auto_range = new_auto_range;
-	actual_resolution = new_resolution;
-
-	return SCPI_ERROR_OK;
-}
-
-static void reset_counters() {
-	mode_counter = 0;
-	params_counter = 0;
-}
+#include "default_multimeter.h"
 
 static void reset() {
 	init_scpimm();
 	clearscpi_errors();
 	init_test_vars();
-	SCPIMM_context()->interface->set_mode = set_mode;
-
-	reset_counters();
-	last_mode = 0;
-	last_params_mode = 0;
-	last_range.type = 0;
-	last_resolution.type = 0;
-	last_auto_range = (last_auto_range) -1;
+	dm_reset_counters();
 }
 
-static void check_last_mode(scpimm_mode_t mode, const scpi_number_t* range, const bool_t* auto_range, const scpi_number_t* resolution) {
-	const scpimm_context_t* const ctx = SCPIMM_context();
-	const scpimm_mode_params_t* const params = SCPIMM_mode_params(ctx, mode);
+/* general checking after CONFIGURE command */
+static void check_general(const scpimm_mode_t mode) {
+	scpimm_mode_t cur_mode;
+	scpimm_mode_params_t cur_params;
+	const bool_t no_params = SCPIMM_MODE_CONTINUITY == mode || SCPIMM_MODE_DIODE == mode;
+	scpimm_context_t* const ctx = SCPIMM_context();
 
-    CU_ASSERT_EQUAL(mode_counter, 1);
-    CU_ASSERT_EQUAL(last_mode, mode);
-	
-	if (params) {
-	    CU_ASSERT_EQUAL(params_counter, 1);
-	    CU_ASSERT_EQUAL(last_params_mode, mode);
+	// check correctness of intf->set_mode call
+    CU_ASSERT_EQUAL(dm_counters.set_mode, CALLED_ONCE);
+    CU_ASSERT_EQUAL(dm_set_mode_last_args.mode, mode);
+    if (no_params) {
+    	CU_ASSERT_TRUE(dm_set_mode_last_args.params_is_null);
+    } else {
+    	CU_ASSERT_FALSE(dm_set_mode_last_args.params_is_null);
+    }
 
-	    if (range) {
-	    	assert_number_equals(&last_range, range);
-	    	assert_number_equals(&params->range, range);
-	    }
+    // check correctness of current multimeter's mode & params
+    ASSERT_NO_SCPI_ERROR(scpimm_interface()->get_mode(&cur_mode, &cur_params));
+    CU_ASSERT_EQUAL(cur_mode, mode);
+    if (!no_params) {
+    	ASSERT_EQUAL_BOOL(cur_params.auto_range, dm_set_mode_last_args.params.auto_range);
+    }
 
-	    if (auto_range) {
-	    	assert_bool_equals(last_auto_range, *auto_range);
-	    	assert_bool_equals(params->auto_range, *auto_range);
-	    }
+    // check preset conditions
+    CU_ASSERT_EQUAL(ctx->state, SCPIMM_STATE_IDLE);
+    CU_ASSERT_EQUAL(ctx->sample_count_num, 1);
+    CU_ASSERT_EQUAL(ctx->trigger_count_num, 1);
+    CU_ASSERT_EQUAL(ctx->trigger_delay, 0);
+    CU_ASSERT_TRUE(ctx->trigger_auto_delay);
+    CU_ASSERT_FALSE(ctx->infinite_trigger_count);
+    CU_ASSERT_EQUAL(ctx->trigger_src, SCPIMM_TRIG_IMM);
 
-		if (resolution) {
-			assert_number_equals(&last_resolution, resolution);
-			assert_number_equals(&params->resolution, resolution);
-		}
-	}
 }
 
-/* configure function with default range and resolution */
-static void test_configure_no_params(const char* function, scpimm_mode_t mode) {
-	scpi_number_t* rangeVar = range_context_var(mode);
-	scpi_number_t* resolutionVar = resolution_context_var(mode);
-	const scpi_number_t def = {0.0, SCPI_UNIT_NONE, SCPI_NUM_DEF};
+static void check_mode_params(const double range, const bool_t auto_range, const double resolution) {
+	ASSERT_EQUAL_BOOL(auto_range, dm_set_mode_last_args.params.auto_range);
+	ASSERT_DOUBLE_EQUAL(range, dm_set_mode_last_args.params.range);
+	ASSERT_DOUBLE_EQUAL(resolution, dm_set_mode_last_args.params.resolution);
+}
+
+/* configure function without range/resolution specification */
+static void test_configure_no_params(const char* function, const scpimm_mode_t mode) {
+	const bool_t no_params = SCPIMM_MODE_CONTINUITY == mode || SCPIMM_MODE_DIODE == mode;
 
 	reset();
-
-	if (rangeVar && resolutionVar) {
-		const scpi_number_t customRange = {1.0, SCPI_UNIT_NONE, SCPI_NUM_NUMBER};
-		const scpi_number_t customResolution = {0.1, SCPI_UNIT_NONE, SCPI_NUM_NUMBER};
-		*rangeVar = customRange;
-		*resolutionVar = customResolution;
-	}
 
 	receivef("CONFIGURE:%s\r\n", function);
 	assert_no_scpi_errors();
 	asset_no_data();
-	check_last_mode(mode, &def, NULL, &def);
 
+	check_general(mode);
+
+	if (!no_params) {
+		double min_range, min_resolution;
+
+		ASSERT_NO_SCPI_ERROR(scpimm_interface()->get_possible_range(mode, &min_range, NULL));
+		ASSERT_NO_SCPI_ERROR(scpimm_interface()->get_possible_resolution(mode, min_range, &min_resolution, NULL));
+		check_mode_params(min_range, TRUE, min_resolution);
+	}
 }
 
 /* configure function with default range and resolution */
@@ -185,7 +92,7 @@ static void test_configure_fix_params(const char* function, scpimm_mode_t mode) 
 		receivef("CONFIGURE:%s %s", function, strs[rangeIndex]);
 		assert_no_scpi_errors();
 		asset_no_data();
-		check_last_mode(mode, &numbers[rangeIndex], &def);
+//		check_last_mode(mode, &numbers[rangeIndex], &def);
 	}
 
 	for (rangeIndex = 0; rangeIndex < sizeof(numbers) / sizeof(numbers[0]); ++rangeIndex) {
@@ -194,7 +101,7 @@ static void test_configure_fix_params(const char* function, scpimm_mode_t mode) 
 			receivef("CONFIGURE:%s %s,%s", function, strs[rangeIndex], strs[resolutionIndex]);
 			assert_no_scpi_errors();
 			asset_no_data();
-			check_last_mode(mode, &numbers[rangeIndex], &numbers[resolutionIndex]);
+//			check_last_mode(mode, &numbers[rangeIndex], &numbers[resolutionIndex]);
 		}
 	}
 }
@@ -228,7 +135,7 @@ static void test_configure_custom_params(const char* function, scpimm_mode_t mod
 		receivef("CONFIGURE:%s %f", function, ranges[rangeIndex].value);
 		assert_no_scpi_errors();
 		asset_no_data();
-		check_last_mode(mode, &ranges[rangeIndex], &def);
+//		check_last_mode(mode, &ranges[rangeIndex], &def);
 	}
 
 	for (rangeIndex = 0; rangeIndex < sizeof(ranges) / sizeof(ranges[0]); ++rangeIndex) {
@@ -237,7 +144,7 @@ static void test_configure_custom_params(const char* function, scpimm_mode_t mod
 			receivef("CONFIGURE:%s %f,%f", function, ranges[rangeIndex].value, resolutions[resolutionIndex].value);
 			assert_no_scpi_errors();
 			asset_no_data();
-			check_last_mode(mode, &ranges[rangeIndex], &resolutions[resolutionIndex]);
+//			check_last_mode(mode, &ranges[rangeIndex], &resolutions[resolutionIndex]);
 		}
 	}
 }

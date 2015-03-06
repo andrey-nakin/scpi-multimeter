@@ -4,42 +4,24 @@
 #include "CUnit/Basic.h"
 #include <scpimm/scpimm.h>
 #include "test_utils.h"
+#include "default_multimeter.h"
 
 #define DOUBLE_DELTA 1.0e-6
 
-static scpimm_mode_t supported_modes(void);
-static int16_t set_mode(scpimm_mode_t mode, const scpimm_mode_params_t* params);
-static void set_remote(bool_t remote, bool_t lock);
-static size_t send(const uint8_t* data, const size_t len);
 static int scpi_error(scpi_t * context, int_fast16_t error);
 
-static char inbuffer[1024];
-static char* inpuffer_pos = inbuffer;
-
-static scpimm_interface_t scpimm_interface = {
-	.supported_modes = supported_modes,
-	.set_mode = set_mode,
-	.send = send,
-	.remote = set_remote
-};
-
-void init_in_buffer() {
-	inpuffer_pos = inbuffer;
-	*inpuffer_pos = '\0';
-}
-
 void init_test_vars() {
-	init_in_buffer();
+	dm_init_in_buffer();
 }
 
 void init_scpimm() {
-	SCPIMM_setup(&scpimm_interface);
+	SCPIMM_setup(&dm_interface);
 	SCPI_context()->interface->error = scpi_error;
 	clearscpi_errors();
 }
 
 void receive(const char* s) {
-	init_in_buffer();
+	dm_init_in_buffer();
 //	printf("SEND: %s\n", s);
 	SCPIMM_parseInBuffer(s, strlen(s));
 	SCPIMM_parseInBuffer("\r\n", 2);
@@ -57,7 +39,7 @@ void receivef(const char* fmt, ...) {
 }
 
 void dump_in_data() {
-	printf("IN DATA [%s] LENGTH [%u]\n", inbuffer, (unsigned) strlen(inbuffer));
+	printf("IN DATA [%s] LENGTH [%u]\n", dm_output_buffer(), (unsigned) strlen(dm_output_buffer()));
 }
 
 void clearscpi_errors() {
@@ -74,7 +56,7 @@ void assert_scpi_error(int16_t error) {
 }
 
 void asset_in_data(const char* s) {
-    CU_ASSERT_EQUAL(strcmp(s, inbuffer), 0);
+    CU_ASSERT_EQUAL(strcmp(s, dm_output_buffer()), 0);
 }
 
 void asset_no_data() {
@@ -94,33 +76,9 @@ void assert_in_int(int v) {
 void assert_in_double(double v) {
 	char* endp;
 	double d;
-	d = strtod(inbuffer, &endp);
+	d = strtod(dm_output_buffer(), &endp);
     CU_ASSERT_EQUAL(*endp, '\r');
 	CU_ASSERT_DOUBLE_EQUAL(d, v, v * DOUBLE_DELTA);
-}
-
-static scpimm_mode_t supported_modes(void) {
-	/* all modes are supported */
-	return (scpimm_mode_t) -1;
-}
-
-static int16_t set_mode(scpimm_mode_t mode, const scpimm_mode_params_t* params) {
-	(void) mode;
-	(void) params;
-	return SCPI_ERROR_OK;	/* stub */
-}
-
-static void set_remote(bool_t remote, bool_t lock) {
-	(void) remote;
-	(void) lock;
-	/* stub */
-}
-
-static size_t send(const uint8_t* data, const size_t len) {
-	memcpy(inpuffer_pos, (const char*) data, len);
-	inpuffer_pos += len;
-	*inpuffer_pos = '\0';
-	return len;
 }
 
 static int scpi_error(scpi_t * context, int_fast16_t error) {
@@ -138,3 +96,6 @@ void assert_number_equals(const scpi_number_t* v, const scpi_number_t* expected)
 	}
 }
 
+const scpimm_interface_t* scpimm_interface() {
+	return &dm_interface;
+}

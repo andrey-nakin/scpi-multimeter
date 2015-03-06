@@ -5,6 +5,12 @@
 
 #define FLOAT_DELTA 1.0e-6
 
+#define	CALLED_ONCE	1
+
+#define ASSERT_NO_SCPI_ERROR(err) CU_ASSERT_EQUAL((err), SCPI_ERROR_OK)
+#define ASSERT_EQUAL_BOOL(a, b) CU_ASSERT_TRUE(((a) && (b)) || (!(a) && !(b)))
+#define ASSERT_DOUBLE_EQUAL(a, b) CU_ASSERT_DOUBLE_EQUAL(a, b, FLOAT_DELTA)
+
 void init_in_buffer();
 void init_test_vars();
 void init_scpimm();
@@ -24,6 +30,8 @@ void assert_in_int(int v);
 void assert_in_double(double v);
 
 void assert_number_equals(const scpi_number_t* v, const scpi_number_t* expected);
+
+const scpimm_interface_t* scpimm_interface();
 
 #endif	//	_TEST_UTILS_SCPIMM_
 

@@ -333,7 +333,7 @@ static scpi_result_t reset(scpi_t* context) {
 
 	{
 		scpi_number_t def = {0.0, SCPI_UNIT_NONE, SCPI_NUM_DEF};
-		SCPIMM_do_configure(context, SCPIMM_MODE_DCV, &def, &def);
+		SCPIMM_do_configure(context, SCPIMM_MODE_DCV, NULL, NULL);
 	}
 
 	// TODO
