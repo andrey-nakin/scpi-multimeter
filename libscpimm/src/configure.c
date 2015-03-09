@@ -4,6 +4,10 @@
 #include "dmm.h"
 #include "utils.h"
 
+static size_t doubleToStr(double val, char * str, size_t len) {
+    return snprintf(str, len, "%lg", val);
+}
+
 static scpi_unit_t detect_units(scpimm_mode_t mode) {
 	switch (mode) {
 		case SCPIMM_MODE_DCV:
