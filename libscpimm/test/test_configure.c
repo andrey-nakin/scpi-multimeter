@@ -270,6 +270,28 @@ static void test_impl(const char* function, scpimm_mode_t mode, const char* pref
 	}
 }
 
+static void test_configureQ_impl(const char* function, scpimm_mode_t mode, const char* mode_name) {
+	const bool_t no_params = SCPIMM_MODE_CONTINUITY == mode || SCPIMM_MODE_DIODE == mode;
+	char buf[100], *result = dm_output_buffer();
+	double range, resolution;
+
+	reset();
+	dm_reset_counters();
+
+	receivef("CONFIGURE:%s\r\n", function);
+	receivef("CONFIGURE?\r\n");
+	assert_no_scpi_errors();
+
+	if (!no_params) {
+		sprintf(buf, "\"%s ", mode_name);
+		CU_ASSERT_EQUAL(strncmp(buf, result, strlen(buf)), 0);
+		sscanf(buf + strlen(buf), "%g,%g", &range, &resolution);
+	} else {
+		sprintf(buf, "\"%s\"\r\n", mode_name);
+		CU_ASSERT_STRING_EQUAL(buf, result);
+	}
+}
+
 int init_suite(void) {
     return 0;
 }
@@ -322,6 +344,11 @@ void test_configure_continuity() {
 
 void test_configure_diode() {
 	test_impl("DIODE", SCPIMM_MODE_DIODE, NULL, NULL);
+}
+
+void test_configureQ() {
+	test_configureQ_impl("VOLTAGE", SCPIMM_MODE_DCV, "VOLT");
+	test_configureQ_impl("VOLTAGE:DC", SCPIMM_MODE_DCV, "VOLT");
 }
 
 int main() {
@@ -380,6 +407,10 @@ int main() {
         return CU_get_error();
     }
     if ((NULL == CU_add_test(pSuite, "configure:diode", test_configure_diode))) {
+        CU_cleanup_registry();
+        return CU_get_error();
+    }
+    if ((NULL == CU_add_test(pSuite, "configure?", test_configureQ))) {
         CU_cleanup_registry();
         return CU_get_error();
     }

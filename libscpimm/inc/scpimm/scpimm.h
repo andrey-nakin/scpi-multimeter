@@ -38,7 +38,8 @@ extern "C" {
 #define SCPI_ERROR_CANNOT_ACHIEVE_REQUESTED_RESOLUTION	532
 #define SCPI_ERROR_NOT_ALLOWED_IN_LOCAL	550
 
-#define SCPI_ERROR_INTERNAL_START	551
+#define SCPI_ERROR_UNKNOWN	551
+#define SCPI_ERROR_INTERNAL_START	552
 
 /******************************************************************************
   Multimeter mode constants (to use in MM_setMode)

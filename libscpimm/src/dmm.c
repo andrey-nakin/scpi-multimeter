@@ -331,3 +331,58 @@ int16_t SCPIMM_set_mode(scpi_t* const context, const scpimm_mode_t mode, const s
 
 	return SCPI_ERROR_OK;
 }
+
+const char* SCPIMM_mode_name(const scpimm_mode_t mode) {
+	const char* res;
+
+	switch (mode) {
+		case SCPIMM_MODE_DCV:
+			res = "VOLT";
+			break;
+
+		case SCPIMM_MODE_DCV_RATIO:
+			res = "VOLT:DC:RAT";	/* TODO */
+			break;
+
+		case SCPIMM_MODE_ACV:
+			res = "VOLT:AC";
+			break;
+
+		case SCPIMM_MODE_DCC:
+			res = "CURR";
+			break;
+
+		case SCPIMM_MODE_ACC:
+			res = "CURR:AC";
+			break;
+
+		case SCPIMM_MODE_RESISTANCE_2W:
+			res = "RES";
+			break;
+
+		case SCPIMM_MODE_RESISTANCE_4W:
+			res = "FRES";
+			break;
+
+		case SCPIMM_MODE_FREQUENCY:
+			res = "FREQ";
+			break;
+
+		case SCPIMM_MODE_PERIOD:
+			res = "PER";
+			break;
+
+		case SCPIMM_MODE_CONTINUITY:
+			res = "CONT";
+			break;
+
+		case SCPIMM_MODE_DIODE:
+			res = "DIOD";
+			break;
+
+		default:
+			res = NULL;
+    }
+
+	return res;
+}

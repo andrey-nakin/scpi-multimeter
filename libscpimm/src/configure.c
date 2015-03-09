@@ -1,3 +1,4 @@
+#include <string.h>
 #include <scpimm/scpimm.h>
 #include "configure.h"
 #include "dmm.h"
@@ -117,10 +118,40 @@ scpi_result_t SCPIMM_do_configure(scpi_t* context, scpimm_mode_t mode, const scp
 	return SCPI_RES_OK;
 }
 
+static int16_t configureQuery(scpi_t* context) {
+	scpimm_mode_t mode;
+	scpimm_mode_params_t params;
+	int16_t err;
+	const char* mode_name;
+    char buf[40], *end;
+
+	CHECK_SCPI_ERROR(SCPIMM_INTERFACE(context)->get_mode(&mode, &params));
+
+	mode_name = SCPIMM_mode_name(mode);
+	if (NULL == mode_name) {
+		return SCPI_ERROR_UNKNOWN;
+	}
+
+	strcpy(buf, mode_name);
+	strcat(buf, " ");
+	end = strchr(buf, '\0');
+	end += doubleToStr(params.range, end, sizeof(buf) - (end - buf));
+	*end++ = ',';
+	end += doubleToStr(params.resolution, end, sizeof(buf) - (end - buf));
+	*end = '\0';
+	SCPI_ResultText(context, buf);
+
+	return SCPI_ERROR_OK;
+}
+
 scpi_result_t SCPIMM_configureQ(scpi_t* context) {
-	(void) context;	
-	/* TODO */
-    return SCPI_RES_OK;
+	int16_t err = configureQuery(context);
+	if (SCPI_ERROR_OK != err) {
+	    SCPI_ErrorPush(context, err);
+    	return SCPI_RES_ERR;
+	}
+
+	return SCPI_RES_OK;
 }
 
 scpi_result_t SCPIMM_configure_voltage_dc(scpi_t* context) {

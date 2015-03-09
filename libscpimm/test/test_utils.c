@@ -56,7 +56,7 @@ void assert_scpi_error(int16_t error) {
 }
 
 void asset_in_data(const char* s) {
-    CU_ASSERT_EQUAL(strcmp(s, dm_output_buffer()), 0);
+	CU_ASSERT_STRING_EQUAL(dm_output_buffer(), s);
 }
 
 void asset_no_data() {
