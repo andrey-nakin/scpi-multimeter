@@ -128,8 +128,11 @@ static int16_t configureQuery(scpi_t* context) {
 	int16_t err;
 	const char* mode_name;
     char buf[40], *end;
+    const double *ranges, *resolutions;
 
 	CHECK_SCPI_ERROR(SCPIMM_INTERFACE(context)->get_mode(&mode, &params));
+	CHECK_SCPI_ERROR(SCPIMM_INTERFACE(context)->get_allowed_ranges(mode, &ranges, NULL));
+	CHECK_SCPI_ERROR(SCPIMM_INTERFACE(context)->get_allowed_resolutions(mode, params.range_index, &resolutions));
 
 	mode_name = SCPIMM_mode_name(mode);
 	if (NULL == mode_name) {
@@ -139,9 +142,9 @@ static int16_t configureQuery(scpi_t* context) {
 	strcpy(buf, mode_name);
 	strcat(buf, " ");
 	end = strchr(buf, '\0');
-	end += doubleToStr(params.range, end, sizeof(buf) - (end - buf));
+	end += doubleToStr(ranges[params.range_index], end, sizeof(buf) - (end - buf));
 	*end++ = ',';
-	end += doubleToStr(params.resolution, end, sizeof(buf) - (end - buf));
+	end += doubleToStr(resolutions[params.resolution_index], end, sizeof(buf) - (end - buf));
 	*end = '\0';
 	SCPI_ResultText(context, buf);
 

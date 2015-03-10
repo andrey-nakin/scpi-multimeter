@@ -1,17 +1,11 @@
 #include <string.h>
 #include "default_multimeter.h"
 
-#define MIN_RANGE 1.0e-1
-#define MAX_RANGE 1.0e3
-
-#define BEST_RESOLUTION	1.0e-6
-#define	WORST_RESOLUTION 1.0e-3
-
 static scpimm_mode_t dm_supported_modes(void);
 static int16_t dm_set_mode(scpimm_mode_t mode, const scpimm_mode_params_t* const params);
 static int16_t dm_get_mode(scpimm_mode_t* mode, scpimm_mode_params_t* const params);
-static int16_t dm_get_possible_range(scpimm_mode_t mode, double* min_range, double* max_range);
-static int16_t dm_get_possible_resolution(scpimm_mode_t mode, double range, double* min_resolution, double* max_resolution);
+static int16_t dm_get_allowed_ranges(scpimm_mode_t mode, const double** const ranges, const double** const overruns);
+static int16_t dm_get_allowed_resolutions(scpimm_mode_t mode, size_t range_index, const double** resolutions);
 static bool_t dm_start_measure();
 static size_t dm_send(const uint8_t* buf, size_t len);
 
@@ -21,14 +15,14 @@ static size_t dm_send(const uint8_t* buf, size_t len);
 
 dm_multimeter_state_t dm_multimeter_state;
 dm_set_mode_args_t dm_set_mode_last_args;
-dm_get_possible_range_args_t dm_get_possible_range_last_args;
-dm_get_possible_resolution_args_t dm_get_possible_resolution_last_args;
+dm_get_allowed_ranges_args_t dm_get_allowed_ranges_last_args;
+dm_get_allowed_resolutions_args_t dm_get_allowed_resolutions_last_args;
 scpimm_interface_t dm_interface = {
 		.supported_modes = dm_supported_modes,
 		.set_mode = dm_set_mode,
 		.get_mode = dm_get_mode,
-		.get_possible_range = dm_get_possible_range,
-		.get_possible_resolution = dm_get_possible_resolution,
+		.get_allowed_ranges = dm_get_allowed_ranges,
+		.get_allowed_resolutions = dm_get_allowed_resolutions,
 		.start_measure = dm_start_measure,
 		.send = dm_send
 };
@@ -36,6 +30,9 @@ dm_counters_t dm_counters;
 
 static char inbuffer[1024];
 static char* inpuffer_pos = inbuffer;
+
+static const double RANGES[] =   {0.1, 10.0, 100.0, 1000.0, -1.0};
+static const double OVERRUNS[] = {1.2, 1.2,  1.2,   1.2,    -1.0};
 
 /***************************************************************
  * Private functions
@@ -132,60 +129,59 @@ static int16_t dm_get_mode(scpimm_mode_t* mode, scpimm_mode_params_t* const para
 	return SCPI_ERROR_OK;
 }
 
-static int16_t dm_get_possible_range(const scpimm_mode_t mode, double* const min_range, double* const max_range) {
+static int16_t dm_get_allowed_ranges(scpimm_mode_t mode, const double** const ranges, const double** const overruns) {
 
 	/* store function arguments for later analysis */
-	dm_get_possible_range_last_args.mode = mode;
-	if (min_range) {
-		dm_get_possible_range_last_args.min_range = *min_range;
-		dm_get_possible_range_last_args.min_range_is_null = FALSE;
+	dm_get_allowed_ranges_last_args.mode = mode;
+	if (ranges) {
+		dm_get_allowed_ranges_last_args.ranges = *ranges;
+		dm_get_allowed_ranges_last_args.ranges_is_null = FALSE;
 	} else {
-		dm_get_possible_range_last_args.min_range_is_null = TRUE;
+		dm_get_allowed_ranges_last_args.ranges_is_null = TRUE;
 	}
-	if (max_range) {
-		dm_get_possible_range_last_args.max_range = *max_range;
-		dm_get_possible_range_last_args.max_range_is_null = FALSE;
+	if (overruns) {
+		dm_get_allowed_ranges_last_args.overruns = *overruns;
+		dm_get_allowed_ranges_last_args.overruns_is_null = FALSE;
 	} else {
-		dm_get_possible_range_last_args.max_range_is_null = TRUE;
+		dm_get_allowed_ranges_last_args.overruns_is_null = TRUE;
 	}
 	/* */
 
-	if (min_range) {
-		*min_range = MIN_RANGE;
+	if (ranges) {
+		*ranges = RANGES;
 	}
 
-	if (max_range) {
-		*max_range = MAX_RANGE;
+	if (overruns) {
+		*overruns = OVERRUNS;
 	}
 
 	return SCPI_ERROR_OK;
 }
 
-static int16_t dm_get_possible_resolution(const scpimm_mode_t mode, const double range, double* const min_resolution, double* const max_resolution) {
+static int16_t dm_get_allowed_resolutions(scpimm_mode_t mode, size_t range_index, const double** resolutions) {
 
 	/* store function arguments for later analysis */
-	dm_get_possible_resolution_last_args.mode = mode;
-	dm_get_possible_resolution_last_args.range = range;
-	if (min_resolution) {
-		dm_get_possible_resolution_last_args.min_resolution = *min_resolution;
-		dm_get_possible_resolution_last_args.min_resolution_is_null = FALSE;
+	dm_get_allowed_resolutions_last_args.mode = mode;
+	dm_get_allowed_resolutions_last_args.range_index = range_index;
+	if (resolutions) {
+		dm_get_allowed_resolutions_last_args.resolutions = *resolutions;
+		dm_get_allowed_resolutions_last_args.resolutions_is_null = FALSE;
 	} else {
-		dm_get_possible_resolution_last_args.min_resolution_is_null = TRUE;
-	}
-	if (max_resolution) {
-		dm_get_possible_resolution_last_args.max_resolution = *max_resolution;
-		dm_get_possible_resolution_last_args.max_resolution_is_null = FALSE;
-	} else {
-		dm_get_possible_resolution_last_args.max_resolution_is_null = TRUE;
+		dm_get_allowed_resolutions_last_args.resolutions_is_null = TRUE;
 	}
 	/* */
 
-	if (min_resolution) {
-		*min_resolution = range * BEST_RESOLUTION;
-	}
+	if (resolutions) {
+		static double res[5];
+		const double* ranges;
 
-	if (max_resolution) {
-		*max_resolution = range * WORST_RESOLUTION;
+		dm_get_allowed_ranges(mode, &ranges, NULL);
+		res[0] = ranges[range_index] * 1.0e-6;
+		res[1] = ranges[range_index] * 1.0e-5;
+		res[2] = ranges[range_index] * 1.0e-4;
+		res[3] = ranges[range_index] * 1.0e-3;
+		res[4] = -1.0;
+		*resolutions = res;
 	}
 
 	return SCPI_ERROR_OK;

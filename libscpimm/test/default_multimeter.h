@@ -23,20 +23,18 @@ typedef struct {
 
 typedef struct {
 	scpimm_mode_t mode;
-	double min_range;
-	bool_t min_range_is_null;
-	double max_range;
-	bool_t max_range_is_null;
-} dm_get_possible_range_args_t;
+	const double* ranges;
+	bool_t ranges_is_null;
+	const double* overruns;
+	bool_t overruns_is_null;
+} dm_get_allowed_ranges_args_t;
 
 typedef struct {
 	scpimm_mode_t mode;
-	double range;
-	double min_resolution;
-	bool_t min_resolution_is_null;
-	double max_resolution;
-	bool_t max_resolution_is_null;
-} dm_get_possible_resolution_args_t;
+	size_t range_index;
+	const double* resolutions;
+	bool_t resolutions_is_null;
+} dm_get_allowed_resolutions_args_t;
 
 typedef struct {
 	unsigned set_mode, get_mode;
@@ -44,8 +42,8 @@ typedef struct {
 
 extern dm_multimeter_state_t dm_multimeter_state;
 extern dm_set_mode_args_t dm_set_mode_last_args;
-extern dm_get_possible_range_args_t dm_get_possible_range_last_args;
-extern dm_get_possible_resolution_args_t dm_get_possible_resolution_last_args;
+extern dm_get_allowed_ranges_args_t dm_get_allowed_ranges_last_args;
+extern dm_get_allowed_resolutions_args_t dm_get_allowed_resolutions_last_args;
 extern scpimm_interface_t dm_interface;
 extern dm_counters_t dm_counters;
 

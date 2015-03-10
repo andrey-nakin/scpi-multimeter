@@ -237,12 +237,19 @@ scpimm_mode_params_t* SCPIMM_mode_params(scpimm_context_t* const ctx, const scpi
 	return NULL;
 }
 
+static size_t max_index(const double* values) {
+	size_t result;
+
+	for (result = 0; values[result] >= 0; result++) {}
+
+	return --result;
+}
+
 int16_t SCPIMM_set_mode(scpi_t* const context, const scpimm_mode_t mode, const scpi_number_t* const range, const bool_t auto_detect_auto_range, const bool_t* const auto_range, const scpi_number_t* const resolution) {
 	scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
 	const scpimm_interface_t* const intf = ctx->interface;
 	scpimm_mode_params_t* const ctx_params = SCPIMM_mode_params(ctx, mode);
 	scpimm_mode_params_t new_params;
-	double min_value, max_value;
 	int16_t err;
 
 	if (ctx_params) {
@@ -250,37 +257,43 @@ int16_t SCPIMM_set_mode(scpi_t* const context, const scpimm_mode_t mode, const s
 		new_params = *ctx_params;
 
 		if (range) {
+			const double* ranges, *overruns;
+
+			new_params.range_index = 0;
+			CHECK_SCPI_ERROR(intf->get_allowed_ranges(mode, &ranges, &overruns));
+
 			switch (range->type) {
 			case SCPI_NUM_NUMBER:
-				CHECK_SCPI_ERROR(intf->get_possible_range(mode, &min_value, &max_value));
-				if (range->value < min_value) {
-					new_params.range = min_value;
-				} else if (range->value > max_value * INCREASE_DELTA) {
-					return SCPI_ERROR_DATA_OUT_OF_RANGE;
-				} else {
-					new_params.range = range->value;
+				for (; ranges[new_params.range_index] >= 0.0; new_params.range_index++) {
+					if (range->value <= ranges[new_params.range_index] * overruns[new_params.range_index]) {
+						break;
+					}
 				}
+
+				if (ranges[new_params.range_index] < 0) {
+					return SCPI_ERROR_DATA_OUT_OF_RANGE;
+				}
+
 				if (auto_detect_auto_range) {
 					new_params.auto_range = FALSE;
 				}
 				break;
 
 			case SCPI_NUM_MIN:
-				CHECK_SCPI_ERROR(intf->get_possible_range(mode, &new_params.range, NULL));
 				if (auto_detect_auto_range) {
 					new_params.auto_range = FALSE;
 				}
 				break;
 
 			case SCPI_NUM_MAX:
-				CHECK_SCPI_ERROR(intf->get_possible_range(mode, NULL, &new_params.range));
+				new_params.range_index = max_index(ranges);
+
 				if (auto_detect_auto_range) {
 					new_params.auto_range = FALSE;
 				}
 				break;
 
 			case SCPI_NUM_DEF:
-				CHECK_SCPI_ERROR(intf->get_possible_range(mode, &new_params.range, NULL));
 				new_params.auto_range = TRUE;
 				break;
 
@@ -294,25 +307,25 @@ int16_t SCPIMM_set_mode(scpi_t* const context, const scpimm_mode_t mode, const s
 		}
 
 		if (resolution) {
+			const double* resolutions;
+
+			new_params.resolution_index = 0;
+			CHECK_SCPI_ERROR(intf->get_allowed_resolutions(mode, new_params.range_index, &resolutions));
+
 			switch (resolution->type) {
 			case SCPI_NUM_NUMBER:
-				CHECK_SCPI_ERROR(intf->get_possible_resolution(mode, new_params.range, &min_value, &max_value));
-				if (resolution->value < min_value * DECREASE_DELTA) {
+				for (; resolution->value > resolutions[new_params.resolution_index] && resolutions[new_params.resolution_index] >= 0; new_params.resolution_index++) {};
+				if (resolution->value > resolutions[new_params.resolution_index]) {
 					return SCPI_ERROR_CANNOT_ACHIEVE_REQUESTED_RESOLUTION;
-				} else if (resolution->value > max_value) {
-					new_params.resolution = max_value;
-				} else {
-					new_params.resolution = resolution->value;
 				}
 				break;
 
 			case SCPI_NUM_DEF:
 			case SCPI_NUM_MIN:
-				CHECK_SCPI_ERROR(intf->get_possible_resolution(mode, new_params.range, &new_params.resolution, NULL));
 				break;
 
 			case SCPI_NUM_MAX:
-				CHECK_SCPI_ERROR(intf->get_possible_resolution(mode, new_params.range, NULL, &new_params.resolution));
+				new_params.resolution_index = max_index(resolutions);
 				break;
 
 			default:
@@ -325,8 +338,7 @@ int16_t SCPIMM_set_mode(scpi_t* const context, const scpimm_mode_t mode, const s
 	CHECK_SCPI_ERROR(intf->set_mode(mode, ctx_params ? &new_params : NULL));
 
 	if (ctx_params) {
-		// read actual parameters
-		CHECK_SCPI_ERROR(intf->get_mode(NULL, ctx_params));
+		*ctx_params = new_params;
 	}
 
 	return SCPI_ERROR_OK;

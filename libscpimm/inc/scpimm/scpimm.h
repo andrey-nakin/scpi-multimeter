@@ -78,9 +78,9 @@ typedef enum {SCPIMM_STATE_IDLE, SCPIMM_STATE_WAIT_FOR_TRIGGER, SCPIMM_STATE_MEA
 typedef uint16_t scpimm_mode_t;
 
 typedef struct _scpimm_mode_params_t {
-	double range;
+	size_t range_index;
 	bool_t auto_range;
-	double resolution;
+	size_t resolution_index;
 } scpimm_mode_params_t;
 
 struct _scpimm_interface_t {
@@ -106,8 +106,8 @@ struct _scpimm_interface_t {
 	 */
 	int16_t (*get_mode)(scpimm_mode_t* mode, scpimm_mode_params_t* dest);
 
-	int16_t (*get_possible_range)(scpimm_mode_t mode, double* min_range, double* max_range);
-	int16_t (*get_possible_resolution)(scpimm_mode_t mode, double range, double* min_resolution, double* max_resolution);
+	int16_t (*get_allowed_ranges)(scpimm_mode_t mode, const double** ranges, const double** overruns);
+	int16_t (*get_allowed_resolutions)(scpimm_mode_t mode, size_t range_index, const double** resolutions);
 
 	/* 
 		Mandatory
