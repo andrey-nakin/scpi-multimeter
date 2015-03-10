@@ -34,6 +34,7 @@ static void check_general(const scpimm_mode_t mode) {
 	scpimm_mode_params_t cur_params;
 	const bool_t no_params = SCPIMM_MODE_CONTINUITY == mode || SCPIMM_MODE_DIODE == mode;
 	scpimm_context_t* const ctx = SCPIMM_context();
+	int16_t err;
 
 	// check correctness of intf->set_mode call
     CU_ASSERT_EQUAL(dm_counters.set_mode, CALLED_ONCE);
@@ -113,6 +114,7 @@ static void test_configure_fix_params(const char* function, scpimm_mode_t mode) 
 	size_t rangeIndex;
 	size_t range_indices[3];
 	const double* ranges;
+	int16_t err;
 
 	reset();
 
@@ -124,7 +126,7 @@ static void test_configure_fix_params(const char* function, scpimm_mode_t mode) 
 		const double* resolutions;
 		size_t resolution_indices[3];
 
-		ASSERT_NO_SCPI_ERROR(scpimm_interface()->get_allowed_resolutions(mode, ranges[range_indices[rangeIndex]], &resolutions));
+		ASSERT_NO_SCPI_ERROR(scpimm_interface()->get_allowed_resolutions(mode, range_indices[rangeIndex], &resolutions));
 		resolution_indices[0] = 0; resolution_indices[1] = max_index(resolutions); resolution_indices[2] = 0;
 
 		// CONFIGURE:func <range>

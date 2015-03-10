@@ -4,9 +4,6 @@
 #include "input.h"
 
 #define SCPIMM_OVERFLOW 9.90000000E+37
-#define	DELTA 1.0e-6
-#define INCREASE_DELTA (1 + DELTA)
-#define DECREASE_DELTA (1 - DELTA)
 
 static scpi_result_t initiate(scpi_t* context, scpimm_dst_t dst) {
 	scpimm_context_t* ctx = SCPIMM_CONTEXT(context);
@@ -36,7 +33,8 @@ static scpi_result_t start_measure(scpi_t* context) {
 
 	if (SCPI_RES_OK == (result = SCPIMM_set_state(context, SCPIMM_STATE_MEASURE))) {
 		const scpimm_interface_t* intf = SCPIMM_INTERFACE(context);
-		if (!intf->start_measure || !intf->start_measure()) {
+		int16_t err = intf->start_measure();
+		if (err) {
 			signalInternalError(context);
 			SCPIMM_set_state(context, SCPIMM_STATE_IDLE);
 			result = SCPI_RES_ERR;

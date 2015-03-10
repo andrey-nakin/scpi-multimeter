@@ -301,9 +301,8 @@ static scpi_interface_t scpi_interface = {
 ******************************************************************************/
 
 static volatile scpimm_context_t scpimm_context = {
-	NULL,
-	TRUE,
-	SCPIMM_MODE_DCV
+	.interface = NULL,
+	.beeper_state = TRUE
 };
 
 static scpi_t scpi_context = {
@@ -367,9 +366,13 @@ static scpi_result_t reset(scpi_t* context) {
 	ctx->display = TRUE;
 	ctx->display_text[0] = '\0';
 
+	if (ctx->interface->reset) {
+		ctx->interface->reset();
+	}
+
 	{
 		scpi_number_t def = {0.0, SCPI_UNIT_NONE, SCPI_NUM_DEF};
-		SCPIMM_do_configure(context, SCPIMM_MODE_DCV, NULL, NULL);
+		SCPIMM_do_configure(context, SCPIMM_MODE_DCV, &def, &def);
 	}
 
 	// TODO

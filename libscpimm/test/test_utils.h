@@ -8,7 +8,7 @@
 #define	CALLED_ONCE	1
 #define	NOT_CALLED 0
 
-#define ASSERT_NO_SCPI_ERROR(err) CU_ASSERT_EQUAL((err), SCPI_ERROR_OK)
+#define ASSERT_NO_SCPI_ERROR(expr) CU_ASSERT_EQUAL((err = (expr)), SCPI_ERROR_OK); if (err) return
 #define ASSERT_EQUAL_BOOL(a, b) CU_ASSERT_TRUE(((a) && (b)) || (!(a) && !(b)))
 #define ASSERT_DOUBLE_EQUAL(a, b) CU_ASSERT_DOUBLE_EQUAL(a, b, FLOAT_DELTA)
 

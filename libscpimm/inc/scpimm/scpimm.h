@@ -83,12 +83,24 @@ typedef struct _scpimm_mode_params_t {
 	size_t resolution_index;
 } scpimm_mode_params_t;
 
+typedef enum {
+    SCPIMM_MS_IDLE,
+    SCPIMM_MS_STARTING,
+    SCPIMM_MS_MEASURING
+} scpimm_measurement_state;
+
 struct _scpimm_interface_t {
 	/*
 		Mandatory
 		Return bitwise set of modes suported by underlying implementation
 	*/
 	scpimm_mode_t (*supported_modes)(void);
+
+	/*
+		Mandatory
+		Initializes multimeter. Call when multimeter is started or *RST command is invoked
+	*/
+	int16_t (*reset)();
 
 	/* 
 		Mandatory
@@ -113,7 +125,7 @@ struct _scpimm_interface_t {
 		Mandatory
 		Start measurement
 	*/
-	bool_t (*start_measure)();
+	int16_t (*start_measure)();
 
 	/* 
 		Mandatory

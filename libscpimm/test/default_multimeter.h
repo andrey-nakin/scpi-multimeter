@@ -37,8 +37,10 @@ typedef struct {
 } dm_get_allowed_resolutions_args_t;
 
 typedef struct {
-	unsigned set_mode, get_mode;
+	unsigned set_mode, get_mode, get_allowed_ranges, get_allowed_resolutions;
 } dm_counters_t;
+
+typedef double (*dm_measuremenet_func_t)(long time);
 
 extern dm_multimeter_state_t dm_multimeter_state;
 extern dm_set_mode_args_t dm_set_mode_last_args;
@@ -46,9 +48,12 @@ extern dm_get_allowed_ranges_args_t dm_get_allowed_ranges_last_args;
 extern dm_get_allowed_resolutions_args_t dm_get_allowed_resolutions_last_args;
 extern scpimm_interface_t dm_interface;
 extern dm_counters_t dm_counters;
+extern dm_measuremenet_func_t dm_measuremenet_func;
 
 void dm_init_in_buffer();
 char* dm_output_buffer();
 void dm_reset_counters();
+
+double dm_measurement_func_const(long time);
 
 #endif	//	_DEFAULT_MULTIMETER_H
