@@ -115,7 +115,7 @@ void SCPIMM_read_value(const scpi_number_t* value) {
 	switch (ctx->dst) {
 		case SCPIMM_DST_OUT:
 			/* send value directly to output buffer */
-			SCPI_ResultDouble(context, v);
+			SCPIMM_ResultDouble(context, v);
 			break;
 
 		case SCPIMM_DST_BUF:
@@ -185,7 +185,7 @@ scpi_result_t SCPIMM_fetchQ(scpi_t* context) {
 		return SCPI_RES_ERR;
 	}
 
-	SCPI_ResultDouble(context, ctx->buf[ctx->buf_head++]);
+	SCPIMM_ResultDouble(context, ctx->buf[ctx->buf_head++]);
 	ctx->buf_head %= SCPIMM_BUF_LEN;
 	return result;
 }

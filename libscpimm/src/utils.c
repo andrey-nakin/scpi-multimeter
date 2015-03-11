@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include <ctype.h>
 #include <scpi/config.h>
 #include "utils.h"
@@ -10,12 +11,35 @@ size_t patternSeparatorShortPos(const char * pattern, size_t len);
 bool_t compareStr(const char * str1, size_t len1, const char * str2, size_t len2);
 bool_t matchPattern(const char * pattern, size_t pattern_len, const char * str, size_t str_len);
 
+static size_t writeData(scpi_t * context, const char * data, size_t len) {
+    return context->interface->write(context, data, len);
+}
+
+static size_t writeDelimiter(scpi_t * context) {
+    if (context->output_count > 0) {
+        return writeData(context, ", ", 2);
+    } else {
+        return 0;
+    }
+}
+
 void SCPIMM_stop_mesurement(void) {
 	// TODO
 }
 
 void SCPIMM_clear_return_buffer(void) {
 	// TODO
+}
+
+size_t SCPIMM_ResultDouble(scpi_t * context, double val) {
+    char buffer[32];
+    size_t result = 0;
+    size_t len = double_to_str(buffer, val);
+    result += writeDelimiter(context);
+    result += writeData(context, buffer, len);
+    context->output_count++;
+    return result;
+
 }
 
 bool_t expectNoParams(scpi_t* context) {
@@ -33,6 +57,47 @@ bool_t expectNoParams(scpi_t* context) {
 void signalInternalError(scpi_t* context) {
 	/* TODO: signal valid error */
     SCPI_ErrorPush(context, SCPI_ERROR_INTERNAL);
+}
+
+size_t double_to_str(char* dest, double v) {
+	char* p = dest;
+	int order = 0;
+
+	if (v < 0.0) {
+		*p++ = '-';
+		v = -v;
+	} else {
+		*p++ = '+';
+	}
+
+	while (!(v < 10.0)) {
+		order++;
+		v /= 10.0;
+	}
+
+	while (v < 1.0) {
+		order--;
+		v *= 10.0;
+	}
+
+	p += sprintf(p, "%d", (int) v);
+	*p++ = '.';
+	v = v - floor(v);
+	v *= 1000.0;
+	p += sprintf(p, "%03d", (int) v);
+	v = v - floor(v);
+	v *= 1000.0;
+	p += sprintf(p, "%03d", (int) v);
+	*p++ = 'E';
+	if (order > 0) {
+		*p++ = '+';
+	} else {
+		*p++ = '-';
+		order = -order;
+	}
+	p += sprintf(p, "%02d", order);
+
+	return p - dest;
 }
 
 #ifdef	ARDUINO

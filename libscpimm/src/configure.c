@@ -124,15 +124,19 @@ scpi_result_t SCPIMM_do_configure(scpi_t* context, scpimm_mode_t mode, const scp
 
 static int16_t configureQuery(scpi_t* context) {
 	scpimm_mode_t mode;
+	bool_t no_params;
 	scpimm_mode_params_t params;
 	int16_t err;
 	const char* mode_name;
-    char buf[40], *end;
+    char buf[48], *end;
     const double *ranges, *resolutions;
 
 	CHECK_SCPI_ERROR(SCPIMM_INTERFACE(context)->get_mode(&mode, &params));
-	CHECK_SCPI_ERROR(SCPIMM_INTERFACE(context)->get_allowed_ranges(mode, &ranges, NULL));
-	CHECK_SCPI_ERROR(SCPIMM_INTERFACE(context)->get_allowed_resolutions(mode, params.range_index, &resolutions));
+	no_params = SCPIMM_MODE_CONTINUITY == mode || SCPIMM_MODE_DIODE == mode;
+	if (!no_params) {
+		CHECK_SCPI_ERROR(SCPIMM_INTERFACE(context)->get_allowed_ranges(mode, &ranges, NULL));
+		CHECK_SCPI_ERROR(SCPIMM_INTERFACE(context)->get_allowed_resolutions(mode, params.range_index, &resolutions));
+	}
 
 	mode_name = SCPIMM_mode_name(mode);
 	if (NULL == mode_name) {
@@ -140,12 +144,14 @@ static int16_t configureQuery(scpi_t* context) {
 	}
 
 	strcpy(buf, mode_name);
-	strcat(buf, " ");
-	end = strchr(buf, '\0');
-	end += doubleToStr(ranges[params.range_index], end, sizeof(buf) - (end - buf));
-	*end++ = ',';
-	end += doubleToStr(resolutions[params.resolution_index], end, sizeof(buf) - (end - buf));
-	*end = '\0';
+	if (!no_params) {
+		strcat(buf, " ");
+		end = strchr(buf, '\0');
+		end += double_to_str(end, ranges[params.range_index]);
+		*end++ = ',';
+		end += double_to_str(end, resolutions[params.resolution_index]);
+		*end = '\0';
+	}
 	SCPI_ResultText(context, buf);
 
 	return SCPI_ERROR_OK;

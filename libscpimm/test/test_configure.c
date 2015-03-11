@@ -302,24 +302,57 @@ static void test_impl(const char* function, scpimm_mode_t mode, const char* pref
 }
 
 static void test_configureQ_impl(const char* function, scpimm_mode_t mode, const char* mode_name) {
+	int16_t err;
 	const bool_t no_params = SCPIMM_MODE_CONTINUITY == mode || SCPIMM_MODE_DIODE == mode;
+	const double *ranges;
+	size_t range_index;
 	char buf[100], *result = dm_output_buffer();
-	double range, resolution;
 
 	reset();
-	dm_reset_counters();
 
-	receivef("CONFIGURE:%s\r\n", function);
-	receivef("CONFIGURE?\r\n");
-	assert_no_scpi_errors();
-
-	if (!no_params) {
-		sprintf(buf, "\"%s ", mode_name);
-		CU_ASSERT_EQUAL(strncmp(buf, result, strlen(buf)), 0);
-		sscanf(result + strlen(buf), "%g,%g", &range, &resolution);
-	} else {
+	if (no_params) {
+		dm_reset_counters();
+		receivef("CONFIGURE:%s\r\n", function);
+		receivef("CONFIGURE?\r\n");
+		assert_no_scpi_errors();
 		sprintf(buf, "\"%s\"\r\n", mode_name);
 		CU_ASSERT_STRING_EQUAL(buf, result);
+		return;
+	}
+
+	ASSERT_NO_SCPI_ERROR(scpimm_interface()->get_allowed_ranges(mode, &ranges, NULL));
+
+	for (range_index = 0; ranges[range_index] >= 0.0; range_index++) {
+		const double range = ranges[range_index] * 0.5;
+		const double *resolutions;
+		size_t resolution_index;
+		double actual_range, actual_resolution;
+
+		ASSERT_NO_SCPI_ERROR(scpimm_interface()->get_allowed_resolutions(mode, range_index, &resolutions));
+
+		dm_reset_counters();
+		configure_with_range(function, ranges[range_index], "");
+		receivef("CONFIGURE?\r\n");
+		assert_no_scpi_errors();
+		sprintf(buf, "\"%s ", mode_name);
+		CU_ASSERT_EQUAL(strncmp(buf, result, strlen(buf)), 0);
+		sscanf(result + strlen(buf), "%le,%le", &actual_range, &actual_resolution);
+		ASSERT_DOUBLE_EQUAL(actual_range, ranges[range_index]);
+		ASSERT_DOUBLE_EQUAL(actual_resolution, resolutions[MIN_RESOLUTION_INDEX]);
+
+		for (resolution_index = 0; resolutions[resolution_index] >= 0.0; resolution_index++) {
+			const double resolution = resolutions[resolution_index] * 2.0;
+
+			dm_reset_counters();
+			configure_with_range_and_res(function, range, "", resolution, "");
+			receivef("CONFIGURE?\r\n");
+			assert_no_scpi_errors();
+			sprintf(buf, "\"%s ", mode_name);
+			CU_ASSERT_EQUAL(strncmp(buf, result, strlen(buf)), 0);
+			sscanf(result + strlen(buf), "%le,%le", &actual_range, &actual_resolution);
+			ASSERT_DOUBLE_EQUAL(actual_range, ranges[range_index]);
+			ASSERT_DOUBLE_EQUAL(actual_resolution, resolutions[resolution_index]);
+		}
 	}
 }
 
@@ -380,6 +413,17 @@ void test_configure_diode() {
 void test_configureQ() {
 	test_configureQ_impl("VOLTAGE", SCPIMM_MODE_DCV, "VOLT");
 	test_configureQ_impl("VOLTAGE:DC", SCPIMM_MODE_DCV, "VOLT");
+	test_configureQ_impl("VOLTAGE:DC:RATIO", SCPIMM_MODE_DCV_RATIO, "VOLT:DC:RAT");
+	test_configureQ_impl("VOLTAGE:AC", SCPIMM_MODE_ACV, "VOLT:AC");
+	test_configureQ_impl("CURRENT", SCPIMM_MODE_DCC, "CURR");
+	test_configureQ_impl("CURRENT:DC", SCPIMM_MODE_DCC, "CURR");
+	test_configureQ_impl("CURRENT:AC", SCPIMM_MODE_ACC, "CURR:AC");
+	test_configureQ_impl("RESISTANCE", SCPIMM_MODE_RESISTANCE_2W, "RES");
+	test_configureQ_impl("FRESISTANCE", SCPIMM_MODE_RESISTANCE_4W, "FRES");
+	test_configureQ_impl("FREQUENCY", SCPIMM_MODE_FREQUENCY, "FREQ");
+	test_configureQ_impl("PERIOD", SCPIMM_MODE_PERIOD, "PER");
+	test_configureQ_impl("CONTINUITY", SCPIMM_MODE_CONTINUITY, "CONT");
+	test_configureQ_impl("DIODE", SCPIMM_MODE_DIODE, "DIOD");
 }
 
 int main() {

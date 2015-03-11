@@ -105,7 +105,7 @@ scpi_result_t SCPIMM_trigger_delayQ(scpi_t* context) {
 			return SCPI_RES_ERR;
 	}
 
-	SCPI_ResultDouble(context, res);
+	SCPIMM_ResultDouble(context, res);
 	return SCPI_RES_OK;
 }
 
@@ -190,7 +190,7 @@ scpi_result_t SCPIMM_trigger_countQ(scpi_t* context) {
 
 		case SCPI_NUM_DEF:
 			if (ctx->infinite_trigger_count) {
-				SCPI_ResultDouble(context, INF_TRIGGER_COUNT);
+				SCPIMM_ResultDouble(context, INF_TRIGGER_COUNT);
 				return SCPI_RES_OK;
 			}
 			lnum = ctx->trigger_count_num;
