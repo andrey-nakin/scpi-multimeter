@@ -3,7 +3,7 @@ LIBNAME = scpimm
 
 CFLAGS += -Wall -Wextra -O1 -g -fPIC -Iinc -I/home/andrey/workspace/scpi-parser/libscpi/inc
 LDFLAGS += -Wl,--as-needed -Ldist -L../../scpi-parser/libscpi/dist
-TESTFLAGS += -lcunit -lscpimm -lscpi -lm -lpthread 
+TESTFLAGS += -lcunit -lscpimm -lscpi -lm -lpthread -lrt
 
 OBJDIR=obj
 DISTDIR=dist
@@ -24,7 +24,7 @@ OBJS = $(addprefix $(OBJDIR)/, $(notdir $(SRCS:.c=.o)))
 HDRS = $(addprefix inc/scpimm/, scpimm.h) $(addprefix src/, configure.h display.h dmm.h ieee488.h input.h measure.h sample.h sense.h system.h route.h trigger.h utils.h)
 
 #TESTS = $(addprefix test/, test_configure.c test_display.c test_dmm.c test_input.c test_sample.c test_sense.c test_system.c test_route.c test_trigger.c)
-TESTS = $(addprefix test/, test_configure.c)
+TESTS = $(addprefix test/, test_dmm.c)
 
 TESTS_OBJS = $(TESTS:.c=.o)
 TESTS_BINS = $(TESTS_OBJS:.o=.test)

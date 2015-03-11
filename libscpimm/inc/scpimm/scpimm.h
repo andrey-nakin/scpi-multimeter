@@ -134,6 +134,18 @@ struct _scpimm_interface_t {
 	size_t (*send)(const uint8_t* buf, size_t len);
 
 	/* 
+		Mandatory
+		Returns relative current time in milliseconds
+	*/
+	size_t (*get_milliseconds)(unsigned long* tm);
+
+	/*
+		Mandatory
+		Sleeps for a given period in ms
+	*/
+	size_t (*sleep_milliseconds)(unsigned ms);
+
+	/*
 		Optional
 		Turn "remote control" mode to on/off
 	*/

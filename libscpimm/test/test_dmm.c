@@ -4,6 +4,13 @@
 #include <scpi/scpi.h>
 #include <scpimm/scpimm.h>
 #include "test_utils.h"
+#include "default_multimeter.h"
+
+static void reset() {
+	init_scpimm();
+	clearscpi_errors();
+	init_test_vars();
+}
 
 int init_suite(void) {
     return 0;
@@ -13,8 +20,24 @@ int clean_suite(void) {
     return 0;
 }
 
+void test_readQ_generic() {
+	char *result = dm_output_buffer();
+	double actual_range, actual_resolution, value;
+
+	reset();
+
+	receivef("CONFIGURE?");
+	assert_no_scpi_errors();
+	sscanf(strchr(result, ' ') + 1, "%le,%le", &actual_range, &actual_resolution);
+
+	receivef("READ?");
+	assert_no_scpi_errors();
+	sscanf(result, "%le", &value);
+	ASSERT_DOUBLE_EQUAL(value, actual_range * 0.5);
+}
+
 void test_readQ() {
-	init_scpimm();
+//	test_readQ_generic();
 }
 
 int main() {
@@ -32,7 +55,7 @@ int main() {
     }
 
     /* Add the tests to the suite */
-    if ((NULL == CU_add_test(pSuite, "test read?", test_readQ))) {
+    if ((NULL == CU_add_test(pSuite, "read? generic", test_readQ_generic))) {
         CU_cleanup_registry();
         return CU_get_error();
     }

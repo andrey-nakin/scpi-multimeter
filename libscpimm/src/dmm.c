@@ -22,7 +22,7 @@ static scpi_result_t initiate(scpi_t* context, scpimm_dst_t dst) {
 
 static scpi_result_t wait_for_idle(scpi_t* const context) {
 	while (SCPIMM_STATE_IDLE != SCPIMM_get_state(context)) {
-		/* TODO sleep */
+		SCPIMM_INTERFACE(context)->sleep_milliseconds(50);
 	}
 
 	return SCPI_RES_OK;

@@ -12,6 +12,8 @@ static int16_t dm_get_allowed_ranges(scpimm_mode_t mode, const double** const ra
 static int16_t dm_get_allowed_resolutions(scpimm_mode_t mode, size_t range_index, const double** resolutions);
 static int16_t dm_start_measure();
 static size_t dm_send(const uint8_t* buf, size_t len);
+static size_t dm_get_milliseconds(unsigned long* const tm);
+static size_t dm_sleep_milliseconds(const unsigned ms);
 
 /***************************************************************
  * Global variables
@@ -29,7 +31,9 @@ scpimm_interface_t dm_interface = {
 		.get_allowed_ranges = dm_get_allowed_ranges,
 		.get_allowed_resolutions = dm_get_allowed_resolutions,
 		.start_measure = dm_start_measure,
-		.send = dm_send
+		.send = dm_send,
+		.get_milliseconds = dm_get_milliseconds,
+		.sleep_milliseconds = dm_sleep_milliseconds
 };
 dm_counters_t dm_counters;
 dm_measuremenet_func_t dm_measuremenet_func = dm_measurement_func_const;
@@ -62,19 +66,15 @@ static void do_measurement() {
 }
 
 static void* measure_thread_routine(void* args) {
-	struct timespec delay = {0, 500 * 1000000};
-
 	(void) args;	//	suppress warning
 
 	while (TRUE) {
 		sem_wait(&measure_sem);
-		printf("measure_thread_routine semaphore released\n");
 
-		nanosleep(&delay, NULL);	//	emulate real measurement delay
+		dm_sleep_milliseconds(500);	//	emulate real measurement delay
 		do_measurement();
 	}
 
-	printf("measure_thread_routine finished\n");
 	return NULL;
 }
 
@@ -131,6 +131,8 @@ static int16_t dm_reset() {
 		}
 		measure_thread_created = TRUE;
 	}
+
+	dm_measuremenet_func = dm_measurement_func_const;
 
 	return SCPI_ERROR_OK;
 }
@@ -292,9 +294,32 @@ static int16_t dm_start_measure() {
 	return SCPI_ERROR_OK;
 }
 
-static size_t dm_send(const uint8_t* data, size_t len) {
+static size_t dm_send(const uint8_t* data, const size_t len) {
 	memcpy(inpuffer_pos, (const char*) data, len);
 	inpuffer_pos += len;
 	*inpuffer_pos = '\0';
 	return len;
+}
+
+static size_t dm_get_milliseconds(unsigned long* const tm) {
+	if (tm) {
+		struct timespec tp;
+		clock_gettime(CLOCK_MONOTONIC, &tp);
+		*tm = tp.tv_sec * 1000 + tp.tv_nsec / 1000000;
+	}
+	return SCPI_ERROR_OK;
+}
+
+static size_t dm_sleep_milliseconds(const unsigned ms) {
+	struct timespec delay;
+
+	if (ms > 999) {
+		delay.tv_sec = ms / 1000;
+		delay.tv_nsec = ms % 1000 * 1000000;
+	} else {
+		delay.tv_sec = 0;
+		delay.tv_nsec = ms * 1000000;
+	}
+	nanosleep(&delay, NULL);
+	return SCPI_ERROR_OK;
 }
