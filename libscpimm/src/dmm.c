@@ -4,6 +4,7 @@
 #include "input.h"
 
 #define SCPIMM_OVERFLOW 9.90000000E+37
+#define	MEASUREMENT_TIMEOUT (10 * 1000)
 
 static scpi_result_t initiate(scpi_t* context, scpimm_dst_t dst) {
 	scpimm_context_t* ctx = SCPIMM_CONTEXT(context);
@@ -28,11 +29,71 @@ static scpi_result_t wait_for_idle(scpi_t* const context) {
 	return SCPI_RES_OK;
 }
 
+static int16_t cancel_measurement(scpi_t* context) {
+	int16_t err;
+	volatile scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
+	const scpimm_interface_t* intf = ctx->interface;
+
+	CHECK_SCPI_ERROR(intf->set_interrupt_status(FALSE));
+
+	switch (ctx->state) {
+	case SCPIMM_STATE_IDLE:
+		// nothing to do
+		break;
+
+	case SCPIMM_STATE_WAIT_FOR_TRIGGER:
+		ctx->state = SCPIMM_STATE_IDLE;
+		break;
+
+	//case SCPIMM_STATE_MEASURE:
+		// TODO
+		//break;
+	}
+
+	CHECK_SCPI_ERROR(intf->set_interrupt_status(TRUE));
+
+	return SCPI_ERROR_OK;
+}
+
+static int16_t wait_until_measurement_is_done(scpi_t* context) {
+	int16_t err;
+	unsigned cur_time;
+	volatile scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
+	const scpimm_interface_t* intf = ctx->interface;
+
+	while (ctx->measuring) {
+		CHECK_SCPI_ERROR(intf->get_milliseconds(&cur_time));
+
+		if (cur_time - ctx->measure_start_time > MEASUREMENT_TIMEOUT) {
+			ctx->measuring = FALSE;
+			cancel_measurement(context);
+			return SCPI_ERROR_IO_PROCESSOR_DOES_NOT_RESPOND;
+		}
+	};
+
+	return SCPI_ERROR_OK;
+}
+
+static int16_t start_measurement(volatile scpimm_context_t* const ctx) {
+	int16_t err;
+
+	CHECK_SCPI_ERROR(wait_until_measurement_is_done(ctx));
+
+	ctx->last_measured_value.type = SCPI_NUM_INF;
+	CHECK_SCPI_ERROR(ctx->interface->get_milliseconds(&ctx->measure_start_time));
+
+	CHECK_SCPI_ERROR(ctx->interface->start_measure());
+	ctx->measuring = TRUE;
+
+	return SCPI_ERROR_OK;
+}
+
 static scpi_result_t start_measure(scpi_t* const context) {
+	volatile scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
 	scpi_result_t result;
 
 	if (SCPI_RES_OK == (result = SCPIMM_set_state(context, SCPIMM_STATE_MEASURE))) {
-		const int16_t err = SCPIMM_INTERFACE(context)->start_measure();
+		const int16_t err = start_measurement(ctx);
 		if (err) {
 		    SCPI_ErrorPush(context, err);
 			SCPIMM_set_state(context, SCPIMM_STATE_IDLE);
@@ -101,38 +162,49 @@ scpimm_state_t SCPIMM_get_state(scpi_t* context) {
 	return state;
 }
 
+static int16_t check_next_measurement(scpi_t* const context) {
+	int16_t err;
+	volatile scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
+
+	if (0 == --ctx->sample_count) {
+		if (!ctx->infinite_trigger_count && 0 == --ctx->trigger_count) {
+			SCPIMM_set_state(context, SCPIMM_STATE_IDLE);		//	TODO handle error
+			return SCPI_ERROR_OK;
+		} else {
+			SCPIMM_set_state(context, SCPIMM_STATE_WAIT_FOR_TRIGGER);	//	TODO handle error
+		}
+	} else {
+		CHECK_SCPI_ERROR(start_measurement(ctx));
+	}
+
+	return SCPI_ERROR_PENDING;
+}
+
+
 void SCPIMM_read_value(const scpi_number_t* value) {
 	scpi_t* const context = SCPI_context();
 	volatile scpimm_context_t* const ctx = SCPIMM_context();
+
+	ctx->last_measured_value.type = SCPI_NUM_NUMBER;
+	ctx->last_measured_value.value = SCPI_NUM_NUMBER == value->type ? value->value : SCPIMM_OVERFLOW;
+	ctx->measuring = FALSE;
+
+	if (SCPIMM_DST_OUT == ctx->dst) {
+		return;
+	}
+
 	if (SCPIMM_STATE_MEASURE != ctx->state) {
 		/* measurement is not expected now */
 		return;
 	}
 
-	const double v = value->type != SCPI_NUM_NUMBER ? SCPIMM_OVERFLOW : value->value;
-
-	switch (ctx->dst) {
-		case SCPIMM_DST_OUT:
-			/* send value directly to output buffer */
-			SCPIMM_ResultDouble(context, v);
-			break;
-
-		case SCPIMM_DST_BUF:
-			/* put value directly to reading buffer */
-			if (ctx->buf_tail %= SCPIMM_BUF_LEN != ctx->buf_tail) {
-				ctx->buf[ctx->buf_tail++] = v;
-				ctx->buf_tail %= SCPIMM_BUF_LEN;
-			}
-			break;
+	/* put value to reading buffer */
+	if (ctx->buf_tail %= SCPIMM_BUF_LEN != ctx->buf_tail) {
+		ctx->buf[ctx->buf_tail++] = ctx->last_measured_value.value;
+		ctx->buf_tail %= SCPIMM_BUF_LEN;
 	}
 
-	if (0 == --ctx->sample_count) {
-		if (!ctx->infinite_trigger_count && 0 == --ctx->trigger_count) {
-			SCPIMM_set_state(context, SCPIMM_STATE_IDLE);
-		} else {
-			SCPIMM_set_state(context, SCPIMM_STATE_WAIT_FOR_TRIGGER);
-		}
-	}
+	check_next_measurement(context);
 }
 
 scpi_result_t SCPIMM_initiate(scpi_t* context) {
@@ -147,9 +219,41 @@ scpi_result_t SCPIMM_initiate(scpi_t* context) {
 	return initiate(context, SCPIMM_DST_BUF);
 }
 
+static int16_t readQ_impl(scpi_t* context) {
+	volatile scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
+	int16_t err;
+	bool_t is_first = TRUE;
+	char buf[16];
+	size_t len;
+
+	do {
+		err = wait_until_measurement_is_done(ctx);
+		if (SCPI_ERROR_OK != err) {
+			cancel_measurement(context);
+			return err;
+		}
+
+		if (!is_first) {
+			context->interface->write(context, ",", 1);
+		}
+		len = double_to_str(buf, ctx->last_measured_value.value);
+		context->interface->write(context, buf, len);
+
+		is_first = FALSE;
+		err = check_next_measurement(context);
+	} while (SCPI_ERROR_PENDING == err);
+
+	if (SCPI_ERROR_OK == err) {
+		context->interface->write(context, "\r\n", 2);
+	}
+
+	return err;
+}
+
 scpi_result_t SCPIMM_readQ(scpi_t* context) {
+	volatile scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
 	scpi_result_t result;
-	scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
+	int16_t err;
 
 	/* cannot initiate bus trigger by READ? command */
 	if (SCPIMM_TRIG_BUS == ctx->trigger_src) {
@@ -161,9 +265,10 @@ scpi_result_t SCPIMM_readQ(scpi_t* context) {
 		return result;
 	}
 
-	/* wait for measurement complete */
-	if (SCPI_RES_OK != (result = wait_for_idle(context))) {
-		return result;
+	err = readQ_impl(context);
+	if (SCPI_ERROR_OK != err) {
+		SCPI_ErrorPush(context, err);
+		return SCPI_RES_ERR;
 	}
 
 	return result;

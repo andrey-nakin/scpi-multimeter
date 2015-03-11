@@ -37,9 +37,11 @@ extern "C" {
 #define SCPI_ERROR_INSUFFICIENT_MEMORY	531
 #define SCPI_ERROR_CANNOT_ACHIEVE_REQUESTED_RESOLUTION	532
 #define SCPI_ERROR_NOT_ALLOWED_IN_LOCAL	550
+#define SCPI_ERROR_IO_PROCESSOR_DOES_NOT_RESPOND 625
 
 #define SCPI_ERROR_UNKNOWN	551
-#define SCPI_ERROR_INTERNAL_START	552
+#define SCPI_ERROR_PENDING	552
+#define SCPI_ERROR_INTERNAL_START	553
 
 /******************************************************************************
   Multimeter mode constants (to use in MM_setMode)
@@ -137,13 +139,19 @@ struct _scpimm_interface_t {
 		Mandatory
 		Returns relative current time in milliseconds
 	*/
-	size_t (*get_milliseconds)(unsigned long* tm);
+	int16_t (*get_milliseconds)(unsigned long* tm);
 
 	/*
 		Mandatory
 		Sleeps for a given period in ms
 	*/
-	size_t (*sleep_milliseconds)(unsigned ms);
+	int16_t (*sleep_milliseconds)(unsigned ms);
+
+	/*
+		Mandatory
+		Disables or enables interrupts
+	*/
+	int16_t (*set_interrupt_status)(bool_t disabled);
 
 	/*
 		Optional
@@ -194,6 +202,10 @@ struct _scpimm_context_t {
 	scpimm_state_t state;
 	bool_t display;
 	char display_text[SCPIMM_DISPLAY_LEN + 1];
+
+	bool_t measuring;
+	scpi_number_t last_measured_value;
+	unsigned measure_start_time;
 
 	struct {
 		scpimm_mode_params_t dcv;
