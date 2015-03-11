@@ -6,10 +6,11 @@
 #include "test_utils.h"
 #include "default_multimeter.h"
 
-#define	RANGE_UNDERFLOW	0.90
-#define	RANGE_OVERFLOW 1.10
 #define	RESOLUTION_UNDERFLOW RANGE_UNDERFLOW
 #define	RESOLUTION_OVERFLOW RANGE_OVERFLOW
+
+#define	MIN_RANGE_INDEX	0
+#define	MIN_RESOLUTION_INDEX	0
 
 static const char* voltage_prefixes[] = {"V", "kV", "KV", "mV", "MV", "uV", "UV", NULL};
 static const double voltage_mults[] = {1, 1e3, 1e3, 1e-3, 1e-3, 1e-6, 1e-6, 0.0};
@@ -95,7 +96,7 @@ static void test_configure_no_params(const char* function, const scpimm_mode_t m
 	check_general(mode);
 
 	if (!no_params) {
-		check_mode_params(0, TRUE, 0);
+		check_mode_params(MIN_RANGE_INDEX, TRUE, MIN_RESOLUTION_INDEX);
 	}
 }
 
@@ -119,7 +120,7 @@ static void test_configure_fix_params(const char* function, scpimm_mode_t mode) 
 	reset();
 
 	ASSERT_NO_SCPI_ERROR(scpimm_interface()->get_allowed_ranges(mode, &ranges, NULL));
-	range_indices[0] = 0; range_indices[1] = max_index(ranges); range_indices[2] = 0;
+	range_indices[0] = MIN_RANGE_INDEX; range_indices[1] = max_index(ranges); range_indices[2] = MIN_RANGE_INDEX;
 
 	for (rangeIndex = 0; rangeIndex < sizeof(types) / sizeof(types[0]); ++rangeIndex) {
 		size_t resolutionIndex;
@@ -127,7 +128,7 @@ static void test_configure_fix_params(const char* function, scpimm_mode_t mode) 
 		size_t resolution_indices[3];
 
 		ASSERT_NO_SCPI_ERROR(scpimm_interface()->get_allowed_resolutions(mode, range_indices[rangeIndex], &resolutions));
-		resolution_indices[0] = 0; resolution_indices[1] = max_index(resolutions); resolution_indices[2] = 0;
+		resolution_indices[0] = MIN_RESOLUTION_INDEX; resolution_indices[1] = max_index(resolutions); resolution_indices[2] = MIN_RESOLUTION_INDEX;
 
 		// CONFIGURE:func <range>
 		dm_reset_counters();
@@ -135,7 +136,7 @@ static void test_configure_fix_params(const char* function, scpimm_mode_t mode) 
 		assert_no_scpi_errors();
 		asset_no_data();
 		check_general(mode);
-		check_mode_params(range_indices[rangeIndex], types[rangeIndex] == SCPI_NUM_DEF, 0);
+		check_mode_params(range_indices[rangeIndex], types[rangeIndex] == SCPI_NUM_DEF, MIN_RESOLUTION_INDEX);
 
 		for (resolutionIndex = 0; resolutionIndex < sizeof(types) / sizeof(types[0]); ++resolutionIndex) {
 			// CONFIGURE:func <range>,<resolution>
@@ -149,61 +150,76 @@ static void test_configure_fix_params(const char* function, scpimm_mode_t mode) 
 	}
 }
 
-/* configure function with arbitrary range and resolution values */
-static void test_configure_custom_params(const char* function, scpimm_mode_t mode) {
-	double range, min_range, max_range;
-#ifdef aaa
-	reset();
-
-	ASSERT_NO_SCPI_ERROR(scpimm_interface()->get_possible_range(mode, &min_range, &max_range));
-
-	for (range = min_range; range <= max_range * (1 + FLOAT_DELTA); range *= 10.0) {
-		double resolution, min_resolution, max_resolution;
-
-		ASSERT_NO_SCPI_ERROR(scpimm_interface()->get_possible_resolution(mode, range, &min_resolution, &max_resolution));
-
-		// CONFIGURE:func <range>
-		dm_reset_counters();
-		configure_with_range(function, range, "");
-		assert_no_scpi_errors();
-		asset_no_data();
-		check_general(mode);
-		check_mode_params(range, FALSE, min_resolution);
-
-		for (resolution = min_resolution; resolution <= max_resolution * (1 + FLOAT_DELTA); resolution *= 10.0) {
-			// CONFIGURE:func <range>,<resolution>
-			dm_reset_counters();
-			configure_with_range_and_res(function, range, "", resolution, "");
-			assert_no_scpi_errors();
-			asset_no_data();
-			check_general(mode);
-			check_mode_params(range, FALSE, resolution);
-		}
-	}
-#endif
+static void test_configure_custom_range_and_resolution(const char* function, scpimm_mode_t mode, const double range, const size_t expected_range_index, const double resolution, const size_t expected_resolution_index) {
+	// CONFIGURE:func <range>,<resolution>
+	dm_reset_counters();
+	configure_with_range_and_res(function, range, "", resolution, "");
+	assert_no_scpi_errors();
+	asset_no_data();
+	check_general(mode);
+	check_mode_params(expected_range_index, FALSE, expected_resolution_index);
 }
 
-/* configure with range/resolutions out of range */
-static void test_configure_out_of_range(const char* function, scpimm_mode_t mode) {
-	double range, min_range, max_range;
-	double resolution, min_resolution, max_resolution;
-#ifdef aaa
-	reset();
+static void test_configure_custom_range(const char* function, scpimm_mode_t mode, const double range, const size_t expected_range_index) {
+	int16_t err;
+	const double *resolutions;
+	size_t resolution_index;
 
-	ASSERT_NO_SCPI_ERROR(scpimm_interface()->get_possible_range(mode, &min_range, &max_range));
-
-	// range < min range
-	range = min_range * RANGE_UNDERFLOW;
-	ASSERT_NO_SCPI_ERROR(scpimm_interface()->get_possible_resolution(mode, min_range, &min_resolution, &max_resolution));
+	// CONFIGURE:func <range>
 	dm_reset_counters();
 	configure_with_range(function, range, "");
 	assert_no_scpi_errors();
 	asset_no_data();
 	check_general(mode);
-	check_mode_params(min_range, FALSE, min_resolution);
+	check_mode_params(expected_range_index, FALSE, MIN_RESOLUTION_INDEX);
+
+	ASSERT_NO_SCPI_ERROR(scpimm_interface()->get_allowed_resolutions(mode, expected_range_index, &resolutions));
+
+	for (resolution_index = 0; resolutions[resolution_index] >= 0.0; resolution_index++) {
+		test_configure_custom_range_and_resolution(function, mode, range, expected_range_index, resolutions[resolution_index], resolution_index);
+		test_configure_custom_range_and_resolution(function, mode, range, expected_range_index, 2.0 * resolutions[resolution_index], resolution_index);
+	}
+}
+
+/* configure function with arbitrary range and resolution values */
+static void test_configure_custom_params(const char* function, const scpimm_mode_t mode) {
+	int16_t err;
+	const double *ranges, *overruns;
+	size_t range_index;
+
+	reset();
+
+	ASSERT_NO_SCPI_ERROR(scpimm_interface()->get_allowed_ranges(mode, &ranges, &overruns));
+
+	for (range_index = 0; ranges[range_index] >= 0.0; range_index++) {
+		test_configure_custom_range(function, mode, 0.5 * ranges[range_index], range_index);
+		test_configure_custom_range(function, mode, ranges[range_index], range_index);
+		test_configure_custom_range(function, mode, 0.999 * ranges[range_index] * overruns[range_index], range_index);
+	}
+}
+
+/* configure with range/resolutions out of range */
+static void test_configure_out_of_range(const char* function, scpimm_mode_t mode) {
+	int16_t err;
+	const double *ranges, *overruns, *resolutions;
+	double range, resolution;
+	size_t range_index;
+
+	reset();
+
+	ASSERT_NO_SCPI_ERROR(scpimm_interface()->get_allowed_ranges(mode, &ranges, &overruns));
+
+	// range < min range
+	range = ranges[0] * 0.5;
+	dm_reset_counters();
+	configure_with_range(function, range, "");
+	assert_no_scpi_errors();
+	asset_no_data();
+	check_general(mode);
+	check_mode_params(MIN_RANGE_INDEX, FALSE, MIN_RESOLUTION_INDEX);
 
 	// range > max range
-	range = max_range * RANGE_OVERFLOW;
+	range = ranges[max_index(ranges)] * overruns[max_index(ranges)] * 1.01;
 	dm_reset_counters();
 	configure_with_range(function, range, "");
 	assert_scpi_error(SCPI_ERROR_DATA_OUT_OF_RANGE);
@@ -211,62 +227,68 @@ static void test_configure_out_of_range(const char* function, scpimm_mode_t mode
 	check_general_failure();
 	clearscpi_errors();
 
-	range = min_range;
-	ASSERT_NO_SCPI_ERROR(scpimm_interface()->get_possible_resolution(mode, range, &min_resolution, &max_resolution));
+	for (range_index = 0; ranges[range_index] >= 0.0; range_index++) {
+		range = ranges[range_index];
+		ASSERT_NO_SCPI_ERROR(scpimm_interface()->get_allowed_resolutions(mode, range_index, &resolutions));
 
-	// resolution < min resolution
-	resolution = min_resolution * RESOLUTION_UNDERFLOW;
-	dm_reset_counters();
-	configure_with_range_and_res(function, range, "", resolution, "");
-	assert_scpi_error(SCPI_ERROR_CANNOT_ACHIEVE_REQUESTED_RESOLUTION);
-	asset_no_data();
-	check_general_failure();
-	clearscpi_errors();
+		// resolution < min resolution
+		resolution = resolutions[0] * 0.99;
+		dm_reset_counters();
+		configure_with_range_and_res(function, range, "", resolution, "");
+		assert_scpi_error(SCPI_ERROR_CANNOT_ACHIEVE_REQUESTED_RESOLUTION);
+		asset_no_data();
+		check_general_failure();
+		clearscpi_errors();
 
-	// resolution > max resolution
-	resolution = max_resolution * RESOLUTION_OVERFLOW;
-	dm_reset_counters();
-	configure_with_range_and_res(function, range, "", resolution, "");
-	assert_no_scpi_errors();
-	asset_no_data();
-	check_general(mode);
-	check_mode_params(range, FALSE, max_resolution);
-#endif
+		// resolution > max resolution
+		resolution = resolutions[max_index(resolutions)] * 2.0;
+		dm_reset_counters();
+		configure_with_range_and_res(function, range, "", resolution, "");
+		assert_no_scpi_errors();
+		asset_no_data();
+		check_general(mode);
+		check_mode_params(range_index, FALSE, max_index(resolutions));
+	}
 }
 
 static void test_configure_units(const char* function, scpimm_mode_t mode, const char* prefs[], const double mults[]) {
-#ifdef aaa
-	double range, min_range;
-	double resolution, min_resolution;
+	int16_t err;
+	const double *ranges;
 	size_t range_index;
 
 	reset();
 
-	ASSERT_NO_SCPI_ERROR(scpimm_interface()->get_possible_range(mode, &min_range, NULL));
-	range = min_range;
-	ASSERT_NO_SCPI_ERROR(scpimm_interface()->get_possible_resolution(mode, range, &min_resolution, NULL));
-	resolution = min_resolution;
+	ASSERT_NO_SCPI_ERROR(scpimm_interface()->get_allowed_ranges(mode, &ranges, NULL));
 
-	for (range_index = 0; prefs[range_index] != NULL; ++range_index) {
-		size_t resolution_index;
+	for (range_index = 0; ranges[range_index] >= 0.0; range_index++) {
+		const double range = ranges[range_index] * 0.5;
+		const double *resolutions;
+		size_t resolution_index, unit_index;
 
-		dm_reset_counters();
-		configure_with_range(function, range / mults[range_index], prefs[range_index]);
-		assert_no_scpi_errors();
-		asset_no_data();
-		check_general(mode);
-		check_mode_params(range, FALSE, min_resolution);
+		ASSERT_NO_SCPI_ERROR(scpimm_interface()->get_allowed_resolutions(mode, range_index, &resolutions));
 
-		for (resolution_index = 0; prefs[resolution_index] != NULL; ++resolution_index) {
+		for (unit_index = 0; prefs[unit_index] != NULL; ++unit_index) {
 			dm_reset_counters();
-			configure_with_range_and_res(function, range / mults[range_index], prefs[range_index], resolution / mults[range_index], prefs[range_index]);
+			configure_with_range(function, range / mults[unit_index], prefs[unit_index]);
 			assert_no_scpi_errors();
 			asset_no_data();
 			check_general(mode);
-			check_mode_params(range, FALSE, resolution);
+			check_mode_params(range_index, FALSE, MIN_RESOLUTION_INDEX);
+		}
+
+		for (resolution_index = 0; resolutions[resolution_index] >= 0.0; resolution_index++) {
+			const double resolution = resolutions[resolution_index] * 2.0;
+
+			for (unit_index = 0; prefs[unit_index] != NULL; ++unit_index) {
+				dm_reset_counters();
+				configure_with_range_and_res(function, range / mults[range_index], prefs[range_index], resolution / mults[range_index], prefs[range_index]);
+				assert_no_scpi_errors();
+				asset_no_data();
+				check_general(mode);
+				check_mode_params(range_index, FALSE, resolution_index);
+			}
 		}
 	}
-#endif
 }
 
 static void test_impl(const char* function, scpimm_mode_t mode, const char* prefs[], const double mults[]) {
@@ -294,7 +316,7 @@ static void test_configureQ_impl(const char* function, scpimm_mode_t mode, const
 	if (!no_params) {
 		sprintf(buf, "\"%s ", mode_name);
 		CU_ASSERT_EQUAL(strncmp(buf, result, strlen(buf)), 0);
-		sscanf(buf + strlen(buf), "%g,%g", &range, &resolution);
+		sscanf(result + strlen(buf), "%g,%g", &range, &resolution);
 	} else {
 		sprintf(buf, "\"%s\"\r\n", mode_name);
 		CU_ASSERT_STRING_EQUAL(buf, result);

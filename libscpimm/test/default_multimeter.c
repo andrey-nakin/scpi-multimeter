@@ -155,6 +155,14 @@ static int16_t dm_validate_mode(const scpimm_mode_t mode) {
 	}
 }
 
+static size_t max_resolution_index(size_t range_index) {
+	const double* resolutions = RESOLUTIONS[range_index];
+	size_t resolution_index = 0;
+
+	for (; resolutions[resolution_index] >= 0.0; resolution_index++) {};
+	return --resolution_index;
+}
+
 static int16_t dm_set_mode(const scpimm_mode_t mode, const scpimm_mode_params_t* const params) {
 	int16_t err;
 
@@ -174,12 +182,20 @@ static int16_t dm_set_mode(const scpimm_mode_t mode, const scpimm_mode_params_t*
 		return err;
 	}
 
-	dm_multimeter_state.mode = mode;
-	dm_multimeter_state.mode_initialized = TRUE;
 	if (params) {
+		if (sizeof(RANGES) / sizeof(RANGES[0]) - 1 <= params->range_index) {
+			return SCPI_ERROR_DATA_OUT_OF_RANGE;
+		}
+		if (max_resolution_index(params->range_index) < params->resolution_index) {
+			return SCPI_ERROR_DATA_OUT_OF_RANGE;
+		}
+
 		dm_multimeter_state.mode_params = *params;
 		dm_multimeter_state.mode_params_initialized = TRUE;
 	}
+
+	dm_multimeter_state.mode = mode;
+	dm_multimeter_state.mode_initialized = TRUE;
 
 	return SCPI_ERROR_OK;
 }

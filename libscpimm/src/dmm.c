@@ -243,6 +243,18 @@ static size_t max_index(const double* values) {
 	return --result;
 }
 
+static int find_greater_than(const double* values, const double v) {
+	int result;
+
+	for (result = 0; values[result] >= 0; result++) {
+		if (values[result] > v) {
+			return result;
+		}
+	}
+
+	return -1;
+}
+
 int16_t SCPIMM_set_mode(scpi_t* const context, const scpimm_mode_t mode, const scpi_number_t* const range, const bool_t auto_detect_auto_range, const bool_t* const auto_range, const scpi_number_t* const resolution) {
 	scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
 	const scpimm_interface_t* const intf = ctx->interface;
@@ -311,11 +323,16 @@ int16_t SCPIMM_set_mode(scpi_t* const context, const scpimm_mode_t mode, const s
 			CHECK_SCPI_ERROR(intf->get_allowed_resolutions(mode, new_params.range_index, &resolutions));
 
 			switch (resolution->type) {
-			case SCPI_NUM_NUMBER:
-				for (; resolution->value > resolutions[new_params.resolution_index] && resolutions[new_params.resolution_index] >= 0; new_params.resolution_index++) {};
-				if (resolution->value > resolutions[new_params.resolution_index]) {
+			case SCPI_NUM_NUMBER: {
+				const int idx = find_greater_than(resolutions, resolution->value * (1.0 + 1.e-6));
+				if (idx < 0) {
+					new_params.resolution_index = max_index(resolutions);
+				} else if (idx > 0) {
+					new_params.resolution_index = idx - 1;
+				} else {
 					return SCPI_ERROR_CANNOT_ACHIEVE_REQUESTED_RESOLUTION;
 				}
+			}
 				break;
 
 			case SCPI_NUM_DEF:
