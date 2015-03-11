@@ -20,7 +20,7 @@ static scpi_result_t initiate(scpi_t* context, scpimm_dst_t dst) {
 	return SCPIMM_set_state(context, SCPIMM_STATE_WAIT_FOR_TRIGGER);
 }
 
-static scpi_result_t wait_for_idle(scpi_t* context) {
+static scpi_result_t wait_for_idle(scpi_t* const context) {
 	while (SCPIMM_STATE_IDLE != SCPIMM_get_state(context)) {
 		/* TODO sleep */
 	}
@@ -28,14 +28,13 @@ static scpi_result_t wait_for_idle(scpi_t* context) {
 	return SCPI_RES_OK;
 }
 
-static scpi_result_t start_measure(scpi_t* context) {
+static scpi_result_t start_measure(scpi_t* const context) {
 	scpi_result_t result;
 
 	if (SCPI_RES_OK == (result = SCPIMM_set_state(context, SCPIMM_STATE_MEASURE))) {
-		const scpimm_interface_t* intf = SCPIMM_INTERFACE(context);
-		int16_t err = intf->start_measure();
+		const int16_t err = SCPIMM_INTERFACE(context)->start_measure();
 		if (err) {
-			signalInternalError(context);
+		    SCPI_ErrorPush(context, err);
 			SCPIMM_set_state(context, SCPIMM_STATE_IDLE);
 			result = SCPI_RES_ERR;
 		}
