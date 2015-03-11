@@ -3,6 +3,7 @@
 #include "sense.h"
 #include "configure.h"
 #include "utils.h"
+#include "dmm.h"
 
 scpi_result_t SCPIMM_sense_function(scpi_t* context) {
     const char* param;
@@ -46,131 +47,51 @@ scpi_result_t SCPIMM_sense_function(scpi_t* context) {
 
 scpi_result_t SCPIMM_sense_functionQ(scpi_t* context) {
 	scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
-	const scpimm_interface_t* const intf = ctx->interface;
 	const char* res = NULL;
 	scpimm_mode_t mode;
-	const int16_t err = intf->get_mode(&mode, NULL);
+	const int16_t err = ctx->interface->get_mode(&mode, NULL);
 
 	if (SCPI_ERROR_OK != err) {
 	    SCPI_ErrorPush(context, err);
     	return SCPI_RES_ERR;
 	}
-
-	/* TODO return valid function codes, e.g. "VOLT" rather than "VOLTage:DC" as well as Agilent 34401A does */
-	switch (mode) {
-		case SCPIMM_MODE_DCV: 
-			res = "VOLTage:DC";
-			break;
-
-		case SCPIMM_MODE_DCV_RATIO:
-			res = "VOLTage:DC:RATio";
-			break;
-
-		case SCPIMM_MODE_ACV:
-			res = "VOLTage:AC";
-			break;
-
-		case SCPIMM_MODE_DCC:
-			res = "CURRent:DC";
-			break;
-
-		case SCPIMM_MODE_ACC:
-			res = "CURRent:AC";
-			break;
-
-		case SCPIMM_MODE_RESISTANCE_2W:
-			res = "RESistance";
-			break;
-
-		case SCPIMM_MODE_RESISTANCE_4W:
-			res = "FRESistance";
-			break;
 	
-		case SCPIMM_MODE_FREQUENCY:
-			res = "FREQuency";
-			break;
-
-		case SCPIMM_MODE_PERIOD:
-			res = "PERiod";
-			break;
-
-		case SCPIMM_MODE_CONTINUITY:
-			res = "CONTinuity";
-			break;
-
-		case SCPIMM_MODE_DIODE:
-			res = "DIODe";
-			break;
-
-		default:
-			/* TODO: valid error code */
-			SCPI_ErrorPush(context, SCPI_ERROR_SUFFIX_NOT_ALLOWED);
-			return SCPI_RES_ERR;
+	res = SCPIMM_mode_name(mode);
+	if (NULL == res) {
+		/* TODO: valid error code */
+		SCPI_ErrorPush(context, SCPI_ERROR_SUFFIX_NOT_ALLOWED);
+		return SCPI_RES_ERR;
     }
 
 	SCPI_ResultText(context, res);
 	return SCPI_RES_OK;
 }
 
-scpi_result_t SCPIMM_sense_voltage_dc_range(scpi_t* context) {
-	(void) context;
+static scpi_result_t SCPIMM_sense_range_impl(scpi_t* const context, const scpimm_mode_t mode) {
+	// TODO
 	return SCPI_RES_OK;
 }
 
-scpi_result_t SCPIMM_sense_voltage_dc_rangeQ(scpi_t* context) {
-	(void) context;
+static scpi_result_t SCPIMM_sense_rangeQ_impl(scpi_t* const context, const scpimm_mode_t mode) {
+	// TODO
 	return SCPI_RES_OK;
 }
 
-scpi_result_t SCPIMM_sense_voltage_ac_range(scpi_t* context) {
-	(void) context;
-	return SCPI_RES_OK;
-}
+#define DECL_SENSE_HANDLERS(mode, func) \
+	scpi_result_t SCPIMM_sense_ ## func ## _range(scpi_t* context) {	\
+		return SCPIMM_sense_range_impl(context, SCPIMM_MODE_ ## mode);	\
+	}	\
+	\
+	scpi_result_t SCPIMM_sense_ ## func ## _rangeQ(scpi_t* context) {	\
+		return SCPIMM_sense_rangeQ_impl(context, SCPIMM_MODE_ ## mode);	\
+	}
 
-scpi_result_t SCPIMM_sense_voltage_ac_rangeQ(scpi_t* context) {
-	(void) context;
-	return SCPI_RES_OK;
-}
-
-scpi_result_t SCPIMM_sense_current_dc_range(scpi_t* context) {
-	(void) context;
-	return SCPI_RES_OK;
-}
-
-scpi_result_t SCPIMM_sense_current_dc_rangeQ(scpi_t* context) {
-	(void) context;
-	return SCPI_RES_OK;
-}
-
-scpi_result_t SCPIMM_sense_current_ac_range(scpi_t* context) {
-	(void) context;
-	return SCPI_RES_OK;
-}
-
-scpi_result_t SCPIMM_sense_current_ac_rangeQ(scpi_t* context) {
-	(void) context;
-	return SCPI_RES_OK;
-}
-
-scpi_result_t SCPIMM_sense_resistance_range(scpi_t* context) {
-	(void) context;
-	return SCPI_RES_OK;
-}
-
-scpi_result_t SCPIMM_sense_resistance_rangeQ(scpi_t* context) {
-	(void) context;
-	return SCPI_RES_OK;
-}
-
-scpi_result_t SCPIMM_sense_fresistance_range(scpi_t* context) {
-	(void) context;
-	return SCPI_RES_OK;
-}
-
-scpi_result_t SCPIMM_sense_fresistance_rangeQ(scpi_t* context) {
-	(void) context;
-	return SCPI_RES_OK;
-}
+DECL_SENSE_HANDLERS(DCV, voltage_dc)
+DECL_SENSE_HANDLERS(ACV, voltage_ac)
+DECL_SENSE_HANDLERS(DCC, current_dc)
+DECL_SENSE_HANDLERS(ACC, current_ac)
+DECL_SENSE_HANDLERS(RESISTANCE_2W, resistance)
+DECL_SENSE_HANDLERS(RESISTANCE_4W, fresistance)
 
 scpi_result_t SCPIMM_sense_frequency_voltage_range(scpi_t* context) {
 	(void) context;
