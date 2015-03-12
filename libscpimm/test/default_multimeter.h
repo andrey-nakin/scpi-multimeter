@@ -46,7 +46,7 @@ typedef struct {
 	unsigned set_mode, get_mode, get_allowed_ranges, get_allowed_resolutions, start_measure, set_interrupt_status;
 } dm_counters_t;
 
-typedef double (*dm_measurement_func_t)(long time);
+typedef double (*dm_measurement_func_t)(uint32_t time);
 
 typedef struct {
 	dm_measurement_type_t measurement_type;
@@ -66,6 +66,6 @@ void dm_init_in_buffer();
 char* dm_output_buffer();
 void dm_reset_counters();
 
-double dm_measurement_func_const(long time);
+double dm_measurement_func_const(uint32_t time);
 
 #endif	//	_DEFAULT_MULTIMETER_H

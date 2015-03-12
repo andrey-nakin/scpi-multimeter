@@ -238,6 +238,8 @@ scpi_result_t SCPIMM_readQ(scpi_t* context) {
 	volatile scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
 	int16_t err;
 
+	// TODO check idle state
+
 	/* cannot initiate bus trigger by READ? command */
 	if (SCPIMM_TRIG_BUS == ctx->trigger_src) {
 	    SCPI_ErrorPush(context, SCPI_ERROR_TRIGGER_DEADLOCK);

@@ -66,9 +66,15 @@ static sem_t measure_sem;
  * Private functions
  **************************************************************/
 
+static uint32_t get_milliseconds() {
+	struct timespec tp;
+	clock_gettime(CLOCK_MONOTONIC, &tp);
+	return tp.tv_sec * 1000 + tp.tv_nsec / 1000000;
+}
+
 static void do_measurement() {
 	scpi_number_t number = {0.0, SCPI_UNIT_NONE, SCPI_NUM_NUMBER};
-	number.value = dm_multimeter_config.measurement_func(0L);	// TODO add time
+	number.value = dm_multimeter_config.measurement_func(get_milliseconds());
 	SCPIMM_read_value(&number);
 }
 
@@ -102,7 +108,7 @@ void dm_reset_counters() {
 	memset(&dm_counters, 0, sizeof(dm_counters));
 }
 
-double dm_measurement_func_const(long time) {
+double dm_measurement_func_const(uint32_t time) {
 	(void) time;
 
 	return dm_multimeter_state.mode_initialized && dm_multimeter_state.mode_params_initialized ?
@@ -332,9 +338,7 @@ static size_t dm_send(const uint8_t* data, const size_t len) {
 
 static int16_t dm_get_milliseconds(uint32_t* const tm) {
 	if (tm) {
-		struct timespec tp;
-		clock_gettime(CLOCK_MONOTONIC, &tp);
-		*tm = tp.tv_sec * 1000 + tp.tv_nsec / 1000000;
+		*tm = get_milliseconds();
 	}
 	return SCPI_ERROR_OK;
 }
