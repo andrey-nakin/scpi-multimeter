@@ -140,6 +140,7 @@ static int16_t dm_reset() {
 	}
 
 	dm_multimeter_state.interrrupt_disable_counter = 0;
+	dm_multimeter_state.measurement_failure_counter = 0;
 
 	dm_multimeter_config.measurement_type = DM_MEASUREMENT_TYPE_ASYNC;
 	dm_multimeter_config.measurement_func = dm_measurement_func_const;
@@ -302,6 +303,13 @@ static int16_t dm_get_allowed_resolutions(scpimm_mode_t mode, size_t range_index
 
 static int16_t dm_start_measure() {
 	dm_counters.start_measure++;
+
+	if (dm_multimeter_state.measurement_failure_counter) {
+		if (1 == dm_multimeter_state.measurement_failure_counter--) {
+			// emulate internal multimeter error when "measurement is ready" signal is lost
+			return SCPI_ERROR_OK;
+		}
+	}
 
 	switch (dm_multimeter_config.measurement_type) {
 	case DM_MEASUREMENT_TYPE_ASYNC:

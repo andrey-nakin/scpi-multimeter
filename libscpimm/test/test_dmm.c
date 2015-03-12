@@ -103,6 +103,12 @@ void test_readQ_generic_impl(const dm_measurement_type_t mt) {
 	assert_no_scpi_errors();
 	ASSERT_INTERRUPTS_ARE_ENABLED();
 	read_equal_numbers(sample_count * trigger_count, values, actual_range * 0.5);
+
+	dm_multimeter_state.measurement_failure_counter = sample_count * trigger_count / 2;
+	CU_ASSERT_TRUE(dm_multimeter_state.measurement_failure_counter > 0);
+	receivef("READ?");
+	assert_scpi_error(SCPI_ERROR_IO_PROCESSOR_DOES_NOT_RESPOND);
+	ASSERT_INTERRUPTS_ARE_ENABLED();
 }
 
 void test_readQ_generic() {

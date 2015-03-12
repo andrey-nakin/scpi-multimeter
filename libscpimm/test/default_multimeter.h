@@ -18,6 +18,7 @@ typedef struct {
 	scpimm_mode_params_t mode_params;
 	bool_t mode_params_initialized;
 	unsigned interrrupt_disable_counter;
+	unsigned measurement_failure_counter;
 } dm_multimeter_state_t;
 
 typedef struct {

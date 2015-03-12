@@ -86,7 +86,7 @@ static int16_t wait_for_trigger(volatile scpimm_context_t* const ctx) {
 }
 
 static int16_t initiate(volatile scpimm_context_t* const ctx, const scpimm_dst_t dst) {
-	ATOMIC_WRITE_INT(ctx->dst, dst);
+	ctx->dst = dst;
 	ctx->sample_count = ctx->sample_count_num;
 	ctx->trigger_count = ctx->trigger_count_num;
 
@@ -164,13 +164,13 @@ void SCPIMM_read_value(const scpi_number_t* value) {
 	ctx->last_measured_value.value = SCPI_NUM_NUMBER == value->type ? value->value : SCPIMM_OVERFLOW;
 	ATOMIC_WRITE_BOOL(ctx->measuring, FALSE);
 
-	if (SCPIMM_DST_OUT == ATOMIC_READ_INT(ctx->dst)) {
-		/* measurement is handled in main thread */
+	if (SCPIMM_STATE_MEASURE != ATOMIC_READ_INT(ctx->state)) {
+		/* measurement is not expected now */
 		return;
 	}
 
-	if (SCPIMM_STATE_MEASURE != ATOMIC_READ_INT(ctx->state)) {
-		/* measurement is not expected now */
+	if (SCPIMM_DST_OUT == ctx->dst) {
+		/* measurement is handled in main thread */
 		return;
 	}
 
