@@ -103,7 +103,6 @@ static scpi_result_t wait_for_idle(scpi_t* const context) {
 
 scpi_result_t SCPIMM_measure_preset(scpi_t* context) {
 	scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
-	scpi_result_t result;
 
 	ATOMIC_WRITE_INT(ctx->state, SCPIMM_STATE_IDLE);
 	ctx->sample_count_num = 1;
@@ -123,11 +122,7 @@ Autozero (ZERO:AUTO)                OFF if resolution setting results in NPLC < 
 Math Function (CALCulate subsystem) OFF
 	*/
 
-	result = SCPIMM_do_set_input_impedance_auto(context, FALSE);
-	if (SCPI_RES_OK == result) {
-		ATOMIC_WRITE_INT(ctx->state, SCPIMM_STATE_IDLE);
-	}
-	return result;
+	return SCPIMM_do_set_input_impedance_auto(context, FALSE);
 }
 
 scpimm_state_t SCPIMM_get_state(scpi_t* context) {
