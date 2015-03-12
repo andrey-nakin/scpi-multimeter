@@ -69,11 +69,15 @@ scpi_result_t SCPIMM_sense_functionQ(scpi_t* context) {
 
 static scpi_result_t SCPIMM_sense_range_impl(scpi_t* const context, const scpimm_mode_t mode) {
 	// TODO
+	(void) context;
+	(void) mode;
 	return SCPI_RES_OK;
 }
 
 static scpi_result_t SCPIMM_sense_rangeQ_impl(scpi_t* const context, const scpimm_mode_t mode) {
 	// TODO
+	(void) context;
+	(void) mode;
 	return SCPI_RES_OK;
 }
 

@@ -12,8 +12,8 @@ static int16_t dm_get_allowed_ranges(scpimm_mode_t mode, const double** const ra
 static int16_t dm_get_allowed_resolutions(scpimm_mode_t mode, size_t range_index, const double** resolutions);
 static int16_t dm_start_measure();
 static size_t dm_send(const uint8_t* buf, size_t len);
-static size_t dm_get_milliseconds(unsigned long* const tm);
-static size_t dm_sleep_milliseconds(const unsigned ms);
+static int16_t dm_get_milliseconds(uint32_t* tm);
+static int16_t dm_sleep_milliseconds(uint32_t);
 
 /***************************************************************
  * Global variables
@@ -36,7 +36,10 @@ scpimm_interface_t dm_interface = {
 		.sleep_milliseconds = dm_sleep_milliseconds
 };
 dm_counters_t dm_counters;
-dm_measuremenet_func_t dm_measuremenet_func = dm_measurement_func_const;
+dm_multimeter_config_t dm_multimeter_config = {
+	.measurement_type = DM_MEASUREMENT_TYPE_ASYNC,
+	.measurement_func = dm_measurement_func_const
+};
 
 static char inbuffer[1024];
 static char* inpuffer_pos = inbuffer;
@@ -61,7 +64,7 @@ static sem_t measure_sem;
 
 static void do_measurement() {
 	scpi_number_t number = {0.0, SCPI_UNIT_NONE, SCPI_NUM_NUMBER};
-	number.value = dm_measuremenet_func(0L);	// TODO add time
+	number.value = dm_multimeter_config.measurement_func(0L);	// TODO add time
 	SCPIMM_read_value(&number);
 }
 
@@ -132,7 +135,8 @@ static int16_t dm_reset() {
 		measure_thread_created = TRUE;
 	}
 
-	dm_measuremenet_func = dm_measurement_func_const;
+	dm_multimeter_config.measurement_type = DM_MEASUREMENT_TYPE_ASYNC;
+	dm_multimeter_config.measurement_func = dm_measurement_func_const;
 
 	return SCPI_ERROR_OK;
 }
@@ -290,7 +294,17 @@ static int16_t dm_get_allowed_resolutions(scpimm_mode_t mode, size_t range_index
 }
 
 static int16_t dm_start_measure() {
-	sem_post(&measure_sem);
+	dm_counters.start_measure++;
+
+	switch (dm_multimeter_config.measurement_type) {
+	case DM_MEASUREMENT_TYPE_ASYNC:
+		sem_post(&measure_sem);
+		break;
+
+	case DM_MEASUREMENT_TYPE_SYNC:
+		do_measurement();
+		break;
+	}
 	return SCPI_ERROR_OK;
 }
 
@@ -301,7 +315,7 @@ static size_t dm_send(const uint8_t* data, const size_t len) {
 	return len;
 }
 
-static size_t dm_get_milliseconds(unsigned long* const tm) {
+static int16_t dm_get_milliseconds(uint32_t* const tm) {
 	if (tm) {
 		struct timespec tp;
 		clock_gettime(CLOCK_MONOTONIC, &tp);
@@ -310,7 +324,7 @@ static size_t dm_get_milliseconds(unsigned long* const tm) {
 	return SCPI_ERROR_OK;
 }
 
-static size_t dm_sleep_milliseconds(const unsigned ms) {
+static int16_t dm_sleep_milliseconds(const uint32_t ms) {
 	struct timespec delay;
 
 	if (ms > 999) {

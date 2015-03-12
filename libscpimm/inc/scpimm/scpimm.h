@@ -74,7 +74,7 @@ typedef enum {SCPIMM_TRIG_BUS, SCPIMM_TRIG_IMM, SCPIMM_TRIG_EXT} scpimm_trig_src
 typedef enum {SCPIMM_DST_BUF, SCPIMM_DST_OUT} scpimm_dst_t;
 
 /* Destination of measured values */
-typedef enum {SCPIMM_STATE_IDLE, SCPIMM_STATE_WAIT_FOR_TRIGGER, SCPIMM_STATE_MEASURE} scpimm_state_t;
+typedef enum {SCPIMM_STATE_IDLE, SCPIMM_STATE_WAIT_FOR_TRIGGER, SCPIMM_STATE_TRIGGER_DELAY, SCPIMM_STATE_MEASURE} scpimm_state_t;
 
 /* See SCPIMM_MODE_xxx constants */
 typedef uint16_t scpimm_mode_t;
@@ -139,13 +139,13 @@ struct _scpimm_interface_t {
 		Mandatory
 		Returns relative current time in milliseconds
 	*/
-	int16_t (*get_milliseconds)(unsigned long* tm);
+	int16_t (*get_milliseconds)(uint32_t* tm);
 
 	/*
 		Mandatory
 		Sleeps for a given period in ms
 	*/
-	int16_t (*sleep_milliseconds)(unsigned ms);
+	int16_t (*sleep_milliseconds)(uint32_t ms);
 
 	/*
 		Mandatory
@@ -205,7 +205,7 @@ struct _scpimm_context_t {
 
 	bool_t measuring;
 	scpi_number_t last_measured_value;
-	unsigned measure_start_time;
+	uint32_t measure_start_time;
 
 	struct {
 		scpimm_mode_params_t dcv;

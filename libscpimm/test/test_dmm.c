@@ -20,20 +20,28 @@ int clean_suite(void) {
     return 0;
 }
 
-void test_readQ_generic() {
+void test_readQ_generic_impl(const dm_measurement_type_t mt) {
 	char *result = dm_output_buffer();
 	double actual_range, actual_resolution, value;
 
 	reset();
+	dm_multimeter_config.measurement_type = mt;
 
 	receivef("CONFIGURE?");
 	assert_no_scpi_errors();
 	sscanf(strchr(result, ' ') + 1, "%le,%le", &actual_range, &actual_resolution);
 
+	dm_reset_counters();
 	receivef("READ?");
 	assert_no_scpi_errors();
 	sscanf(result, "%le", &value);
+	CU_ASSERT_EQUAL(dm_counters.start_measure, 1);
 	ASSERT_DOUBLE_EQUAL(value, actual_range * 0.5);
+}
+
+void test_readQ_generic() {
+	test_readQ_generic_impl(DM_MEASUREMENT_TYPE_ASYNC);
+	test_readQ_generic_impl(DM_MEASUREMENT_TYPE_SYNC);
 }
 
 void test_readQ() {

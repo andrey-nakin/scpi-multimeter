@@ -13,6 +13,15 @@
 #define SCPIMM_INTERFACE(context) (SCPIMM_CONTEXT(context)->interface)
 
 #define CHECK_SCPI_ERROR(expr) if (SCPI_ERROR_OK != (err = (expr))) return err
+#define CHECK_AND_PUSH_ERROR(expr) 	if (SCPI_ERROR_OK != (err = (expr))) {	\
+	    SCPI_ErrorPush(context, err);	\
+		return SCPI_RES_ERR;	\
+	}
+
+#define	ATOMIC_READ_BOOL(var) (var)
+#define	ATOMIC_WRITE_BOOL(var, value) (var) = (value)
+#define	ATOMIC_READ_INT(var) (var)
+#define	ATOMIC_WRITE_INT(var, value) (var) = (value)
 
 void SCPIMM_stop_mesurement(void);
 void SCPIMM_clear_return_buffer(void);

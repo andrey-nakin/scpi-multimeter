@@ -8,6 +8,10 @@
 #include <scpi/scpi.h>
 #include <scpimm/scpimm.h>
 
+typedef enum {
+	DM_MEASUREMENT_TYPE_ASYNC, DM_MEASUREMENT_TYPE_SYNC
+} dm_measurement_type_t;
+
 typedef struct {
 	scpimm_mode_t mode;
 	bool_t mode_initialized;
@@ -37,10 +41,15 @@ typedef struct {
 } dm_get_allowed_resolutions_args_t;
 
 typedef struct {
-	unsigned set_mode, get_mode, get_allowed_ranges, get_allowed_resolutions;
+	unsigned set_mode, get_mode, get_allowed_ranges, get_allowed_resolutions, start_measure;
 } dm_counters_t;
 
-typedef double (*dm_measuremenet_func_t)(long time);
+typedef double (*dm_measurement_func_t)(long time);
+
+typedef struct {
+	dm_measurement_type_t measurement_type;
+	dm_measurement_func_t measurement_func;
+} dm_multimeter_config_t;
 
 extern dm_multimeter_state_t dm_multimeter_state;
 extern dm_set_mode_args_t dm_set_mode_last_args;
@@ -48,7 +57,7 @@ extern dm_get_allowed_ranges_args_t dm_get_allowed_ranges_last_args;
 extern dm_get_allowed_resolutions_args_t dm_get_allowed_resolutions_last_args;
 extern scpimm_interface_t dm_interface;
 extern dm_counters_t dm_counters;
-extern dm_measuremenet_func_t dm_measuremenet_func;
+extern dm_multimeter_config_t dm_multimeter_config;
 
 void dm_init_in_buffer();
 char* dm_output_buffer();
