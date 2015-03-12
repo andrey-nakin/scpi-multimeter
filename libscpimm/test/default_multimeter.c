@@ -14,6 +14,7 @@ static int16_t dm_start_measure();
 static size_t dm_send(const uint8_t* buf, size_t len);
 static int16_t dm_get_milliseconds(uint32_t* tm);
 static int16_t dm_sleep_milliseconds(uint32_t);
+static int16_t dm_set_interrupt_status(bool_t disabled);
 
 /***************************************************************
  * Global variables
@@ -33,7 +34,8 @@ scpimm_interface_t dm_interface = {
 		.start_measure = dm_start_measure,
 		.send = dm_send,
 		.get_milliseconds = dm_get_milliseconds,
-		.sleep_milliseconds = dm_sleep_milliseconds
+		.sleep_milliseconds = dm_sleep_milliseconds,
+		.set_interrupt_status = dm_set_interrupt_status
 };
 dm_counters_t dm_counters;
 dm_multimeter_config_t dm_multimeter_config = {
@@ -134,6 +136,8 @@ static int16_t dm_reset() {
 		}
 		measure_thread_created = TRUE;
 	}
+
+	dm_multimeter_state.interrrupt_disable_counter = 0;
 
 	dm_multimeter_config.measurement_type = DM_MEASUREMENT_TYPE_ASYNC;
 	dm_multimeter_config.measurement_func = dm_measurement_func_const;
@@ -335,5 +339,17 @@ static int16_t dm_sleep_milliseconds(const uint32_t ms) {
 		delay.tv_nsec = ms * 1000000;
 	}
 	nanosleep(&delay, NULL);
+	return SCPI_ERROR_OK;
+}
+
+static int16_t dm_set_interrupt_status(const bool_t disabled) {
+	dm_counters.set_interrupt_status++;
+
+	if (disabled) {
+		dm_multimeter_state.interrrupt_disable_counter++;
+	} else {
+		dm_multimeter_state.interrrupt_disable_counter--;
+	}
+
 	return SCPI_ERROR_OK;
 }

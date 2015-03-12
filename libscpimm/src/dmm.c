@@ -183,6 +183,7 @@ void SCPIMM_read_value(const scpi_number_t* value) {
 }
 
 scpi_result_t SCPIMM_initiate(scpi_t* context) {
+	int16_t err;
 	volatile scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
 
 	if (	ctx->infinite_trigger_count
@@ -191,7 +192,9 @@ scpi_result_t SCPIMM_initiate(scpi_t* context) {
 		return SCPI_RES_ERR;
 	}
 
-	return initiate(ctx, SCPIMM_DST_BUF);
+	CHECK_AND_PUSH_ERROR(initiate(ctx, SCPIMM_DST_BUF));
+
+	return SCPI_RES_OK;
 }
 
 static int16_t readQ_impl(scpi_t* context) {

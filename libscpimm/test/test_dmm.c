@@ -36,6 +36,7 @@ void test_readQ_generic_impl(const dm_measurement_type_t mt) {
 	assert_no_scpi_errors();
 	sscanf(result, "%le", &value);
 	CU_ASSERT_EQUAL(dm_counters.start_measure, 1);
+	ASSERT_INTERRUPTS_ARE_ENABLED();
 	ASSERT_DOUBLE_EQUAL(value, actual_range * 0.5);
 }
 

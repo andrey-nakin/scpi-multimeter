@@ -17,6 +17,7 @@ typedef struct {
 	bool_t mode_initialized;
 	scpimm_mode_params_t mode_params;
 	bool_t mode_params_initialized;
+	unsigned interrrupt_disable_counter;
 } dm_multimeter_state_t;
 
 typedef struct {
@@ -41,7 +42,7 @@ typedef struct {
 } dm_get_allowed_resolutions_args_t;
 
 typedef struct {
-	unsigned set_mode, get_mode, get_allowed_ranges, get_allowed_resolutions, start_measure;
+	unsigned set_mode, get_mode, get_allowed_ranges, get_allowed_resolutions, start_measure, set_interrupt_status;
 } dm_counters_t;
 
 typedef double (*dm_measurement_func_t)(long time);

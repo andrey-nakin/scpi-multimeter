@@ -2,6 +2,7 @@
 #define	_TEST_UTILS_SCPIMM_
 
 #include <scpi/scpi.h>
+#include "default_multimeter.h"
 
 #define FLOAT_DELTA 1.0e-6
 
@@ -29,6 +30,8 @@ void asset_no_data();
 void asset_in_bool(bool_t v);
 void assert_in_int(int v);
 void assert_in_double(double v);
+
+#define ASSERT_INTERRUPTS_ARE_ENABLED() CU_ASSERT_EQUAL(dm_multimeter_state.interrrupt_disable_counter, 0)
 
 void assert_number_equals(const scpi_number_t* v, const scpi_number_t* expected);
 
