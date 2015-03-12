@@ -144,6 +144,7 @@ static int16_t check_next_measurement(volatile scpimm_context_t* const ctx) {
 			ATOMIC_WRITE_INT(ctx->state, SCPIMM_STATE_IDLE);
 			err = SCPI_ERROR_OK;
 		} else {
+			ctx->sample_count = ctx->sample_count_num;
 			CHECK_SCPI_ERROR(wait_for_trigger(ctx));
 			err = SCPI_ERROR_PENDING;
 		}

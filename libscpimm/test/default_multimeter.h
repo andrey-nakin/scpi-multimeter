@@ -50,6 +50,7 @@ typedef double (*dm_measurement_func_t)(long time);
 typedef struct {
 	dm_measurement_type_t measurement_type;
 	dm_measurement_func_t measurement_func;
+	uint32_t measurement_duration;
 } dm_multimeter_config_t;
 
 extern dm_multimeter_state_t dm_multimeter_state;

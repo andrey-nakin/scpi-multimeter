@@ -4,6 +4,8 @@
 #include <semaphore.h>
 #include "default_multimeter.h"
 
+#define DEFAULT_MEAS_DURATION 500
+
 static scpimm_mode_t dm_supported_modes(void);
 static int16_t dm_reset();
 static int16_t dm_set_mode(scpimm_mode_t mode, const scpimm_mode_params_t* const params);
@@ -76,7 +78,7 @@ static void* measure_thread_routine(void* args) {
 	while (TRUE) {
 		sem_wait(&measure_sem);
 
-		dm_sleep_milliseconds(500);	//	emulate real measurement delay
+		dm_sleep_milliseconds(dm_multimeter_config.measurement_duration);	//	emulate real measurement delay
 		do_measurement();
 	}
 
@@ -141,6 +143,7 @@ static int16_t dm_reset() {
 
 	dm_multimeter_config.measurement_type = DM_MEASUREMENT_TYPE_ASYNC;
 	dm_multimeter_config.measurement_func = dm_measurement_func_const;
+	dm_multimeter_config.measurement_duration = DEFAULT_MEAS_DURATION;
 
 	return SCPI_ERROR_OK;
 }
