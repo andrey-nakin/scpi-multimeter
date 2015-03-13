@@ -236,6 +236,7 @@ void SCPIMM_setup(const scpimm_interface_t*);
 */
 void SCPIMM_read_value(const scpi_number_t* value);
 void SCPIMM_parseInBuffer(const char* buf, size_t len);
+void SCPIMM_yield();
 
 /* For debug purposes */
 scpimm_context_t* SCPIMM_context();
