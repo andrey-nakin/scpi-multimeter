@@ -200,12 +200,14 @@ struct _scpimm_context_t {
 	double buf[SCPIMM_BUF_LEN];
 	unsigned buf_head, buf_tail;
 	scpimm_state_t state;
+	uint32_t state_time;
 	bool_t display;
 	char display_text[SCPIMM_DISPLAY_LEN + 1];
 
 	bool_t measuring;
 	scpi_number_t last_measured_value;
 	uint32_t measure_start_time;
+	int16_t measurement_error;
 
 	struct {
 		scpimm_mode_params_t dcv;

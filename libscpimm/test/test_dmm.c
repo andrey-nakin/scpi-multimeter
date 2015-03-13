@@ -109,6 +109,9 @@ void test_readQ_generic_impl(const dm_measurement_type_t mt) {
 	receivef("READ?");
 	assert_scpi_error(SCPI_ERROR_IO_PROCESSOR_DOES_NOT_RESPOND);
 	ASSERT_INTERRUPTS_ARE_ENABLED();
+
+	// TODO check bus trigger error
+	// TODO check READ? after a failure
 }
 
 void test_readQ_generic() {

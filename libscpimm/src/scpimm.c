@@ -438,10 +438,6 @@ void SCPIMM_parseInBuffer(char const* inbuf, size_t avail) {
 	SCPI_Input(&scpi_context, inbuf, avail);
 }
 
-void SCPIMM_yield() {
-
-}
-
 scpimm_context_t* SCPIMM_context() {
 	return (scpimm_context_t*) &scpimm_context;
 }

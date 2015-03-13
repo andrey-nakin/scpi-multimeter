@@ -77,6 +77,12 @@ static int16_t wait_for_trigger(volatile scpimm_context_t* const ctx) {
 		break;
 
 	case SCPIMM_TRIG_BUS:
+		if (SCPIMM_DST_OUT == ctx->dst) {
+			return SCPI_ERROR_TRIGGER_DEADLOCK;
+		}
+		// will wait for external trigger
+		break;
+
 	case SCPIMM_TRIG_EXT:
 		// will wait for external trigger
 		break;
@@ -89,16 +95,22 @@ static int16_t initiate(volatile scpimm_context_t* const ctx, const scpimm_dst_t
 	ctx->dst = dst;
 	ctx->sample_count = ctx->sample_count_num;
 	ctx->trigger_count = ctx->trigger_count_num;
+	ctx->measurement_error = SCPI_ERROR_OK;
 
 	return wait_for_trigger(ctx);
 }
 
-static scpi_result_t wait_for_idle(scpi_t* const context) {
-	while (SCPIMM_STATE_IDLE != SCPIMM_get_state(context)) {
-		SCPIMM_INTERFACE(context)->sleep_milliseconds(50);
+static int16_t wait_for_idle(volatile scpimm_context_t* const ctx) {
+	int16_t err;
+
+	while (SCPIMM_STATE_IDLE != ATOMIC_READ_INT(ctx->state)) {
+		SCPIMM_yield();
 	}
 
-	return SCPI_RES_OK;
+	err = ctx->measurement_error;
+	ctx->measurement_error = SCPI_ERROR_OK;
+
+	return err;
 }
 
 scpi_result_t SCPIMM_measure_preset(scpi_t* context) {
@@ -151,6 +163,50 @@ static int16_t check_next_measurement(volatile scpimm_context_t* const ctx) {
 	return err;
 }
 
+static void switch_to_state(volatile scpimm_context_t* const ctx, const scpimm_state_t new_state, const bool_t get_time) {
+	uint32_t tm;
+
+	ctx->state = new_state;
+	if (get_time) {
+		const int16_t err = ctx->interface->get_milliseconds(&tm);
+		if (SCPI_ERROR_OK != err) {
+			ctx->state = SCPIMM_STATE_IDLE;
+			ctx->measurement_error = err;
+		} else {
+			ctx->state_time = tm;
+		}
+	}
+}
+
+void SCPIMM_yield() {
+	volatile scpimm_context_t* const ctx = SCPIMM_context();
+	int16_t err;
+	uint32_t cur_time;
+
+	switch (ATOMIC_READ_INT(ctx->state)) {
+	case SCPIMM_STATE_IDLE:
+		// nothing to do
+		break;
+
+	case SCPIMM_STATE_TRIGGER_DELAY:
+		err = ctx->interface->get_milliseconds(&cur_time);
+		if (SCPI_ERROR_OK != err) {
+			switch_to_state(ctx, SCPIMM_STATE_IDLE, FALSE);
+			ctx->measurement_error = err;
+		}
+
+		if (cur_time - ctx->state_time >= (uint32_t) ctx->trigger_delay) {
+			// trigger delay exhausted
+			switch_to_state(ctx, SCPIMM_STATE_MEASURE, TRUE);
+			err = start_measurement(ctx);
+			if (SCPI_ERROR_OK != err) {
+				switch_to_state(ctx, SCPIMM_STATE_IDLE, FALSE);
+				ctx->measurement_error = err;
+			}
+		}
+		break;
+	}
+}
 
 void SCPIMM_read_value(const scpi_number_t* value) {
 	volatile scpimm_context_t* const ctx = SCPIMM_context();
@@ -235,33 +291,26 @@ scpi_result_t SCPIMM_readQ(scpi_t* context) {
 
 	// TODO check idle state
 
-	/* cannot initiate bus trigger by READ? command */
-	if (SCPIMM_TRIG_BUS == ctx->trigger_src) {
-	    SCPI_ErrorPush(context, SCPI_ERROR_TRIGGER_DEADLOCK);
-		return SCPI_RES_ERR;
-	}
-
 	CHECK_AND_PUSH_ERROR(initiate(ctx, SCPIMM_DST_OUT));
-	CHECK_AND_PUSH_ERROR(readQ_impl(context));
+	// TODO CHECK_AND_PUSH_ERROR(readQ_impl(context));
+	CHECK_AND_PUSH_ERROR(wait_for_idle(ctx));
 
 	return SCPI_RES_OK;
 }
 
 scpi_result_t SCPIMM_fetchQ(scpi_t* context) {
-	scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
+	volatile scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
+	int16_t err;
 	scpi_result_t result;
 
-	/* wait for measurement complete */
-	if (SCPI_RES_OK != (result = wait_for_idle(context))) {
-		return result;
-	}
+	CHECK_AND_PUSH_ERROR(wait_for_idle(ctx));
 
 	if (ctx->buf_tail == ctx->buf_head) {
 		/* no data to transfer */
-	    SCPI_ErrorPush(context, SCPI_ERROR_DATA_STALE);
-		return SCPI_RES_ERR;
+		CHECK_AND_PUSH_ERROR(SCPI_ERROR_DATA_STALE);
 	}
 
+	// TODO return all values from buffer
 	SCPIMM_ResultDouble(context, ctx->buf[ctx->buf_head++]);
 	ctx->buf_head %= SCPIMM_BUF_LEN;
 	return result;
