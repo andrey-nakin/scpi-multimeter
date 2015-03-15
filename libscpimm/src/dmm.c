@@ -162,21 +162,17 @@ static int16_t check_measuring_timeout(volatile scpimm_context_t* const ctx) {
 	return SCPI_ERROR_OK;
 }
 
-static int16_t store_value_in_buffer(volatile scpimm_context_t* const ctx) {
-	(void) ctx;
-	/* TODO obsolete
+static int16_t store_value_in_buffer(volatile scpimm_context_t* const ctx, const double value) {
 	if (ctx->buf_tail %= SCPIMM_BUF_LEN != ctx->buf_tail) {
-		ctx->buf[ctx->buf_tail++] = ctx->last_measured_value.value;
+		ctx->buf[ctx->buf_tail++] = value;
 		ctx->buf_tail %= SCPIMM_BUF_LEN;
+		return SCPI_ERROR_OK;
+	} else {
+		return SCPI_ERROR_INSUFFICIENT_MEMORY;
 	}
-
-	check_next_measurement(ctx);
-	*/
-
-	return SCPI_ERROR_OK;
 }
 
-static int16_t send_value_to_out_buffer(volatile scpimm_context_t* const ctx) {
+static int16_t send_value_to_out_buffer(volatile scpimm_context_t* const ctx, const double value) {
 	char buf[16];
 	size_t len;
 	scpi_t* const context = SCPI_context();
@@ -187,9 +183,7 @@ static int16_t send_value_to_out_buffer(volatile scpimm_context_t* const ctx) {
 		context->interface->write(context, ",", 1);
 	}
 
-	len = double_to_str(buf, ctx->last_measured_value.type == SCPI_NUM_NUMBER
-			? ctx->last_measured_value.value
-			: SCPIMM_OVERFLOW);
+	len = double_to_str(buf, value);
 	context->interface->write(context, buf, len);
 
 	return SCPI_ERROR_OK;
@@ -202,14 +196,17 @@ static void flush_out_buffer() {
 
 static int16_t check_measured_value(volatile scpimm_context_t* const ctx) {
 	int16_t err;
+	const double value = ctx->last_measured_value.type == SCPI_NUM_NUMBER
+			? ctx->last_measured_value.value
+			: SCPIMM_OVERFLOW;
 
 	switch (ctx->dst) {
 	case SCPIMM_DST_BUF:
-		CHECK_SCPI_ERROR(store_value_in_buffer(ctx));
+		CHECK_SCPI_ERROR(store_value_in_buffer(ctx, value));
 		break;
 
 	case SCPIMM_DST_OUT:
-		CHECK_SCPI_ERROR(send_value_to_out_buffer(ctx));
+		CHECK_SCPI_ERROR(send_value_to_out_buffer(ctx, value));
 		break;
 	}
 
