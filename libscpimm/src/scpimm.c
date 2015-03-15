@@ -51,6 +51,7 @@ static const scpi_command_t scpi_commands[] = {
     {"FETCh?", SCPIMM_fetchQ},
     {"INITiate", SCPIMM_initiate},
     {"READ?", SCPIMM_readQ},
+    {"DATA:POINts?", SCPIMM_data_pointsQ},
 
     {"CONFigure?", SCPIMM_configureQ},
     {"CONFigure:VOLTage", SCPIMM_configure_voltage_dc},

@@ -17,7 +17,7 @@ extern "C" {
 
 #define SCPIMM_BUF_LEN 11
 //#define SCPIMM_BUF_LEN 513
-#define SCPIMM_BUF_CAPACITY (SCPIMM_BUF_LEN - 1)
+#define SCPIMM_BUF_CAPACITY SCPIMM_BUF_LEN
 
 #define SCPIMM_DISPLAY_LEN 12
 
@@ -40,8 +40,7 @@ extern "C" {
 #define SCPI_ERROR_IO_PROCESSOR_DOES_NOT_RESPOND 625
 
 #define SCPI_ERROR_UNKNOWN	551
-#define SCPI_ERROR_PENDING	552
-#define SCPI_ERROR_INTERNAL_START	553
+#define SCPI_ERROR_INTERNAL_START	555
 
 /******************************************************************************
   Multimeter mode constants (to use in MM_setMode)
@@ -198,14 +197,13 @@ struct _scpimm_context_t {
 	bool_t trigger_auto_delay;
 	scpimm_dst_t dst;
 	double buf[SCPIMM_BUF_LEN];
-	unsigned buf_head, buf_tail;
+	unsigned buf_count;
 	scpimm_state_t state;
 	uint32_t state_time;
 	bool_t display;
 	char display_text[SCPIMM_DISPLAY_LEN + 1];
 	uint32_t measurement_timeout;
 
-	bool_t measuring;
 	scpi_number_t last_measured_value;
 	uint32_t measure_start_time;
 	int16_t measurement_error;

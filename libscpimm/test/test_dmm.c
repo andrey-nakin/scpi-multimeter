@@ -48,6 +48,16 @@ static void read_numbers(const unsigned expected_num_of_values, double* values) 
 	CU_ASSERT_STRING_EQUAL(s, "\r\n");
 }
 
+static void read_data_points(const unsigned expected_num_of_values) {
+	const char* const result = dm_output_buffer();
+	int pos = 0;
+	double value;
+
+	CU_ASSERT_EQUAL(sscanf(result, "%lg%n", &value, &pos), 1);
+	CU_ASSERT_STRING_EQUAL(result + pos, "\r\n");
+	CU_ASSERT_EQUAL((unsigned) value, expected_num_of_values);
+}
+
 static void read_equal_numbers(const unsigned expected_num_of_values, double* const values, const double expected_value) {
 	size_t i;
 
@@ -136,15 +146,129 @@ void test_readQ_generic_impl(const dm_measurement_type_t mt, const char* trigger
 	read_equal_numbers(sample_count * trigger_count, values, actual_range * 0.5);
 }
 
-void test_readQ_generic() {
+void test_readQ() {
 	test_readQ_generic_impl(DM_MEASUREMENT_TYPE_ASYNC, "IMM");
 	test_readQ_generic_impl(DM_MEASUREMENT_TYPE_SYNC, "IMM");
 	test_readQ_generic_impl(DM_MEASUREMENT_TYPE_ASYNC, "EXT");
 	test_readQ_generic_impl(DM_MEASUREMENT_TYPE_SYNC, "EXT");
 }
 
-void test_readQ() {
-//	test_readQ_generic();
+void check_after_init_state() {
+	assert_no_scpi_errors();
+}
+
+void check_after_data_points_state() {
+	check_after_read_state();
+}
+
+void check_after_fetch_state() {
+	check_after_read_state();
+}
+
+void test_initiate_generic_impl(const dm_measurement_type_t mt, const char* trigger_src) {
+	char *result = dm_output_buffer();
+	double actual_range, actual_resolution;
+	double values[16];
+	const int sample_count = 2, trigger_count = 3;
+
+	reset();
+	dm_multimeter_config.measurement_type = mt;
+
+	// read current value range
+	receivef("CONFIGURE?");
+	assert_no_scpi_errors();
+	CU_ASSERT_EQUAL(sscanf(strchr(result, ' ') + 1, "%le,%le", &actual_range, &actual_resolution), 2);
+
+	// read single value
+	receivef("TRIGGER:SOURCE %s", trigger_src);
+	dm_reset_counters();
+	receivef("INITIATE");
+	check_after_init_state();
+	receivef("FETCH?");
+	check_after_fetch_state();
+	read_equal_numbers(1, values, actual_range * 0.5);
+	receivef("DATA:POINTS?");
+	check_after_data_points_state();
+	read_data_points(1);
+
+	// decrease measurement duration for quicker testing
+	dm_multimeter_config.measurement_duration = 10;
+
+	// read SAMPLE_COUNT values
+	receivef("SAMPLE:COUNT %d", sample_count);
+	assert_no_scpi_errors();
+	dm_reset_counters();
+	receivef("INITIATE");
+	check_after_init_state();
+	receivef("FETCH?");
+	check_after_fetch_state();
+	read_equal_numbers(sample_count, values, actual_range * 0.5);
+	receivef("DATA:POINTS?");
+	check_after_data_points_state();
+	read_data_points(sample_count);
+
+	// read TRIGGER_COUNT values
+	receivef("SAMPLE:COUNT %d", 1);
+	assert_no_scpi_errors();
+	receivef("TRIGGER:COUNT %d", trigger_count);
+	assert_no_scpi_errors();
+	dm_reset_counters();
+	receivef("INITIATE");
+	check_after_init_state();
+	receivef("FETCH?");
+	check_after_fetch_state();
+	read_equal_numbers(trigger_count, values, actual_range * 0.5);
+	receivef("DATA:POINTS?");
+	check_after_data_points_state();
+	read_data_points(trigger_count);
+
+	// read SAMPLE_COUNT * TRIGGER_COUNT values
+	receivef("SAMPLE:COUNT %d", sample_count);
+	assert_no_scpi_errors();
+	dm_reset_counters();
+	receivef("INITIATE");
+	check_after_init_state();
+	receivef("FETCH?");
+	check_after_fetch_state();
+	read_equal_numbers(sample_count * trigger_count, values, actual_range * 0.5);
+	receivef("DATA:POINTS?");
+	check_after_data_points_state();
+	read_data_points(sample_count * trigger_count);
+
+	// read value with failed hardware
+	SCPIMM_context()->measurement_timeout = 100;	//	reduce timeout for quicker testing
+	dm_multimeter_state.measurement_failure_counter = sample_count * trigger_count / 2;
+	CU_ASSERT_TRUE(dm_multimeter_state.measurement_failure_counter > 0);
+	receivef("INITIATE");
+	check_after_init_state();
+	receivef("FETCH?");
+	assert_scpi_error(SCPI_ERROR_IO_PROCESSOR_DOES_NOT_RESPOND);
+
+	// read values again after failure
+	dm_reset_counters();
+	receivef("INITIATE");
+	check_after_init_state();
+	receivef("FETCH?");
+	check_after_fetch_state();
+	read_equal_numbers(sample_count * trigger_count, values, actual_range * 0.5);
+	receivef("DATA:POINTS?");
+	check_after_data_points_state();
+	read_data_points(sample_count * trigger_count);
+
+	// check "out-of-buffer-length" error
+	receivef("TRIGGER:COUNT %u", 1);
+	assert_no_scpi_errors();
+	receivef("SAMPLE:COUNT %u", (unsigned) (SCPIMM_BUF_CAPACITY + 1));
+	assert_no_scpi_errors();
+	receivef("INITIATE");
+	assert_scpi_error(SCPI_ERROR_INSUFFICIENT_MEMORY);
+}
+
+void test_initiate() {
+	test_initiate_generic_impl(DM_MEASUREMENT_TYPE_ASYNC, "IMM");
+	test_initiate_generic_impl(DM_MEASUREMENT_TYPE_SYNC, "IMM");
+	test_initiate_generic_impl(DM_MEASUREMENT_TYPE_ASYNC, "EXT");
+	test_initiate_generic_impl(DM_MEASUREMENT_TYPE_SYNC, "EXT");
 }
 
 int main() {
@@ -162,7 +286,11 @@ int main() {
     }
 
     /* Add the tests to the suite */
-    if ((NULL == CU_add_test(pSuite, "read? generic", test_readQ_generic))) {
+    if ((NULL == CU_add_test(pSuite, "read?", test_readQ))) {
+        CU_cleanup_registry();
+        return CU_get_error();
+    }
+    if ((NULL == CU_add_test(pSuite, "init", test_initiate))) {
         CU_cleanup_registry();
         return CU_get_error();
     }

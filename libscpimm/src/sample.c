@@ -3,7 +3,7 @@
 #include "utils.h"
 
 static long max_sample_count() {
-	return SCPIMM_BUF_CAPACITY;
+	return 65535;
 }
 
 scpi_result_t SCPIMM_sample_count(scpi_t* context) {
