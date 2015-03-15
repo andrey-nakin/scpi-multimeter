@@ -6,39 +6,31 @@
 #define SCPIMM_OVERFLOW 9.90000000E+37
 #define	MEASUREMENT_TIMEOUT (10 * 1000)
 
-static int16_t cancel_measurement(volatile scpimm_context_t* const ctx) {
-	ATOMIC_WRITE_INT(ctx->state, SCPIMM_STATE_IDLE);
+static int16_t switch_to_timed_state(volatile scpimm_context_t* const ctx, const scpimm_state_t new_state) {
+	uint32_t tm;
+	int16_t err;
+
+	ATOMIC_WRITE_INT(ctx->state, new_state);
+	CHECK_SCPI_ERROR(ctx->interface->get_milliseconds(&tm));
+	ctx->state_time = tm;
+
 	return SCPI_ERROR_OK;
 }
 
-static int16_t wait_until_measurement_is_done(volatile scpimm_context_t* const ctx) {
-	int16_t err;
-	uint32_t cur_time;
-	const scpimm_interface_t* intf = ctx->interface;
-
-	while (ATOMIC_READ_BOOL(ctx->measuring)) {
-		CHECK_SCPI_ERROR(intf->get_milliseconds(&cur_time));
-
-		if (cur_time - ctx->measure_start_time > MEASUREMENT_TIMEOUT) {
-			ATOMIC_WRITE_BOOL(ctx->measuring, FALSE);
-			cancel_measurement(ctx);
-			return SCPI_ERROR_IO_PROCESSOR_DOES_NOT_RESPOND;
-		}
-	};
-
-	return SCPI_ERROR_OK;
+static void switch_to_state(volatile scpimm_context_t* const ctx, const scpimm_state_t new_state) {
+	ATOMIC_WRITE_INT(ctx->state, new_state);
 }
 
 static int16_t start_measurement(volatile scpimm_context_t* const ctx) {
 	int16_t err;
 	uint32_t cur_time;
 
-	CHECK_SCPI_ERROR(wait_until_measurement_is_done(ctx));
 
 	ctx->last_measured_value.type = SCPI_NUM_INF;
 	CHECK_SCPI_ERROR(ctx->interface->get_milliseconds(&cur_time));
 	ctx->measure_start_time = cur_time;
 
+	CHECK_SCPI_ERROR(switch_to_timed_state(ctx, SCPIMM_STATE_MEASURING));
 	ctx->measuring = TRUE;
 	err = ctx->interface->start_measure();
 	if (SCPI_ERROR_OK != err) {
@@ -49,27 +41,13 @@ static int16_t start_measurement(volatile scpimm_context_t* const ctx) {
 }
 
 static int16_t trigger_pulled(volatile scpimm_context_t* const ctx) {
-	int16_t err;
-	const uint32_t delay = (uint32_t) ctx->trigger_delay;
-
-	if (delay) {
-		ATOMIC_WRITE_INT(ctx->state, SCPIMM_STATE_TRIGGER_DELAY);
-		CHECK_SCPI_ERROR(ctx->interface->sleep_milliseconds(delay));
-	}
-
-	ATOMIC_WRITE_INT(ctx->state, SCPIMM_STATE_MEASURE);
-	err = start_measurement(ctx);
-	if (SCPI_ERROR_OK != err) {
-		ATOMIC_WRITE_INT(ctx->state, SCPIMM_STATE_IDLE);
-	}
-
-	return err;
+	return switch_to_timed_state(ctx, SCPIMM_STATE_TRIGGER_DELAY);
 }
 
-static int16_t wait_for_trigger(volatile scpimm_context_t* const ctx) {
+static int16_t init_trigger(volatile scpimm_context_t* const ctx) {
 	int16_t err = SCPI_ERROR_OK;
 
-	ATOMIC_WRITE_INT(ctx->state, SCPIMM_STATE_WAIT_FOR_TRIGGER);
+	switch_to_state(ctx, SCPIMM_STATE_WAIT_FOR_TRIGGER);
 
 	switch (ctx->trigger_src) {
 	case SCPIMM_TRIG_IMM:
@@ -80,7 +58,7 @@ static int16_t wait_for_trigger(volatile scpimm_context_t* const ctx) {
 		if (SCPIMM_DST_OUT == ctx->dst) {
 			return SCPI_ERROR_TRIGGER_DEADLOCK;
 		}
-		// will wait for external trigger
+		// will wait for *TRG command
 		break;
 
 	case SCPIMM_TRIG_EXT:
@@ -92,12 +70,24 @@ static int16_t wait_for_trigger(volatile scpimm_context_t* const ctx) {
 }
 
 static int16_t initiate(volatile scpimm_context_t* const ctx, const scpimm_dst_t dst) {
+	int16_t err;
+
+	if (SCPIMM_STATE_IDLE != ATOMIC_READ_INT(ctx->state)) {
+		return SCPI_ERROR_INIT_IGNORED;
+	}
+
 	ctx->dst = dst;
 	ctx->sample_count = ctx->sample_count_num;
 	ctx->trigger_count = ctx->trigger_count_num;
 	ctx->measurement_error = SCPI_ERROR_OK;
+	ctx->is_first_measured_value = TRUE;
 
-	return wait_for_trigger(ctx);
+	err = init_trigger(ctx);
+	if (SCPI_ERROR_OK != err) {
+		switch_to_state(ctx, SCPIMM_STATE_IDLE);
+	}
+
+	return err;
 }
 
 static int16_t wait_for_idle(volatile scpimm_context_t* const ctx) {
@@ -125,6 +115,7 @@ scpi_result_t SCPIMM_measure_preset(scpi_t* context) {
 	ctx->trigger_src = SCPIMM_TRIG_IMM;
 	ctx->buf_tail = 0;
 	ctx->buf_head = 0;
+	ctx->measurement_timeout = MEASUREMENT_TIMEOUT;
 
 	/* TODO
 AC Filter (DET:BAND)                20 Hz (medium filter)
@@ -143,68 +134,126 @@ scpimm_state_t SCPIMM_get_state(scpi_t* context) {
 	return state;
 }
 
-static int16_t check_next_measurement(volatile scpimm_context_t* const ctx) {
+static int16_t check_trigger_delay(volatile scpimm_context_t* const ctx) {
 	int16_t err;
+	uint32_t cur_time;
+
+	CHECK_SCPI_ERROR(ctx->interface->get_milliseconds(&cur_time));
+
+	if (cur_time - ctx->state_time >= (uint32_t) ctx->trigger_delay) {
+		// trigger delay exhausted
+		CHECK_SCPI_ERROR(start_measurement(ctx));
+	}
+
+	return SCPI_ERROR_OK;
+}
+
+static int16_t check_measuring_timeout(volatile scpimm_context_t* const ctx) {
+	int16_t err;
+	uint32_t cur_time;
+
+	CHECK_SCPI_ERROR(ctx->interface->get_milliseconds(&cur_time));
+
+	if (cur_time - ctx->state_time >= ctx->measurement_timeout) {
+		// measure timeout
+		return SCPI_ERROR_IO_PROCESSOR_DOES_NOT_RESPOND;
+	}
+
+	return SCPI_ERROR_OK;
+}
+
+static int16_t store_value_in_buffer(volatile scpimm_context_t* const ctx) {
+	(void) ctx;
+	/* TODO obsolete
+	if (ctx->buf_tail %= SCPIMM_BUF_LEN != ctx->buf_tail) {
+		ctx->buf[ctx->buf_tail++] = ctx->last_measured_value.value;
+		ctx->buf_tail %= SCPIMM_BUF_LEN;
+	}
+
+	check_next_measurement(ctx);
+	*/
+
+	return SCPI_ERROR_OK;
+}
+
+static int16_t send_value_to_out_buffer(volatile scpimm_context_t* const ctx) {
+	char buf[16];
+	size_t len;
+	scpi_t* const context = SCPI_context();
+
+	if (ctx->is_first_measured_value) {
+		ctx->is_first_measured_value = FALSE;
+	} else {
+		context->interface->write(context, ",", 1);
+	}
+
+	len = double_to_str(buf, ctx->last_measured_value.type == SCPI_NUM_NUMBER
+			? ctx->last_measured_value.value
+			: SCPIMM_OVERFLOW);
+	context->interface->write(context, buf, len);
+
+	return SCPI_ERROR_OK;
+}
+
+static void flush_out_buffer() {
+	scpi_t* const context = SCPI_context();
+	context->interface->write(context, "\r\n", 2);
+}
+
+static int16_t check_measured_value(volatile scpimm_context_t* const ctx) {
+	int16_t err;
+
+	switch (ctx->dst) {
+	case SCPIMM_DST_BUF:
+		CHECK_SCPI_ERROR(store_value_in_buffer(ctx));
+		break;
+
+	case SCPIMM_DST_OUT:
+		CHECK_SCPI_ERROR(send_value_to_out_buffer(ctx));
+		break;
+	}
 
 	if (0 == --ctx->sample_count) {
 		if (!ctx->infinite_trigger_count && 0 == --ctx->trigger_count) {
-			ATOMIC_WRITE_INT(ctx->state, SCPIMM_STATE_IDLE);
-			err = SCPI_ERROR_OK;
+			flush_out_buffer();
+			switch_to_state(ctx, SCPIMM_STATE_IDLE);
 		} else {
 			ctx->sample_count = ctx->sample_count_num;
-			CHECK_SCPI_ERROR(wait_for_trigger(ctx));
-			err = SCPI_ERROR_PENDING;
+			CHECK_SCPI_ERROR(init_trigger(ctx));
 		}
 	} else {
-		CHECK_SCPI_ERROR(start_measurement(ctx));
-		err = SCPI_ERROR_PENDING;
+		CHECK_SCPI_ERROR(switch_to_timed_state(ctx, SCPIMM_STATE_TRIGGER_DELAY));
 	}
 
-	return err;
-}
-
-static void switch_to_state(volatile scpimm_context_t* const ctx, const scpimm_state_t new_state, const bool_t get_time) {
-	uint32_t tm;
-
-	ctx->state = new_state;
-	if (get_time) {
-		const int16_t err = ctx->interface->get_milliseconds(&tm);
-		if (SCPI_ERROR_OK != err) {
-			ctx->state = SCPIMM_STATE_IDLE;
-			ctx->measurement_error = err;
-		} else {
-			ctx->state_time = tm;
-		}
-	}
+	return SCPI_ERROR_OK;
 }
 
 void SCPIMM_yield() {
 	volatile scpimm_context_t* const ctx = SCPIMM_context();
-	int16_t err;
-	uint32_t cur_time;
+	int16_t err = SCPI_ERROR_OK;
 
 	switch (ATOMIC_READ_INT(ctx->state)) {
 	case SCPIMM_STATE_IDLE:
+	case SCPIMM_STATE_WAIT_FOR_TRIGGER:
 		// nothing to do
 		break;
 
 	case SCPIMM_STATE_TRIGGER_DELAY:
-		err = ctx->interface->get_milliseconds(&cur_time);
-		if (SCPI_ERROR_OK != err) {
-			switch_to_state(ctx, SCPIMM_STATE_IDLE, FALSE);
-			ctx->measurement_error = err;
-		}
-
-		if (cur_time - ctx->state_time >= (uint32_t) ctx->trigger_delay) {
-			// trigger delay exhausted
-			switch_to_state(ctx, SCPIMM_STATE_MEASURE, TRUE);
-			err = start_measurement(ctx);
-			if (SCPI_ERROR_OK != err) {
-				switch_to_state(ctx, SCPIMM_STATE_IDLE, FALSE);
-				ctx->measurement_error = err;
-			}
-		}
+		err = check_trigger_delay(ctx);
 		break;
+
+	case SCPIMM_STATE_MEASURING:
+		err = check_measuring_timeout(ctx);
+		break;
+
+	case SCPIMM_STATE_MEASURED:
+		err = check_measured_value(ctx);
+		break;
+	}
+
+	if (SCPI_ERROR_OK != err) {
+		switch_to_state(ctx, SCPIMM_STATE_IDLE);
+		ctx->measurement_error = err;
 	}
 }
 
@@ -215,23 +264,12 @@ void SCPIMM_read_value(const scpi_number_t* value) {
 	ctx->last_measured_value.value = SCPI_NUM_NUMBER == value->type ? value->value : SCPIMM_OVERFLOW;
 	ATOMIC_WRITE_BOOL(ctx->measuring, FALSE);
 
-	if (SCPIMM_STATE_MEASURE != ATOMIC_READ_INT(ctx->state)) {
+	if (SCPIMM_STATE_MEASURING != ATOMIC_READ_INT(ctx->state)) {
 		/* measurement is not expected now */
 		return;
 	}
 
-	if (SCPIMM_DST_OUT == ctx->dst) {
-		/* measurement is handled in main thread */
-		return;
-	}
-
-	/* put value to reading buffer */
-	if (ctx->buf_tail %= SCPIMM_BUF_LEN != ctx->buf_tail) {
-		ctx->buf[ctx->buf_tail++] = ctx->last_measured_value.value;
-		ctx->buf_tail %= SCPIMM_BUF_LEN;
-	}
-
-	check_next_measurement(ctx);
+	switch_to_state(ctx, SCPIMM_STATE_MEASURED);
 }
 
 scpi_result_t SCPIMM_initiate(scpi_t* context) {
@@ -249,50 +287,11 @@ scpi_result_t SCPIMM_initiate(scpi_t* context) {
 	return SCPI_RES_OK;
 }
 
-static int16_t readQ_impl(scpi_t* context) {
-	volatile scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
-	int16_t err;
-	bool_t is_first = TRUE;
-	char buf[16];
-	size_t len;
-
-	do {
-		err = wait_until_measurement_is_done(ctx);
-		if (SCPI_ERROR_OK != err) {
-			cancel_measurement(ctx);
-			return err;
-		}
-
-		if (!is_first) {
-			context->interface->write(context, ",", 1);
-		}
-		len = double_to_str(buf, ctx->last_measured_value.type == SCPI_NUM_NUMBER ? ctx->last_measured_value.value : SCPIMM_OVERFLOW);
-		context->interface->write(context, buf, len);
-
-		err = check_next_measurement(ctx);
-		if (SCPI_ERROR_OK != err && SCPI_ERROR_PENDING != err) {
-			cancel_measurement(ctx);
-			return err;
-		}
-
-		is_first = FALSE;
-	} while (SCPI_ERROR_PENDING == err);
-
-	if (SCPI_ERROR_OK == err) {
-		context->interface->write(context, "\r\n", 2);
-	}
-
-	return err;
-}
-
 scpi_result_t SCPIMM_readQ(scpi_t* context) {
 	volatile scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
 	int16_t err;
 
-	// TODO check idle state
-
 	CHECK_AND_PUSH_ERROR(initiate(ctx, SCPIMM_DST_OUT));
-	// TODO CHECK_AND_PUSH_ERROR(readQ_impl(context));
 	CHECK_AND_PUSH_ERROR(wait_for_idle(ctx));
 
 	return SCPI_RES_OK;
@@ -320,17 +319,13 @@ scpi_result_t SCPIMM_trg(scpi_t* const context) {
 	int16_t err;
 	volatile scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
 	
-	if (	SCPIMM_TRIG_BUS != ctx->trigger_src		
-			|| SCPIMM_STATE_WAIT_FOR_TRIGGER != SCPIMM_get_state(context)) {
+	if (	SCPIMM_STATE_WAIT_FOR_TRIGGER != ATOMIC_READ_INT(ctx->state)
+			|| SCPIMM_TRIG_BUS != ctx->trigger_src ) {
 	    SCPI_ErrorPush(context, SCPI_ERROR_TRIGGER_IGNORED);
 		return SCPI_RES_ERR;
 	}
 
-	err = trigger_pulled(ctx);
-	if (SCPI_ERROR_OK != err) {
-	    SCPI_ErrorPush(context, err);
-		return SCPI_RES_ERR;
-	}
+	CHECK_AND_PUSH_ERROR(trigger_pulled(ctx));
 
 	return SCPI_RES_OK;
 }
@@ -545,4 +540,13 @@ const char* SCPIMM_mode_name(const scpimm_mode_t mode) {
     }
 
 	return res;
+}
+
+void SCPIMM_external_trigger() {
+	volatile scpimm_context_t* const ctx = SCPIMM_context();
+	if (	SCPIMM_STATE_WAIT_FOR_TRIGGER == ATOMIC_READ_INT(ctx->state)
+			&& SCPIMM_TRIG_EXT == ctx->trigger_src ) {
+
+		trigger_pulled(ctx);
+	}
 }

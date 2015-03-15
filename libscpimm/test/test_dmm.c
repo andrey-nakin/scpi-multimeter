@@ -57,7 +57,13 @@ static void read_equal_numbers(const unsigned expected_num_of_values, double* co
 	}
 }
 
-void test_readQ_generic_impl(const dm_measurement_type_t mt) {
+void check_after_read_state() {
+	assert_no_scpi_errors();
+	CU_ASSERT_EQUAL(SCPIMM_context()->state, SCPIMM_STATE_IDLE);
+	ASSERT_INTERRUPTS_ARE_ENABLED();
+}
+
+void test_readQ_generic_impl(const dm_measurement_type_t mt, const char* trigger_src) {
 	char *result = dm_output_buffer();
 	double actual_range, actual_resolution;
 	double values[16];
@@ -66,57 +72,72 @@ void test_readQ_generic_impl(const dm_measurement_type_t mt) {
 	reset();
 	dm_multimeter_config.measurement_type = mt;
 
+	// read current value range
 	receivef("CONFIGURE?");
 	assert_no_scpi_errors();
 	CU_ASSERT_EQUAL(sscanf(strchr(result, ' ') + 1, "%le,%le", &actual_range, &actual_resolution), 2);
 
+	// read single value
 	dm_reset_counters();
 	receivef("READ?");
-	assert_no_scpi_errors();
-	ASSERT_INTERRUPTS_ARE_ENABLED();
+	check_after_read_state();
 	read_equal_numbers(1, values, actual_range * 0.5);
 
+	// decrease measurement duration for quicker testing
 	dm_multimeter_config.measurement_duration = 10;
 
+	// attempt to read value with invalid trigger source
+	receivef("TRIGGER:SOURCE BUS");
+	assert_no_scpi_errors();
+	dm_reset_counters();
+	receivef("READ?");
+	assert_scpi_error(SCPI_ERROR_TRIGGER_DEADLOCK);
+
+	// read SAMPLE_COUNT values
+	receivef("TRIGGER:SOURCE %s", trigger_src);
 	receivef("SAMPLE:COUNT %d", sample_count);
 	assert_no_scpi_errors();
 	dm_reset_counters();
 	receivef("READ?");
-	assert_no_scpi_errors();
-	ASSERT_INTERRUPTS_ARE_ENABLED();
+	check_after_read_state();
 	read_equal_numbers(sample_count, values, actual_range * 0.5);
 
+	// read TRIGGER_COUNT values
 	receivef("SAMPLE:COUNT %d", 1);
 	assert_no_scpi_errors();
 	receivef("TRIGGER:COUNT %d", trigger_count);
 	assert_no_scpi_errors();
 	dm_reset_counters();
 	receivef("READ?");
-	assert_no_scpi_errors();
-	ASSERT_INTERRUPTS_ARE_ENABLED();
+	check_after_read_state();
 	read_equal_numbers(trigger_count, values, actual_range * 0.5);
 
+	// read SAMPLE_COUNT * TRIGGER)COUNT values
 	receivef("SAMPLE:COUNT %d", sample_count);
 	assert_no_scpi_errors();
 	dm_reset_counters();
 	receivef("READ?");
-	assert_no_scpi_errors();
-	ASSERT_INTERRUPTS_ARE_ENABLED();
+	check_after_read_state();
 	read_equal_numbers(sample_count * trigger_count, values, actual_range * 0.5);
 
+	// read value with failed hardware
+	SCPIMM_context()->measurement_timeout = 100;	//	reduce timeout for quicker testing
 	dm_multimeter_state.measurement_failure_counter = sample_count * trigger_count / 2;
 	CU_ASSERT_TRUE(dm_multimeter_state.measurement_failure_counter > 0);
 	receivef("READ?");
 	assert_scpi_error(SCPI_ERROR_IO_PROCESSOR_DOES_NOT_RESPOND);
-	ASSERT_INTERRUPTS_ARE_ENABLED();
+	check_after_read_state();
 
-	// TODO check bus trigger error
-	// TODO check READ? after a failure
+	// read values again after failure
+	dm_reset_counters();
+	receivef("READ?");
+	check_after_read_state();
+	read_equal_numbers(sample_count * trigger_count, values, actual_range * 0.5);
 }
 
 void test_readQ_generic() {
-	test_readQ_generic_impl(DM_MEASUREMENT_TYPE_ASYNC);
-	test_readQ_generic_impl(DM_MEASUREMENT_TYPE_SYNC);
+	test_readQ_generic_impl(DM_MEASUREMENT_TYPE_ASYNC, "IMM");
+	test_readQ_generic_impl(DM_MEASUREMENT_TYPE_SYNC, "IMM");
 }
 
 void test_readQ() {

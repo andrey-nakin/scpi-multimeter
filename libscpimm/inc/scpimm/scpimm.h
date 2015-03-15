@@ -74,7 +74,7 @@ typedef enum {SCPIMM_TRIG_BUS, SCPIMM_TRIG_IMM, SCPIMM_TRIG_EXT} scpimm_trig_src
 typedef enum {SCPIMM_DST_BUF, SCPIMM_DST_OUT} scpimm_dst_t;
 
 /* Destination of measured values */
-typedef enum {SCPIMM_STATE_IDLE, SCPIMM_STATE_WAIT_FOR_TRIGGER, SCPIMM_STATE_TRIGGER_DELAY, SCPIMM_STATE_MEASURE} scpimm_state_t;
+typedef enum {SCPIMM_STATE_IDLE, SCPIMM_STATE_WAIT_FOR_TRIGGER, SCPIMM_STATE_TRIGGER_DELAY, SCPIMM_STATE_MEASURING, SCPIMM_STATE_MEASURED} scpimm_state_t;
 
 /* See SCPIMM_MODE_xxx constants */
 typedef uint16_t scpimm_mode_t;
@@ -203,11 +203,13 @@ struct _scpimm_context_t {
 	uint32_t state_time;
 	bool_t display;
 	char display_text[SCPIMM_DISPLAY_LEN + 1];
+	uint32_t measurement_timeout;
 
 	bool_t measuring;
 	scpi_number_t last_measured_value;
 	uint32_t measure_start_time;
 	int16_t measurement_error;
+	bool_t is_first_measured_value;
 
 	struct {
 		scpimm_mode_params_t dcv;
@@ -238,6 +240,7 @@ void SCPIMM_setup(const scpimm_interface_t*);
 */
 void SCPIMM_read_value(const scpi_number_t* value);
 void SCPIMM_parseInBuffer(const char* buf, size_t len);
+void SCPIMM_external_trigger();
 void SCPIMM_yield();
 
 /* For debug purposes */
