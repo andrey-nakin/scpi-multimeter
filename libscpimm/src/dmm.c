@@ -212,7 +212,9 @@ static int16_t check_measured_value(volatile scpimm_context_t* const ctx) {
 
 	if (0 == --ctx->sample_count) {
 		if (!ctx->infinite_trigger_count && 0 == --ctx->trigger_count) {
-			flush_out_buffer();
+			if (SCPIMM_DST_OUT == ctx->dst) {
+				flush_out_buffer();
+			}
 			switch_to_state(ctx, SCPIMM_STATE_IDLE);
 		} else {
 			ctx->sample_count = ctx->sample_count_num;
