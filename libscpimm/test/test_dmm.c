@@ -78,6 +78,7 @@ void test_readQ_generic_impl(const dm_measurement_type_t mt, const char* trigger
 	CU_ASSERT_EQUAL(sscanf(strchr(result, ' ') + 1, "%le,%le", &actual_range, &actual_resolution), 2);
 
 	// read single value
+	receivef("TRIGGER:SOURCE %s", trigger_src);
 	dm_reset_counters();
 	receivef("READ?");
 	check_after_read_state();
@@ -138,6 +139,8 @@ void test_readQ_generic_impl(const dm_measurement_type_t mt, const char* trigger
 void test_readQ_generic() {
 	test_readQ_generic_impl(DM_MEASUREMENT_TYPE_ASYNC, "IMM");
 	test_readQ_generic_impl(DM_MEASUREMENT_TYPE_SYNC, "IMM");
+	test_readQ_generic_impl(DM_MEASUREMENT_TYPE_ASYNC, "EXT");
+	test_readQ_generic_impl(DM_MEASUREMENT_TYPE_SYNC, "EXT");
 }
 
 void test_readQ() {

@@ -58,8 +58,9 @@ static const double RESOLUTIONS[][5] = {
 		{1000e-6, 1000e-5, 1000e-4, 1000e-3, -1.0}
 };
 
-static pthread_t measure_thread;
+static pthread_t measure_thread, trigger_thread;
 static bool_t measure_thread_created = FALSE;
+static bool_t trigger_thread_created = FALSE;
 static sem_t measure_sem;
 
 /***************************************************************
@@ -86,6 +87,17 @@ static void* measure_thread_routine(void* args) {
 
 		dm_sleep_milliseconds(dm_multimeter_config.measurement_duration);	//	emulate real measurement delay
 		do_measurement();
+	}
+
+	return NULL;
+}
+
+static void* trigger_thread_routine(void* args) {
+	(void) args;	//	suppress warning
+
+	while (TRUE) {
+		dm_sleep_milliseconds(100);
+		SCPIMM_external_trigger();
 	}
 
 	return NULL;
@@ -139,10 +151,21 @@ static int16_t dm_reset() {
 
 	    err = pthread_create(&measure_thread, NULL, measure_thread_routine, NULL);
 		if (err) {
-			printf("Error creating thread");
+			printf("Error creating measurement thread");
 			exit(err);
 		}
 		measure_thread_created = TRUE;
+	}
+
+	if (!trigger_thread_created) {
+		int err;
+
+	    err = pthread_create(&trigger_thread, NULL, trigger_thread_routine, NULL);
+		if (err) {
+			printf("Error creating trigger thread");
+			exit(err);
+		}
+		trigger_thread_created = TRUE;
 	}
 
 	dm_multimeter_state.interrrupt_disable_counter = 0;
