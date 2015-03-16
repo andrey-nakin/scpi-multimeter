@@ -4,6 +4,7 @@
 #include <math.h>
 #include <ctype.h>
 #include <scpi/config.h>
+#include "scpimm_internal.h"
 #include "utils.h"
 
 size_t strToDouble(const char * str, double * val);
@@ -56,7 +57,7 @@ bool_t expectNoParams(scpi_t* context) {
 
 void signalInternalError(scpi_t* context) {
 	/* TODO: signal valid error */
-    SCPI_ErrorPush(context, SCPI_ERROR_INTERNAL);
+    SCPI_ErrorPush(context, SCPI_ERROR_UNKNOWN);
 }
 
 size_t double_to_str(char* dest, double v) {

@@ -16,16 +16,17 @@ static void beeper() {
 	++beeper_counter;
 }
 
-static void remote(bool_t remote, bool_t lock) {
+static int16_t remote(bool_t remote, bool_t lock) {
 	++remove_counter;
 	last_remote = remote;
 	last_lock = lock;
+	return SCPI_ERROR_OK;
 }
 
 static void beeper_state_impl(const char* cmd, bool_t expected) {
 	receive(cmd);
 	assert_no_scpi_errors();
-	asset_no_data();
+	assert_no_data();
     CU_ASSERT_EQUAL(CONTEXT->beeper_state, expected);
 }
 
@@ -36,7 +37,7 @@ static void remote_impl(const char* cmd, bool_t expected_remote, bool_t expected
 
 	receive(cmd);
 	assert_no_scpi_errors();
-	asset_no_data();
+	assert_no_data();
 
     CU_ASSERT_EQUAL(remove_counter, 1);
     CU_ASSERT_EQUAL(last_remote, expected_remote);
@@ -45,14 +46,14 @@ static void remote_impl(const char* cmd, bool_t expected_remote, bool_t expected
 
 static void error_impl(const char* cmd) {
 	receive(cmd);
-	asset_in_data("0, \"No error\"\r\n");
+	assert_in_data("0, \"No error\"\r\n");
 
 	receive("wrong command");
 	receive(cmd);
-	asset_in_data("-113, \"Undefined header\"\r\n");
+	assert_in_data("-113, \"Undefined header\"\r\n");
 
 	receive(cmd);
-	asset_in_data("0, \"No error\"\r\n");
+	assert_in_data("0, \"No error\"\r\n");
 }
 
 int init_suite(void) {
@@ -73,7 +74,7 @@ void test_beeper() {
 	beeper_counter = 0;
 	receive("SYSTEM:BEEPER");
 	assert_no_scpi_errors();
-	asset_no_data();
+	assert_no_data();
     CU_ASSERT_EQUAL(beeper_counter, 1);
 }
 
@@ -92,12 +93,12 @@ void test_beeper_stateQ() {
 	CONTEXT->beeper_state = FALSE;
 	receive("SYSTEM:BEEPER:STATE?");
 	assert_no_scpi_errors();
-	asset_in_bool(FALSE);
+	assert_in_bool(FALSE);
 
 	CONTEXT->beeper_state = TRUE;
 	receive("SYSTEM:BEEPER:STATE?");
 	assert_no_scpi_errors();
-	asset_in_bool(TRUE);
+	assert_in_bool(TRUE);
 }
 
 void test_errorQ() {
@@ -110,15 +111,15 @@ void test_error_nextQ() {
 
 void test_error_countQ() {
 	receive("SYSTEM:ERROR:COUNT?");
-	asset_in_data("0\r\n");
+	assert_in_data("0\r\n");
 
 	receive("wrong command");
 	receive("SYSTEM:ERROR:COUNT?");
-	asset_in_data("1\r\n");
+	assert_in_data("1\r\n");
 
 	receive("wrong command 2");
 	receive("SYSTEM:ERROR:COUNT?");
-	asset_in_data("2\r\n");
+	assert_in_data("2\r\n");
 
 	clearscpi_errors();
 }
@@ -138,7 +139,7 @@ void test_rwlock() {
 void test_version() {
 	receive("SYSTEM:VERSION?");
 	assert_no_scpi_errors();
-	asset_in_data("v1.0\r\n");
+	assert_in_data("v1.0\r\n");
 }
 
 int main() {

@@ -2,6 +2,7 @@
 #define	_TEST_UTILS_SCPIMM_
 
 #include <scpi/scpi.h>
+#include "../src/scpimm_internal.h"
 #include "default_multimeter.h"
 
 #define FLOAT_DELTA 1.0e-6

@@ -22,32 +22,32 @@ void test_count() {
 	ctx->sample_count_num = 0;
 	receive("SAMPLE:COUNT MIN");
 	assert_no_scpi_errors();
-	asset_no_data();
+	assert_no_data();
 	CU_ASSERT_EQUAL(ctx->sample_count_num, 1);
 
 	receive("SAMPLE:COUNT MAX");
 	assert_no_scpi_errors();
-	asset_no_data();
+	assert_no_data();
 	CU_ASSERT_EQUAL(ctx->sample_count_num, SCPIMM_BUF_CAPACITY);
 
 	for (i = 1; i <= SCPIMM_BUF_CAPACITY; ++i) {
 		receivef("SAMPLE:COUNT %d", i);
 		assert_no_scpi_errors();
-		asset_no_data();
+		assert_no_data();
 		CU_ASSERT_EQUAL((int) ctx->sample_count_num, i);
 	}
 
 	receive("SAMPLE:COUNT 0");
 	assert_scpi_error(SCPI_ERROR_DATA_OUT_OF_RANGE);
-	asset_no_data();
+	assert_no_data();
 
 	receivef("SAMPLE:COUNT %d", (int) (SCPIMM_BUF_CAPACITY + 1));
 	assert_scpi_error(SCPI_ERROR_DATA_OUT_OF_RANGE);
-	asset_no_data();
+	assert_no_data();
 
 	receive("SAMPLE:COUNT DEF");
 	assert_scpi_error(SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
-	asset_no_data();
+	assert_no_data();
 }
 
 void test_countQ() {

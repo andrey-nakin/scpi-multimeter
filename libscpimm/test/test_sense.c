@@ -3,6 +3,7 @@
 #include "CUnit/Basic.h"
 #include <scpi/scpi.h>
 #include <scpimm/scpimm.h>
+#include "test_utils.h"
 
 int init_suite(void) {
     return 0;
@@ -15,7 +16,7 @@ int clean_suite(void) {
 void test_functionQ() {
 	receive("SENSE:FUNCTION?");
 	assert_no_scpi_errors();
-	asset_in_data("v1.0\r\n");
+	assert_in_data("v1.0\r\n");
 }
 
 int main() {

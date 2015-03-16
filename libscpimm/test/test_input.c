@@ -34,17 +34,17 @@ void test_impedance_auto() {
 
 	receive("INPUT:IMPEDANCE:AUTO ON");
 	assert_no_scpi_errors();
-	asset_no_data();
+	assert_no_data();
 	CU_ASSERT_EQUAL(ctx->input_impedance_auto_state, TRUE);
 	
 	receive("INPUT:IMPEDANCE:AUTO OFF");
 	assert_no_scpi_errors();
-	asset_no_data();
+	assert_no_data();
 	CU_ASSERT_EQUAL(ctx->input_impedance_auto_state, FALSE);
 
 	receive("INPUT:IMPEDANCE:AUTO");
 	assert_scpi_error(SCPI_ERROR_MISSING_PARAMETER);
-	asset_no_data();
+	assert_no_data();
 
 	intf->set_input_impedance_auto = set_input_impedance_auto;
 	result = TRUE;
@@ -53,22 +53,22 @@ void test_impedance_auto() {
 	last_state = FALSE;
 	receive("INPUT:IMPEDANCE:AUTO ON");
 	assert_no_scpi_errors();
-	asset_no_data();
+	assert_no_data();
 	CU_ASSERT_EQUAL(ctx->input_impedance_auto_state, TRUE);
 	CU_ASSERT_EQUAL(counter, 1);
 	CU_ASSERT_EQUAL(last_state, TRUE);
 
 	receive("INPUT:IMPEDANCE:AUTO OFF");
 	assert_no_scpi_errors();
-	asset_no_data();
+	assert_no_data();
 	CU_ASSERT_EQUAL(ctx->input_impedance_auto_state, FALSE);
 	CU_ASSERT_EQUAL(counter, 2);
 	CU_ASSERT_EQUAL(last_state, FALSE);
 
 	result = FALSE;
 	receive("INPUT:IMPEDANCE:AUTO ON");
-	assert_scpi_error(SCPI_ERROR_INTERNAL);
-	asset_no_data();
+	assert_scpi_error(SCPI_ERROR_UNKNOWN);
+	assert_no_data();
 }
 
 void test_impedance_autoQ() {
@@ -78,12 +78,12 @@ void test_impedance_autoQ() {
 	ctx->input_impedance_auto_state = TRUE;
 	receive("INPUT:IMPEDANCE:AUTO?");
 	assert_no_scpi_errors();
-	asset_in_bool(TRUE);
+	assert_in_bool(TRUE);
 
 	ctx->input_impedance_auto_state = FALSE;
 	receive("INPUT:IMPEDANCE:AUTO?");
 	assert_no_scpi_errors();
-	asset_in_bool(FALSE);
+	assert_in_bool(FALSE);
 }
 
 int main() {

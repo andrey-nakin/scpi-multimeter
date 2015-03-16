@@ -23,8 +23,8 @@ void init_scpimm() {
 void receive(const char* s) {
 	dm_init_in_buffer();
 //	printf("SEND: %s\n", s);
-	SCPIMM_parseInBuffer(s, strlen(s));
-	SCPIMM_parseInBuffer("\r\n", 2);
+	SCPIMM_parse_in_buffer(s, strlen(s));
+	SCPIMM_parse_in_buffer("\r\n", 2);
 }
 
 void receivef(const char* fmt, ...) {

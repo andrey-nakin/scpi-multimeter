@@ -11,7 +11,7 @@
 static void delay_auto_impl(const char* cmd, bool_t expected) {
 	receive(cmd);
 	assert_no_scpi_errors();
-	asset_no_data();
+	assert_no_data();
     CU_ASSERT_EQUAL(CONTEXT->trigger_auto_delay, expected);
 }
 
@@ -35,13 +35,13 @@ void test_source() {
 	for (i = 0; i < sizeof(options) / sizeof(options[0]); ++i) {
 		receivef("TRIGGER:SOURCE %s", options[i]);
 		assert_no_scpi_errors();
-		asset_no_data();
+		assert_no_data();
 		CU_ASSERT_EQUAL(ctx->trigger_src, expected[i]);
 	}
 
 	receive("TRIGGER:SOURCE WRONG");
 	assert_scpi_error(SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
-	asset_no_data();
+	assert_no_data();
 }
 
 void test_sourceQ() {
@@ -56,7 +56,7 @@ void test_sourceQ() {
 		ctx->trigger_src = values[i];
 		receive("TRIGGER:SOURCE?");
 		assert_no_scpi_errors();
-		asset_in_data(expected[i]);
+		assert_in_data(expected[i]);
 	}
 }
 
@@ -71,32 +71,32 @@ void test_delay() {
 
 	receive("TRIGGER:DELAY MIN");
 	assert_no_scpi_errors();
-	asset_no_data();
+	assert_no_data();
 	CU_ASSERT_DOUBLE_EQUAL(ctx->trigger_delay, 0.0f, FLOAT_DELTA);
 
 	receive("TRIGGER:DELAY MAX");
 	assert_no_scpi_errors();
-	asset_no_data();
+	assert_no_data();
 	CU_ASSERT_DOUBLE_EQUAL(ctx->trigger_delay, 3600.0f, FLOAT_DELTA);
 
 	for (f = 0.0f; f <= 3600.0f; f += 123.45f) {
 		receivef("TRIGGER:DELAY %f", (double) f);
 		assert_no_scpi_errors();
-		asset_no_data();
+		assert_no_data();
 		CU_ASSERT_DOUBLE_EQUAL(ctx->trigger_delay, f, FLOAT_DELTA);
 	}
 
 	receive("TRIGGER:DELAY -1");
 	assert_scpi_error(SCPI_ERROR_DATA_OUT_OF_RANGE);
-	asset_no_data();
+	assert_no_data();
 
 	receive("TRIGGER:DELAY 3601");
 	assert_scpi_error(SCPI_ERROR_DATA_OUT_OF_RANGE);
-	asset_no_data();
+	assert_no_data();
 
 	receive("TRIGGER:COUNT DEF");
 	assert_scpi_error(SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
-	asset_no_data();
+	assert_no_data();
 }
 
 void test_delayQ() {
@@ -139,12 +139,12 @@ void test_delay_autoQ() {
 	CONTEXT->trigger_auto_delay = FALSE;
 	receive("TRIGGER:DELAY:AUTO?");
 	assert_no_scpi_errors();
-	asset_in_bool(FALSE);
+	assert_in_bool(FALSE);
 
 	CONTEXT->trigger_auto_delay = TRUE;
 	receive("TRIGGER:DELAY:AUTO?");
 	assert_no_scpi_errors();
-	asset_in_bool(TRUE);
+	assert_in_bool(TRUE);
 }
 
 void test_count() {
@@ -158,40 +158,40 @@ void test_count() {
 
 	receive("TRIGGER:COUNT MIN");
 	assert_no_scpi_errors();
-	asset_no_data();
+	assert_no_data();
 	CU_ASSERT_EQUAL(ctx->trigger_count_num, 1);
 	CU_ASSERT_EQUAL(ctx->infinite_trigger_count, FALSE);
 
 	receive("TRIGGER:COUNT INF");
 	assert_no_scpi_errors();
-	asset_no_data();
+	assert_no_data();
 	CU_ASSERT_EQUAL(ctx->infinite_trigger_count, TRUE);
 
 	receive("TRIGGER:COUNT MAX");
 	assert_no_scpi_errors();
-	asset_no_data();
+	assert_no_data();
 	CU_ASSERT_EQUAL(ctx->trigger_count_num, SCPIMM_BUF_CAPACITY);
 	CU_ASSERT_EQUAL(ctx->infinite_trigger_count, FALSE);
 
 	for (i = 1; i <= SCPIMM_BUF_CAPACITY; ++i) {
 		receivef("TRIGGER:COUNT %d", i);
 		assert_no_scpi_errors();
-		asset_no_data();
+		assert_no_data();
 		CU_ASSERT_EQUAL((int) ctx->trigger_count_num, i);
 		CU_ASSERT_EQUAL(ctx->infinite_trigger_count, FALSE);
 	}
 
 	receive("TRIGGER:COUNT 0");
 	assert_scpi_error(SCPI_ERROR_DATA_OUT_OF_RANGE);
-	asset_no_data();
+	assert_no_data();
 
 	receivef("TRIGGER:COUNT %d", (int) (SCPIMM_BUF_CAPACITY + 1));
 	assert_scpi_error(SCPI_ERROR_DATA_OUT_OF_RANGE);
-	asset_no_data();
+	assert_no_data();
 
 	receive("TRIGGER:COUNT DEF");
 	assert_scpi_error(SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
-	asset_no_data();
+	assert_no_data();
 }
 
 void test_countQ() {

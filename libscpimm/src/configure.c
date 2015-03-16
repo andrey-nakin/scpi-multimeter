@@ -55,12 +55,6 @@ static bool_t validate_number(scpi_t* context, scpimm_mode_t mode, const scpi_nu
 static scpi_result_t configure_2arg_impl(scpi_t* context, scpimm_mode_t mode) {
     scpi_number_t range, resolution;
 
-	if (!(SCPIMM_INTERFACE(context)->supported_modes() & mode)) {
-		/* given mode is not supported */
-	    SCPI_ErrorPush(context, SCPI_ERROR_UNDEFINED_HEADER);
-    	return SCPI_RES_ERR;
-	}
-
     if (SCPI_ParamNumber(context, &range, FALSE)) {
 		if (!validate_number(context, mode, &range)) {
 			return SCPI_RES_ERR;
@@ -87,12 +81,6 @@ static scpi_result_t configure_2arg_impl(scpi_t* context, scpimm_mode_t mode) {
 }
 
 static scpi_result_t configure_noarg_impl(scpi_t* context, scpimm_mode_t mode) {
-	if (!(SCPIMM_INTERFACE(context)->supported_modes() & mode)) {
-		/* given mode is not supported */
-	    SCPI_ErrorPush(context, SCPI_ERROR_UNDEFINED_HEADER);
-    	return SCPI_RES_ERR;
-	}
-
 	expectNoParams(context);
 
 	if (context->cmd_error) {

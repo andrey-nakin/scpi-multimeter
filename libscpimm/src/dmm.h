@@ -2,6 +2,7 @@
 #define	__DMM_H_SCPIMM_
 
 #include <scpi/scpi.h>
+#include "scpimm_internal.h"
 
 scpi_result_t SCPIMM_measure_preset(scpi_t* context);
 scpi_result_t SCPIMM_set_state(scpi_t* context, scpimm_state_t new_state);

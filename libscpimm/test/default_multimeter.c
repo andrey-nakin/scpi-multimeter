@@ -1,12 +1,12 @@
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <pthread.h>
 #include <semaphore.h>
 #include "default_multimeter.h"
 
 #define DEFAULT_MEAS_DURATION 500
 
-static scpimm_mode_t dm_supported_modes(void);
 static int16_t dm_reset();
 static int16_t dm_set_mode(scpimm_mode_t mode, const scpimm_mode_params_t* const params);
 static int16_t dm_get_mode(scpimm_mode_t* mode, scpimm_mode_params_t* const params);
@@ -27,7 +27,6 @@ dm_set_mode_args_t dm_set_mode_last_args;
 dm_get_allowed_ranges_args_t dm_get_allowed_ranges_last_args;
 dm_get_allowed_resolutions_args_t dm_get_allowed_resolutions_last_args;
 scpimm_interface_t dm_interface = {
-		.supported_modes = dm_supported_modes,
 		.reset = dm_reset,
 		.set_mode = dm_set_mode,
 		.get_mode = dm_get_mode,
@@ -131,13 +130,6 @@ double dm_measurement_func_const(uint32_t time) {
 /***************************************************************
  * Multimeter interface
  **************************************************************/
-
-static scpimm_mode_t dm_supported_modes(void) {
-	return SCPIMM_MODE_DCV | SCPIMM_MODE_DCV_RATIO | SCPIMM_MODE_ACV | SCPIMM_MODE_DCC
-			| SCPIMM_MODE_ACC | SCPIMM_MODE_RESISTANCE_2W | SCPIMM_MODE_RESISTANCE_4W
-			| SCPIMM_MODE_FREQUENCY | SCPIMM_MODE_PERIOD | SCPIMM_MODE_CONTINUITY
-			| SCPIMM_MODE_DIODE;
-}
 
 static int16_t dm_reset() {
 	if (!measure_thread_created) {

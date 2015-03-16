@@ -10,7 +10,7 @@
 static void delay_auto_impl(const char* cmd, bool_t expected) {
 	receive(cmd);
 	assert_no_scpi_errors();
-	asset_no_data();
+	assert_no_data();
     CU_ASSERT_EQUAL(CONTEXT->display, expected);
 }
 
@@ -41,12 +41,12 @@ void test_displayQ() {
 	CONTEXT->display = FALSE;
 	receive("DISPLAY?");
 	assert_no_scpi_errors();
-	asset_in_bool(FALSE);
+	assert_in_bool(FALSE);
 
 	CONTEXT->display = TRUE;
 	receive("DISPLAY?");
 	assert_no_scpi_errors();
-	asset_in_bool(TRUE);
+	assert_in_bool(TRUE);
 }
 
 void test_display_text() {
@@ -54,17 +54,17 @@ void test_display_text() {
 
 	receive("DISPLAY:TEXT ''");
 	assert_no_scpi_errors();
-	asset_no_data();
+	assert_no_data();
     CU_ASSERT_STRING_EQUAL(CONTEXT->display_text, "");
 
 	receive("DISPLAY:TEXT '1234567890AB'");
 	assert_no_scpi_errors();
-	asset_no_data();
+	assert_no_data();
     CU_ASSERT_STRING_EQUAL(CONTEXT->display_text, "1234567890AB");
 
 	receive("DISPLAY:TEXT '1234567890ABC'");
 	assert_scpi_error(SCPI_ERROR_TOO_MUCH_DATA);
-	asset_no_data();
+	assert_no_data();
 }
 
 void test_display_textQ() {
@@ -72,12 +72,12 @@ void test_display_textQ() {
 
 	receive("DISPLAY:TEXT?");
 	assert_no_scpi_errors();
-	asset_in_data("\"\"\r\n");
+	assert_in_data("\"\"\r\n");
 
 	strcpy(CONTEXT->display_text, "1234567890AB");
 	receive("DISPLAY:TEXT?");
 	assert_no_scpi_errors();
-	asset_in_data("\"1234567890AB\"\r\n");
+	assert_in_data("\"1234567890AB\"\r\n");
 }
 
 void test_display_text_clear() {
@@ -86,7 +86,7 @@ void test_display_text_clear() {
 	strcpy(CONTEXT->display_text, "1234567890AB");
 	receive("DISPLAY:TEXT:CLEAR");
 	assert_no_scpi_errors();
-	asset_no_data();
+	assert_no_data();
     CU_ASSERT_STRING_EQUAL(CONTEXT->display_text, "");
 }
 

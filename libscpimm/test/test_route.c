@@ -29,23 +29,23 @@ void test_terminalsQ() {
 	intf->get_input_terminal = NULL;
 	receive("ROUTE:TERMINALS?");
 	assert_no_scpi_errors();
-	asset_in_data("FRON\r\n");
+	assert_in_data("FRON\r\n");
 
 	intf->get_input_terminal = get_input_terminal;
 	terminal = SCPIMM_TERM_FRONT;
 	terminal_result = TRUE;
 	receive("ROUTE:TERMINALS?");
 	assert_no_scpi_errors();
-	asset_in_data("FRON\r\n");
+	assert_in_data("FRON\r\n");
 
 	terminal = SCPIMM_TERM_REAR;
 	receive("ROUTE:TERMINALS?");
 	assert_no_scpi_errors();
-	asset_in_data("REAR\r\n");
+	assert_in_data("REAR\r\n");
 
 	terminal_result = FALSE;
 	receive("ROUTE:TERMINALS?");
-	assert_scpi_error(SCPI_ERROR_INTERNAL);
+	assert_scpi_error(SCPI_ERROR_UNKNOWN);
 }
 
 int main() {

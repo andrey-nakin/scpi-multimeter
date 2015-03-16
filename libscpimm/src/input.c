@@ -1,5 +1,6 @@
 #include <scpimm/scpimm.h>
 #include "input.h"
+#include "scpimm_internal.h"
 #include "utils.h"
 
 scpi_result_t SCPIMM_do_set_input_impedance_auto(scpi_t* context, bool_t state) {

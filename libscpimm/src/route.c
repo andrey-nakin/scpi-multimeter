@@ -1,4 +1,5 @@
 #include "route.h"
+#include "scpimm_internal.h"
 #include "utils.h"
 
 scpi_result_t SCPIMM_route_terminals(scpi_t* context) {

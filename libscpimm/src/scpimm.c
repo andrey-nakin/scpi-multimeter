@@ -272,7 +272,7 @@ void SCPIMM_setup(const scpimm_interface_t* i) {
 	reset(&scpi_context);
 }
 
-void SCPIMM_parseInBuffer(char const* inbuf, size_t avail) {
+void SCPIMM_parse_in_buffer(char const* inbuf, size_t avail) {
 	SCPI_Input(&scpi_context, inbuf, avail);
 }
 
@@ -296,7 +296,7 @@ static scpi_result_t reset(scpi_t* context) {
 	volatile scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
 
 //	memset((void*) ctx, 0, sizeof(*ctx));
-	SCPIMM_set_remote(context, FALSE, FALSE);
+	SCPIMM_set_remote(context, TRUE, FALSE);
 	ctx->display = TRUE;
 	ctx->display_text[0] = '\0';
 

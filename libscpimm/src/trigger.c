@@ -1,5 +1,6 @@
 #include <scpimm/scpimm.h>
 #include "trigger.h"
+#include "scpimm_internal.h"
 #include "utils.h"
 
 #define	INF_TRIGGER_COUNT	9.90000000E+37

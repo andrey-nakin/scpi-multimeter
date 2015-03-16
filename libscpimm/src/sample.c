@@ -1,5 +1,6 @@
 #include <scpimm/scpimm.h>
 #include "sample.h"
+#include "scpimm_internal.h"
 #include "utils.h"
 
 static long max_sample_count() {

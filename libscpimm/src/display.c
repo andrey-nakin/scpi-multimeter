@@ -1,5 +1,6 @@
 #include <string.h>
 #include "display.h"
+#include "scpimm_internal.h"
 #include "utils.h"
 
 scpi_result_t SCPIMM_display(scpi_t* context) {

@@ -1,46 +1,13 @@
 #ifndef __EXTERNALS_H_SCPIMM
 #define	__EXTERNALS_H_SCPIMM
 
-#include <stdlib.h>
 #include <stdint.h>
 #include <scpi/scpi.h>
+#include "errors.h"
 
 #ifdef  __cplusplus
 extern "C" {
 #endif
-
-/******************************************************************************
-  Basic constants
-******************************************************************************/
-
-#define	SCPI_ERROR_INTERNAL SCPI_ERROR_PARAMETER_NOT_ALLOWED
-
-#define SCPIMM_BUF_LEN 11
-//#define SCPIMM_BUF_LEN 513
-#define SCPIMM_BUF_CAPACITY SCPIMM_BUF_LEN
-
-#define SCPIMM_DISPLAY_LEN 12
-
-/******************************************************************************
-  Errot codes
-******************************************************************************/
-
-#define SCPI_ERROR_OK	0
-
-#define SCPI_ERROR_TRIGGER_IGNORED	-211
-#define SCPI_ERROR_INIT_IGNORED	-213
-#define SCPI_ERROR_TRIGGER_DEADLOCK	-214
-#define SCPI_ERROR_DATA_OUT_OF_RANGE	-222
-#define SCPI_ERROR_TOO_MUCH_DATA	-223
-#define SCPI_ERROR_ILLEGAL_PARAMETER_VALUE	-224
-#define SCPI_ERROR_DATA_STALE	-230
-#define SCPI_ERROR_INSUFFICIENT_MEMORY	531
-#define SCPI_ERROR_CANNOT_ACHIEVE_REQUESTED_RESOLUTION	532
-#define SCPI_ERROR_NOT_ALLOWED_IN_LOCAL	550
-#define SCPI_ERROR_IO_PROCESSOR_DOES_NOT_RESPOND 625
-
-#define SCPI_ERROR_UNKNOWN	551
-#define SCPI_ERROR_INTERNAL_START	555
 
 /******************************************************************************
   Multimeter mode constants (to use in MM_setMode)
@@ -66,15 +33,6 @@ extern "C" {
 /* Input terminal type */
 typedef enum {SCPIMM_TERM_FRONT, SCPIMM_TERM_REAR} scpimm_terminal_state_t;
 
-/* Trigger source type */
-typedef enum {SCPIMM_TRIG_BUS, SCPIMM_TRIG_IMM, SCPIMM_TRIG_EXT} scpimm_trig_src_t;
-
-/* Destination of measured values */
-typedef enum {SCPIMM_DST_BUF, SCPIMM_DST_OUT} scpimm_dst_t;
-
-/* Destination of measured values */
-typedef enum {SCPIMM_STATE_IDLE, SCPIMM_STATE_WAIT_FOR_TRIGGER, SCPIMM_STATE_TRIGGER_DELAY, SCPIMM_STATE_MEASURING, SCPIMM_STATE_MEASURED} scpimm_state_t;
-
 /* See SCPIMM_MODE_xxx constants */
 typedef uint16_t scpimm_mode_t;
 
@@ -84,18 +42,7 @@ typedef struct _scpimm_mode_params_t {
 	size_t resolution_index;
 } scpimm_mode_params_t;
 
-typedef enum {
-    SCPIMM_MS_IDLE,
-    SCPIMM_MS_STARTING,
-    SCPIMM_MS_MEASURING
-} scpimm_measurement_state;
-
-struct _scpimm_interface_t {
-	/*
-		Mandatory
-		Return bitwise set of modes suported by underlying implementation
-	*/
-	scpimm_mode_t (*supported_modes)(void);
+typedef struct {
 
 	/*
 		Mandatory
@@ -156,7 +103,7 @@ struct _scpimm_interface_t {
 		Optional
 		Turn "remote control" mode to on/off
 	*/
-	void (*remote)(bool_t remote, bool_t lock);
+	int16_t (*remote)(bool_t remote, bool_t lock);
 
 	/* 
 		Optional
@@ -176,54 +123,7 @@ struct _scpimm_interface_t {
 	*/
 	bool_t (*set_input_impedance_auto)(bool_t state);
 
-	/*
-		Optional
-		Get text description of non-standard multimeter error
-	*/
-	const char* (*get_error_description)(int16_t error);
-
-};
-
-typedef struct _scpimm_interface_t scpimm_interface_t;
-
-struct _scpimm_context_t {
-	scpimm_interface_t* interface;
-	bool_t beeper_state;
-	bool_t input_impedance_auto_state;
-	unsigned sample_count_num, trigger_count_num, sample_count, trigger_count;
-	bool_t infinite_trigger_count;
-	scpimm_trig_src_t trigger_src;
-	float trigger_delay;
-	bool_t trigger_auto_delay;
-	scpimm_dst_t dst;
-	double buf[SCPIMM_BUF_LEN];
-	unsigned buf_count;
-	scpimm_state_t state;
-	uint32_t state_time;
-	bool_t display;
-	char display_text[SCPIMM_DISPLAY_LEN + 1];
-	uint32_t measurement_timeout;
-
-	scpi_number_t last_measured_value;
-	uint32_t measure_start_time;
-	int16_t measurement_error;
-	bool_t is_first_measured_value;
-
-	struct {
-		scpimm_mode_params_t dcv;
-		scpimm_mode_params_t dcv_ratio;
-		scpimm_mode_params_t acv;
-		scpimm_mode_params_t dcc;
-		scpimm_mode_params_t acc;
-		scpimm_mode_params_t resistance;
-		scpimm_mode_params_t fresistance;
-		scpimm_mode_params_t frequency;
-		scpimm_mode_params_t period;
-	} mode_params;
-
-};
-
-typedef struct _scpimm_context_t scpimm_context_t;
+} scpimm_interface_t;
 
 /******************************************************************************
   Public functions
@@ -237,13 +137,9 @@ void SCPIMM_setup(const scpimm_interface_t*);
 	Process value measured
 */
 void SCPIMM_read_value(const scpi_number_t* value);
-void SCPIMM_parseInBuffer(const char* buf, size_t len);
+void SCPIMM_parse_in_buffer(const char* buf, size_t len);
 void SCPIMM_external_trigger();
 void SCPIMM_yield();
-
-/* For debug purposes */
-scpimm_context_t* SCPIMM_context();
-scpi_t* SCPI_context();
 
 #ifdef  __cplusplus
 }
