@@ -9,6 +9,9 @@
 
 #define SCPIMM_DISPLAY_LEN 12
 
+#define	MAX_SAMPLE_COUNT	50000
+#define	MAX_TRIGGER_COUNT	MAX_SAMPLE_COUNT
+
 /******************************************************************************
   Types
 ******************************************************************************/
@@ -26,7 +29,7 @@ typedef struct {
 	scpimm_interface_t* interface;
 	bool_t beeper_state;
 	bool_t input_impedance_auto_state;
-	unsigned sample_count_num, trigger_count_num, sample_count, trigger_count;
+	uint16_t sample_count_num, trigger_count_num, sample_count, trigger_count;
 	bool_t infinite_trigger_count;
 	scpimm_trig_src_t trigger_src;
 	float trigger_delay;

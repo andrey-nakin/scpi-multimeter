@@ -4,7 +4,7 @@
 #include "utils.h"
 
 static long max_sample_count() {
-	return 65535;
+	return MAX_SAMPLE_COUNT;
 }
 
 scpi_result_t SCPIMM_sample_count(scpi_t* context) {
@@ -40,7 +40,7 @@ scpi_result_t SCPIMM_sample_count(scpi_t* context) {
     	return SCPI_RES_ERR;
 	}
 
-	ctx->sample_count_num = (unsigned) lnum;
+	ctx->sample_count_num = (uint16_t) lnum;
 	return SCPI_RES_OK;
 }
 

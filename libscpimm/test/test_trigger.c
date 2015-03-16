@@ -170,7 +170,7 @@ void test_count() {
 	receive("TRIGGER:COUNT MAX");
 	assert_no_scpi_errors();
 	assert_no_data();
-	CU_ASSERT_EQUAL(ctx->trigger_count_num, SCPIMM_BUF_CAPACITY);
+	CU_ASSERT_EQUAL(ctx->trigger_count_num, MAX_TRIGGER_COUNT);
 	CU_ASSERT_EQUAL(ctx->infinite_trigger_count, FALSE);
 
 	for (i = 1; i <= SCPIMM_BUF_CAPACITY; ++i) {

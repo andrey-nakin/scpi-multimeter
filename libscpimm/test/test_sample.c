@@ -28,9 +28,9 @@ void test_count() {
 	receive("SAMPLE:COUNT MAX");
 	assert_no_scpi_errors();
 	assert_no_data();
-	CU_ASSERT_EQUAL(ctx->sample_count_num, SCPIMM_BUF_CAPACITY);
+	CU_ASSERT_EQUAL(ctx->sample_count_num, MAX_SAMPLE_COUNT);
 
-	for (i = 1; i <= SCPIMM_BUF_CAPACITY; ++i) {
+	for (i = 1; i <= MAX_SAMPLE_COUNT; ++i) {
 		receivef("SAMPLE:COUNT %d", i);
 		assert_no_scpi_errors();
 		assert_no_data();
@@ -41,7 +41,7 @@ void test_count() {
 	assert_scpi_error(SCPI_ERROR_DATA_OUT_OF_RANGE);
 	assert_no_data();
 
-	receivef("SAMPLE:COUNT %d", (int) (SCPIMM_BUF_CAPACITY + 1));
+	receivef("SAMPLE:COUNT %d", (int) (MAX_SAMPLE_COUNT + 1));
 	assert_scpi_error(SCPI_ERROR_DATA_OUT_OF_RANGE);
 	assert_no_data();
 
@@ -62,9 +62,9 @@ void test_countQ() {
 
 	receive("SAMPLE:COUNT? MAX");
 	assert_no_scpi_errors();
-	assert_in_int(SCPIMM_BUF_CAPACITY);
+	assert_in_int(MAX_SAMPLE_COUNT);
 
-	for (i = 1; i <= SCPIMM_BUF_CAPACITY; ++i) {
+	for (i = 1; i <= MAX_SAMPLE_COUNT; ++i) {
 		ctx->sample_count_num = i;
 		receive("SAMPLE:COUNT?");
 		assert_no_scpi_errors();

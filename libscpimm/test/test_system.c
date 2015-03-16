@@ -139,7 +139,7 @@ void test_rwlock() {
 void test_version() {
 	receive("SYSTEM:VERSION?");
 	assert_no_scpi_errors();
-	assert_in_data("v1.0\r\n");
+	assert_in_data("1992.0\r\n");
 }
 
 int main() {

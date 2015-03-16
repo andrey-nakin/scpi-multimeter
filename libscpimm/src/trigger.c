@@ -10,8 +10,8 @@
 
 static const char* options[] = {"BUS", "IMMediate", "EXTernal", NULL};
 
-static long max_sample_count() {
-	return SCPIMM_BUF_CAPACITY;
+static long max_trigger_count() {
+	return MAX_TRIGGER_COUNT;
 }
 
 scpi_result_t SCPIMM_trigger_source(scpi_t* context) {
@@ -127,7 +127,7 @@ scpi_result_t SCPIMM_trigger_delay_autoQ(scpi_t* context) {
 }
 
 scpi_result_t SCPIMM_trigger_count(scpi_t* context) {
-	const long lmax = max_sample_count();
+	const long lmax = max_trigger_count();
 	scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
     scpi_number_t num;
 	long lnum;
@@ -186,7 +186,7 @@ scpi_result_t SCPIMM_trigger_countQ(scpi_t* context) {
 			break;
 
 		case SCPI_NUM_MAX:
-			lnum = max_sample_count();
+			lnum = max_trigger_count();
 			break;
 
 		case SCPI_NUM_DEF:
