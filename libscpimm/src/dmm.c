@@ -254,8 +254,11 @@ void SCPIMM_yield() {
 void SCPIMM_read_value(const scpi_number_t* value) {
 	volatile scpimm_context_t* const ctx = SCPIMM_context();
 
-	ctx->last_measured_value.type = SCPI_NUM_NUMBER;
-	ctx->last_measured_value.value = SCPI_NUM_NUMBER == value->type ? value->value : SCPIMM_OVERFLOW;
+	if (value) {
+		ctx->last_measured_value = *value;
+	} else {
+		ctx->last_measured_value.type = SCPI_NUM_NAN;
+	}
 
 	if (SCPIMM_STATE_MEASURING != ATOMIC_READ_INT(ctx->state)) {
 		/* measurement is not expected now */
@@ -304,7 +307,6 @@ scpi_result_t SCPIMM_fetchQ(scpi_t* context) {
 	}
 
 	for (i = 0; i < ctx->buf_count; i++) {
-		// TODO valid delimiters
 		SCPIMM_ResultDouble(context, ctx->buf[i]);
 	}
 

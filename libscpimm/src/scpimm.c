@@ -32,6 +32,32 @@ static scpi_result_t system_versionQ(scpi_t* context);
   Constant global variables
 ******************************************************************************/
 
+#define DECL_NO_PARAM_FUNCTION(func_name, routine_name)	\
+	{"CONFigure:" func_name, SCPIMM_configure_ ## routine_name},	\
+	{"MEASure:" func_name "?", SCPIMM_measure_ ## routine_name ## Q},
+
+#define DECL_GENERIC_AC_FUNCTION(func_name, routine_name)	\
+	DECL_NO_PARAM_FUNCTION(func_name, routine_name)	\
+	{"SENSe:" func_name ":RANGe", SCPIMM_sense_ ## routine_name ## _range},	\
+	{"SENSe:" func_name ":RANGe?", SCPIMM_sense_ ## routine_name ## _rangeQ},	\
+	{"SENSe:" func_name ":RANGe:AUTO", SCPIMM_sense_ ## routine_name ## _range_auto},	\
+	{"SENSe:" func_name ":RANGe:AUTO?", SCPIMM_sense_ ## routine_name ## _range_autoQ},	\
+	{"SENSe:" func_name ":RESolution", SCPIMM_sense_ ## routine_name ## _resolution},	\
+	{"SENSe:" func_name ":RESolution?", SCPIMM_sense_ ## routine_name ## _resolutionQ},	\
+	{func_name ":RANGe", SCPIMM_sense_ ## routine_name ## _range},	\
+	{func_name ":RANGe?", SCPIMM_sense_ ## routine_name ## _rangeQ},	\
+	{func_name ":RANGe:AUTO", SCPIMM_sense_ ## routine_name ## _range_auto},	\
+	{func_name ":RANGe:AUTO?", SCPIMM_sense_ ## routine_name ## _range_autoQ},	\
+	{func_name ":RESolution", SCPIMM_sense_ ## routine_name ## _resolution},	\
+	{func_name ":RESolution?", SCPIMM_sense_ ## routine_name ## _resolutionQ},
+
+#define DECL_GENERIC_DC_FUNCTION(func_name, routine_name)	\
+	DECL_GENERIC_AC_FUNCTION(func_name, routine_name)	\
+	{"SENSe:" func_name ":NPLCycles", SCPIMM_sense_ ## routine_name ## _nplcycles},	\
+	{"SENSe:" func_name ":NPLCycles?", SCPIMM_sense_ ## routine_name ## _nplcyclesQ},	\
+	{func_name ":NPLCycles", SCPIMM_sense_ ## routine_name ## _nplcycles},	\
+	{func_name ":NPLCycles?", SCPIMM_sense_ ## routine_name ## _nplcyclesQ},
+
 static const scpi_command_t scpi_commands[] = {
 	{"*CLS", SCPI_CoreCls},
 	{"*ESE", SCPI_CoreEse},
@@ -54,33 +80,101 @@ static const scpi_command_t scpi_commands[] = {
     {"DATA:POINts?", SCPIMM_data_pointsQ},
 
     {"CONFigure?", SCPIMM_configureQ},
-    {"CONFigure:VOLTage", SCPIMM_configure_voltage_dc},
-    {"CONFigure:VOLTage:DC", SCPIMM_configure_voltage_dc},
-    {"CONFigure:VOLTage:DC:RATio", SCPIMM_configure_voltage_dc_ratio},
-    {"CONFigure:VOLTage:AC", SCPIMM_configure_voltage_ac},
-#ifndef SCPIMM_NO_CURR_DC
-    {"CONFigure:CURRent", SCPIMM_configure_current_dc},
-    {"CONFigure:CURRent:DC", SCPIMM_configure_current_dc},
+
+    /* declare generic CONFIGURE:* and SENSE:* commands */
+
+#ifndef SCPIMM_NO_VOLTAGE_DC
+    DECL_GENERIC_DC_FUNCTION("VOLTage", voltage_dc)
+    DECL_GENERIC_DC_FUNCTION("VOLTage:DC", voltage_dc)
 #endif
-#ifndef SCPIMM_NO_CURR_AC
-    {"CONFigure:CURRent:AC", SCPIMM_configure_current_ac},
+
+#ifndef SCPIMM_NO_VOLTAGE_DC_RATIO
+    DECL_NO_PARAM_FUNCTION("VOLTage:DC:RATio", voltage_dc_ratio)
 #endif
-    {"CONFigure:RESistance", SCPIMM_configure_resistance},
+
+#ifndef SCPIMM_NO_VOLTAGE_AC
+    DECL_GENERIC_AC_FUNCTION("VOLTage:AC", voltage_ac)
+#endif
+
+#ifndef SCPIMM_NO_CURRENT_DC
+    DECL_GENERIC_DC_FUNCTION("CURRent", current_dc)
+    DECL_GENERIC_DC_FUNCTION("CURRent:DC", current_dc)
+#endif
+
+#ifndef SCPIMM_NO_CURRENT_AC
+    DECL_GENERIC_AC_FUNCTION("CURRent:AC", current_ac)
+#endif
+
+#ifndef SCPIMM_NO_RESISTANCE
+    DECL_GENERIC_DC_FUNCTION("RESistance", resistance)
+#endif
+
 #ifndef SCPIMM_NO_FRESISTANCE
-    {"CONFigure:FRESistance", SCPIMM_configure_fresistance},
+    DECL_GENERIC_DC_FUNCTION("FRESistance", fresistance)
 #endif
-#ifndef SCPIMM_NO_FREQUENCY
-    {"CONFigure:FREQuency", SCPIMM_configure_frequency},
-#endif
-#ifndef SCPIMM_NO_PERIOD
-    {"CONFigure:PERiod", SCPIMM_configure_period},
-#endif
+
 #ifndef SCPIMM_NO_CONTINUITY
-    {"CONFigure:CONTinuity", SCPIMM_configure_continuity},
+    DECL_NO_PARAM_FUNCTION("CONTinuity", continuity)
 #endif
+
 #ifndef SCPIMM_NO_DIODE
-    {"CONFigure:DIODe", SCPIMM_configure_diode},
+    DECL_NO_PARAM_FUNCTION("DIODe", diode)
 #endif
+
+    /* declare specific CONFIGURE:* and SENSE:* commands */
+
+#ifndef SCPIMM_NO_FREQUENCY
+    DECL_NO_PARAM_FUNCTION("FREQuency", frequency)
+
+	{"SENSe:FREQuency:VOLTage:RANGe", SCPIMM_sense_frequency_voltage_range},
+	{"SENSe:FREQuency:VOLTage:RANGe?", SCPIMM_sense_frequency_voltage_rangeQ},
+	{"SENSe:FREQuency:VOLTage:RANGe:AUTO", SCPIMM_sense_frequency_voltage_range_auto},
+	{"SENSe:FREQuency:VOLTage:RANGe:AUTO?", SCPIMM_sense_frequency_voltage_range_autoQ},
+	{"SENSe:FREQuency:APERture", SCPIMM_sense_frequency_aperture},
+	{"SENSe:FREQuency:APERture?", SCPIMM_sense_frequency_apertureQ},
+
+	{"FREQuency:VOLTage:RANGe", SCPIMM_sense_frequency_voltage_range},
+	{"FREQuency:VOLTage:RANGe?", SCPIMM_sense_frequency_voltage_rangeQ},
+	{"FREQuency:VOLTage:RANGe:AUTO", SCPIMM_sense_frequency_voltage_range_auto},
+	{"FREQuency:VOLTage:RANGe:AUTO?", SCPIMM_sense_frequency_voltage_range_autoQ},
+	{"FREQuency:APERture", SCPIMM_sense_frequency_aperture},
+	{"FREQuency:APERture?", SCPIMM_sense_frequency_apertureQ},
+#endif
+
+#ifndef SCPIMM_NO_PERIOD
+    DECL_NO_PARAM_FUNCTION("PERiod", period)
+
+	{"SENSe:PERiod:VOLTage:RANGe", SCPIMM_sense_period_voltage_range},
+	{"SENSe:PERiod:VOLTage:RANGe?", SCPIMM_sense_period_voltage_rangeQ},
+	{"SENSe:PERiod:VOLTage:RANGe:AUTO", SCPIMM_sense_period_voltage_range_auto},
+	{"SENSe:PERiod:VOLTage:RANGe:AUTO?", SCPIMM_sense_period_voltage_range_autoQ},
+	{"SENSe:PERiod:APERture", SCPIMM_sense_period_aperture},
+	{"SENSe:PERiod:APERture?", SCPIMM_sense_period_apertureQ},
+
+	{"PERiod:VOLTage:RANGe", SCPIMM_sense_period_voltage_range},
+	{"PERiod:VOLTage:RANGe?", SCPIMM_sense_period_voltage_rangeQ},
+	{"PERiod:VOLTage:RANGe:AUTO", SCPIMM_sense_period_voltage_range_auto},
+	{"PERiod:VOLTage:RANGe:AUTO?", SCPIMM_sense_period_voltage_range_autoQ},
+	{"PERiod:APERture", SCPIMM_sense_period_aperture},
+	{"PERiod:APERture?", SCPIMM_sense_period_apertureQ},
+#endif
+
+	{"SENSe:FUNCtion", SCPIMM_sense_function},
+	{"SENSe:FUNCtion?", SCPIMM_sense_functionQ},
+	{"SENSe:DETector:BANDwidth", SCPIMM_sense_detector_bandwidth},
+	{"SENSe:DETector:BANDwidth?", SCPIMM_sense_detector_bandwidthQ},
+	{"SENSe:ZERO:AUTO", SCPIMM_sense_zero_auto},
+	{"SENSe:ZERO:AUTO?", SCPIMM_sense_zero_autoQ},
+
+	{"FUNCtion", SCPIMM_sense_function},
+	{"FUNCtion?", SCPIMM_sense_functionQ},
+	{"DETector:BANDwidth", SCPIMM_sense_detector_bandwidth},
+	{"DETector:BANDwidth?", SCPIMM_sense_detector_bandwidthQ},
+	{"ZERO:AUTO", SCPIMM_sense_zero_auto},
+	{"ZERO:AUTO?", SCPIMM_sense_zero_autoQ},
+
+	{"SAMPle:COUNt", SCPIMM_sample_count},
+	{"SAMPle:COUNt?", SCPIMM_sample_countQ},
 
     {"DISPlay", SCPIMM_display},
     {"DISPlay?", SCPIMM_displayQ},
@@ -90,263 +184,6 @@ static const scpi_command_t scpi_commands[] = {
 
     {"INPut:IMPedance:AUTO", SCPIMM_input_impedance_auto},
     {"INPut:IMPedance:AUTO?", SCPIMM_input_impedance_autoQ},
-
-    {"MEASure:VOLTage?", SCPIMM_measure_voltage_dcQ},
-    {"MEASure:VOLTage:DC?", SCPIMM_measure_voltage_dcQ},
-    {"MEASure:VOLTage:DC:RATio?", SCPIMM_measure_voltage_dc_ratioQ},
-    {"MEASure:VOLTage:AC?", SCPIMM_measure_voltage_acQ},
-#ifndef SCPIMM_NO_CURR_DC
-    {"MEASure:CURRent?", SCPIMM_measure_current_dcQ},
-    {"MEASure:CURRent:DC?", SCPIMM_measure_current_dcQ},
-#endif
-#ifndef SCPIMM_NO_CURR_AC
-    {"MEASure:CURRent:AC?", SCPIMM_measure_current_acQ},
-#endif
-    {"MEASure:RESistance?", SCPIMM_measure_resistanceQ},
-#ifndef SCPIMM_NO_FRESISTANCE
-    {"MEASure:FRESistance?", SCPIMM_measure_fresistanceQ},
-#endif
-#ifndef SCPIMM_NO_FREQUENCY
-    {"MEASure:FREQuency?", SCPIMM_measure_frequencyQ},
-#endif
-#ifndef SCPIMM_NO_PERIOD
-    {"MEASure:PERiod?", SCPIMM_measure_periodQ},
-#endif
-#ifndef SCPIMM_NO_CONTINUITY
-    {"MEASure:CONTinuity?", SCPIMM_measure_continuityQ},
-#endif
-#ifndef SCPIMM_NO_DIODE
-    {"MEASure:DIODe?", SCPIMM_measure_diodeQ},
-#endif
-
-	{"SAMPle:COUNt", SCPIMM_sample_count},
-	{"SAMPle:COUNt?", SCPIMM_sample_countQ},
-
-	{"SENSe:FUNCtion", SCPIMM_sense_function},
-	{"SENSe:FUNCtion?", SCPIMM_sense_functionQ},
-	{"SENSe:VOLTage:RANGe", SCPIMM_sense_voltage_dc_range},
-	{"SENSe:VOLTage:RANGe?", SCPIMM_sense_voltage_dc_rangeQ},
-	{"SENSe:VOLTage:DC:RANGe", SCPIMM_sense_voltage_dc_range},
-	{"SENSe:VOLTage:DC:RANGe?", SCPIMM_sense_voltage_dc_rangeQ},
-	{"SENSe:VOLTage:AC:RANGe", SCPIMM_sense_voltage_ac_range},
-	{"SENSe:VOLTage:AC:RANGe?", SCPIMM_sense_voltage_ac_rangeQ},
-#ifndef SCPIMM_NO_CURR_DC
-	{"SENSe:CURRent:RANGe", SCPIMM_sense_current_dc_range},
-	{"SENSe:CURRent:RANGe?", SCPIMM_sense_current_dc_rangeQ},
-	{"SENSe:CURRent:DC:RANGe", SCPIMM_sense_current_dc_range},
-	{"SENSe:CURRent:DC:RANGe?", SCPIMM_sense_current_dc_rangeQ},
-#endif
-#ifndef SCPIMM_NO_CURR_AC
-	{"SENSe:CURRent:AC:RANGe", SCPIMM_sense_current_ac_range},
-	{"SENSe:CURRent:AC:RANGe?", SCPIMM_sense_current_ac_rangeQ},
-#endif
-	{"SENSe:RESistance:RANGe", SCPIMM_sense_resistance_range},
-	{"SENSe:RESistance:RANGe?", SCPIMM_sense_resistance_rangeQ},
-#ifndef SCPIMM_NO_FRESISTANCE
-	{"SENSe:FRESistance:RANGe", SCPIMM_sense_fresistance_range},
-	{"SENSe:FRESistance:RANGe?", SCPIMM_sense_fresistance_rangeQ},
-#endif
-#ifndef SCPIMM_NO_FREQUENCY
-	{"SENSe:FREQuency:VOLTage:RANGe", SCPIMM_sense_frequency_voltage_range},
-	{"SENSe:FREQuency:VOLTage:RANGe?", SCPIMM_sense_frequency_voltage_rangeQ},
-#endif
-#ifndef SCPIMM_NO_PERIOD
-	{"SENSe:PERiod:VOLTage:RANGe", SCPIMM_sense_period_voltage_range},
-	{"SENSe:PERiod:VOLTage:RANGe?", SCPIMM_sense_period_voltage_rangeQ},
-#endif
-	{"SENSe:VOLTage:RANGe:AUTO", SCPIMM_sense_voltage_dc_range_auto},
-	{"SENSe:VOLTage:RANGe:AUTO?", SCPIMM_sense_voltage_dc_range_autoQ},
-	{"SENSe:VOLTage:DC:RANGe:AUTO", SCPIMM_sense_voltage_dc_range_auto},
-	{"SENSe:VOLTage:DC:RANGe:AUTO?", SCPIMM_sense_voltage_dc_range_autoQ},
-	{"SENSe:VOLTage:AC:RANGe:AUTO", SCPIMM_sense_voltage_ac_range_auto},
-	{"SENSe:VOLTage:AC:RANGe:AUTO?", SCPIMM_sense_voltage_ac_range_autoQ},
-#ifndef SCPIMM_NO_CURR_DC
-	{"SENSe:CURRent:RANGe:AUTO", SCPIMM_sense_current_dc_range_auto},
-	{"SENSe:CURRent:RANGe:AUTO?", SCPIMM_sense_current_dc_range_autoQ},
-	{"SENSe:CURRent:DC:RANGe:AUTO", SCPIMM_sense_current_dc_range_auto},
-	{"SENSe:CURRent:DC:RANGe:AUTO?", SCPIMM_sense_current_dc_range_autoQ},
-#endif
-#ifndef SCPIMM_NO_CURR_AC
-	{"SENSe:CURRent:AC:RANGe:AUTO", SCPIMM_sense_current_ac_range_auto},
-	{"SENSe:CURRent:AC:RANGe:AUTO?", SCPIMM_sense_current_ac_range_autoQ},
-#endif
-	{"SENSe:RESistance:RANGe:AUTO", SCPIMM_sense_resistance_range_auto},
-	{"SENSe:RESistance:RANGe:AUTO?", SCPIMM_sense_resistance_range_autoQ},
-#ifndef SCPIMM_NO_FRESISTANCE
-	{"SENSe:FRESistance:RANGe:AUTO", SCPIMM_sense_fresistance_range_auto},
-	{"SENSe:FRESistance:RANGe:AUTO?", SCPIMM_sense_fresistance_range_autoQ},
-#endif
-#ifndef SCPIMM_NO_FREQUENCY
-	{"SENSe:FREQuency:VOLTage:RANGe:AUTO", SCPIMM_sense_frequency_voltage_range_auto},
-	{"SENSe:FREQuency:VOLTage:RANGe:AUTO?", SCPIMM_sense_frequency_voltage_range_autoQ},
-#endif
-#ifndef SCPIMM_NO_PERIOD
-	{"SENSe:PERiod:VOLTage:RANGe:AUTO", SCPIMM_sense_period_voltage_range_auto},
-	{"SENSe:PERiod:VOLTage:RANGe:AUTO?", SCPIMM_sense_period_voltage_range_autoQ},
-#endif
-	{"SENSe:VOLTage:RESolution", SCPIMM_sense_voltage_dc_resolution},
-	{"SENSe:VOLTage:RESolution?", SCPIMM_sense_voltage_dc_resolutionQ},
-	{"SENSe:VOLTage:DC:RESolution", SCPIMM_sense_voltage_dc_resolution},
-	{"SENSe:VOLTage:DC:RESolution?", SCPIMM_sense_voltage_dc_resolutionQ},
-	{"SENSe:VOLTage:AC:RESolution", SCPIMM_sense_voltage_ac_resolution},
-	{"SENSe:VOLTage:AC:RESolution?", SCPIMM_sense_voltage_ac_resolutionQ},
-#ifndef SCPIMM_NO_CURR_DC
-	{"SENSe:CURRent:RESolution", SCPIMM_sense_current_dc_resolution},
-	{"SENSe:CURRent:RESolution?", SCPIMM_sense_current_dc_resolutionQ},
-	{"SENSe:CURRent:DC:RESolution", SCPIMM_sense_current_dc_resolution},
-	{"SENSe:CURRent:DC:RESolution?", SCPIMM_sense_current_dc_resolutionQ},
-#endif
-#ifndef SCPIMM_NO_CURR_AC
-	{"SENSe:CURRent:AC:RESolution", SCPIMM_sense_current_ac_resolution},
-	{"SENSe:CURRent:AC:RESolution?", SCPIMM_sense_current_ac_resolutionQ},
-#endif
-	{"SENSe:RESistance:RESolution", SCPIMM_sense_resistance_resolution},
-	{"SENSe:RESistance:RESolution?", SCPIMM_sense_resistance_resolutionQ},
-#ifndef SCPIMM_NO_FRESISTANCE
-	{"SENSe:FRESistance:RESolution", SCPIMM_sense_fresistance_resolution},
-	{"SENSe:FRESistance:RESolution?", SCPIMM_sense_fresistance_resolutionQ},
-#endif
-	{"SENSe:VOLTage:NPLCycles", SCPIMM_sense_voltage_dc_nplcycles},
-	{"SENSe:VOLTage:NPLCycles?", SCPIMM_sense_voltage_dc_nplcyclesQ},
-	{"SENSe:VOLTage:DC:NPLCycles", SCPIMM_sense_voltage_dc_nplcycles},
-	{"SENSe:VOLTage:DC:NPLCycles?", SCPIMM_sense_voltage_dc_nplcyclesQ},
-#ifndef SCPIMM_NO_CURR_DC
-	{"SENSe:CURRent:NPLCycles", SCPIMM_sense_current_dc_nplcycles},
-	{"SENSe:CURRent:NPLCycles?", SCPIMM_sense_current_dc_nplcyclesQ},
-	{"SENSe:CURRent:DC:NPLCycles", SCPIMM_sense_current_dc_nplcycles},
-	{"SENSe:CURRent:DC:NPLCycles?", SCPIMM_sense_current_dc_nplcyclesQ},
-#endif
-	{"SENSe:RESistance:NPLCycles", SCPIMM_sense_resistance_nplcycles},
-	{"SENSe:RESistance:NPLCycles?", SCPIMM_sense_resistance_nplcyclesQ},
-#ifndef SCPIMM_NO_FRESISTANCE
-	{"SENSe:FRESistance:NPLCycles", SCPIMM_sense_fresistance_nplcycles},
-	{"SENSe:FRESistance:NPLCycles?", SCPIMM_sense_fresistance_nplcyclesQ},
-#endif
-#ifndef SCPIMM_NO_FREQUENCY
-	{"SENSe:FREQuency:APERture", SCPIMM_sense_frequency_aperture},
-	{"SENSe:FREQuency:APERture?", SCPIMM_sense_frequency_apertureQ},
-#endif
-#ifndef SCPIMM_NO_PERIOD
-	{"SENSe:PERiod:APERture", SCPIMM_sense_period_aperture},
-	{"SENSe:PERiod:APERture?", SCPIMM_sense_period_apertureQ},
-#endif
-	{"SENSe:DETector:BANDwidth", SCPIMM_sense_detector_bandwidth},
-	{"SENSe:DETector:BANDwidth?", SCPIMM_sense_detector_bandwidthQ},
-	{"SENSe:ZERO:AUTO", SCPIMM_sense_zero_auto},
-	{"SENSe:ZERO:AUTO?", SCPIMM_sense_zero_autoQ},
-
-	{"FUNCtion", SCPIMM_sense_function},
-	{"FUNCtion?", SCPIMM_sense_functionQ},
-	{"VOLTage:RANGe", SCPIMM_sense_voltage_dc_range},
-	{"VOLTage:RANGe?", SCPIMM_sense_voltage_dc_rangeQ},
-	{"VOLTage:DC:RANGe", SCPIMM_sense_voltage_dc_range},
-	{"VOLTage:DC:RANGe?", SCPIMM_sense_voltage_dc_rangeQ},
-	{"VOLTage:AC:RANGe", SCPIMM_sense_voltage_ac_range},
-	{"VOLTage:AC:RANGe?", SCPIMM_sense_voltage_ac_rangeQ},
-#ifndef SCPIMM_NO_CURR_DC
-	{"CURRent:RANGe", SCPIMM_sense_current_dc_range},
-	{"CURRent:RANGe?", SCPIMM_sense_current_dc_rangeQ},
-	{"CURRent:DC:RANGe", SCPIMM_sense_current_dc_range},
-	{"CURRent:DC:RANGe?", SCPIMM_sense_current_dc_rangeQ},
-#endif
-#ifndef SCPIMM_NO_CURR_AC
-	{"CURRent:AC:RANGe", SCPIMM_sense_current_ac_range},
-	{"CURRent:AC:RANGe?", SCPIMM_sense_current_ac_rangeQ},
-#endif
-	{"RESistance:RANGe", SCPIMM_sense_resistance_range},
-	{"RESistance:RANGe?", SCPIMM_sense_resistance_rangeQ},
-#ifndef SCPIMM_NO_FRESISTANCE
-	{"FRESistance:RANGe", SCPIMM_sense_fresistance_range},
-	{"FRESistance:RANGe?", SCPIMM_sense_fresistance_rangeQ},
-#endif
-#ifndef SCPIMM_NO_FREQUENCY
-	{"FREQuency:VOLTage:RANGe", SCPIMM_sense_frequency_voltage_range},
-	{"FREQuency:VOLTage:RANGe?", SCPIMM_sense_frequency_voltage_rangeQ},
-#endif
-#ifndef SCPIMM_NO_PERIOD
-	{"PERiod:VOLTage:RANGe", SCPIMM_sense_period_voltage_range},
-	{"PERiod:VOLTage:RANGe?", SCPIMM_sense_period_voltage_rangeQ},
-#endif
-	{"VOLTage:RANGe:AUTO", SCPIMM_sense_voltage_dc_range_auto},
-	{"VOLTage:RANGe:AUTO?", SCPIMM_sense_voltage_dc_range_autoQ},
-	{"VOLTage:DC:RANGe:AUTO", SCPIMM_sense_voltage_dc_range_auto},
-	{"VOLTage:DC:RANGe:AUTO?", SCPIMM_sense_voltage_dc_range_autoQ},
-	{"VOLTage:AC:RANGe:AUTO", SCPIMM_sense_voltage_ac_range_auto},
-	{"VOLTage:AC:RANGe:AUTO?", SCPIMM_sense_voltage_ac_range_autoQ},
-#ifndef SCPIMM_NO_CURR_DC
-	{"CURRent:RANGe:AUTO", SCPIMM_sense_current_dc_range_auto},
-	{"CURRent:RANGe:AUTO?", SCPIMM_sense_current_dc_range_autoQ},
-	{"CURRent:DC:RANGe:AUTO", SCPIMM_sense_current_dc_range_auto},
-	{"CURRent:DC:RANGe:AUTO?", SCPIMM_sense_current_dc_range_autoQ},
-#endif
-#ifndef SCPIMM_NO_CURR_AC
-	{"CURRent:AC:RANGe:AUTO", SCPIMM_sense_current_ac_range_auto},
-	{"CURRent:AC:RANGe:AUTO?", SCPIMM_sense_current_ac_range_autoQ},
-#endif
-	{"RESistance:RANGe:AUTO", SCPIMM_sense_resistance_range_auto},
-	{"RESistance:RANGe:AUTO?", SCPIMM_sense_resistance_range_autoQ},
-#ifndef SCPIMM_NO_FRESISTANCE
-	{"FRESistance:RANGe:AUTO", SCPIMM_sense_fresistance_range_auto},
-	{"FRESistance:RANGe:AUTO?", SCPIMM_sense_fresistance_range_autoQ},
-#endif
-#ifndef SCPIMM_NO_FREQUENCY
-	{"FREQuency:VOLTage:RANGe:AUTO", SCPIMM_sense_frequency_voltage_range_auto},
-	{"FREQuency:VOLTage:RANGe:AUTO?", SCPIMM_sense_frequency_voltage_range_autoQ},
-#endif
-#ifndef SCPIMM_NO_PERIOD
-	{"PERiod:VOLTage:RANGe:AUTO", SCPIMM_sense_period_voltage_range_auto},
-	{"PERiod:VOLTage:RANGe:AUTO?", SCPIMM_sense_period_voltage_range_autoQ},
-#endif
-	{"VOLTage:RESolution", SCPIMM_sense_voltage_dc_resolution},
-	{"VOLTage:RESolution?", SCPIMM_sense_voltage_dc_resolutionQ},
-	{"VOLTage:DC:RESolution", SCPIMM_sense_voltage_dc_resolution},
-	{"VOLTage:DC:RESolution?", SCPIMM_sense_voltage_dc_resolutionQ},
-	{"VOLTage:AC:RESolution", SCPIMM_sense_voltage_ac_resolution},
-	{"VOLTage:AC:RESolution?", SCPIMM_sense_voltage_ac_resolutionQ},
-#ifndef SCPIMM_NO_CURR_DC
-	{"CURRent:RESolution", SCPIMM_sense_current_dc_resolution},
-	{"CURRent:RESolution?", SCPIMM_sense_current_dc_resolutionQ},
-	{"CURRent:DC:RESolution", SCPIMM_sense_current_dc_resolution},
-	{"CURRent:DC:RESolution?", SCPIMM_sense_current_dc_resolutionQ},
-#endif
-#ifndef SCPIMM_NO_CURR_AC
-	{"CURRent:AC:RESolution", SCPIMM_sense_current_ac_resolution},
-	{"CURRent:AC:RESolution?", SCPIMM_sense_current_ac_resolutionQ},
-#endif
-	{"RESistance:RESolution", SCPIMM_sense_resistance_resolution},
-	{"RESistance:RESolution?", SCPIMM_sense_resistance_resolutionQ},
-#ifndef SCPIMM_NO_FRESISTANCE
-	{"FRESistance:RESolution", SCPIMM_sense_fresistance_resolution},
-	{"FRESistance:RESolution?", SCPIMM_sense_fresistance_resolutionQ},
-#endif
-	{"VOLTage:NPLCycles", SCPIMM_sense_voltage_dc_nplcycles},
-	{"VOLTage:NPLCycles?", SCPIMM_sense_voltage_dc_nplcyclesQ},
-	{"VOLTage:DC:NPLCycles", SCPIMM_sense_voltage_dc_nplcycles},
-	{"VOLTage:DC:NPLCycles?", SCPIMM_sense_voltage_dc_nplcyclesQ},
-#ifndef SCPIMM_NO_CURR_DC
-	{"CURRent:NPLCycles", SCPIMM_sense_current_dc_nplcycles},
-	{"CURRent:NPLCycles?", SCPIMM_sense_current_dc_nplcyclesQ},
-	{"CURRent:DC:NPLCycles", SCPIMM_sense_current_dc_nplcycles},
-	{"CURRent:DC:NPLCycles?", SCPIMM_sense_current_dc_nplcyclesQ},
-#endif
-	{"RESistance:NPLCycles", SCPIMM_sense_resistance_nplcycles},
-	{"RESistance:NPLCycles?", SCPIMM_sense_resistance_nplcyclesQ},
-#ifndef SCPIMM_NO_FRESISTANCE
-	{"FRESistance:NPLCycles", SCPIMM_sense_fresistance_nplcycles},
-	{"FRESistance:NPLCycles?", SCPIMM_sense_fresistance_nplcyclesQ},
-#endif
-#ifndef SCPIMM_NO_FREQUENCY
-	{"FREQuency:APERture", SCPIMM_sense_frequency_aperture},
-	{"FREQuency:APERture?", SCPIMM_sense_frequency_apertureQ},
-#endif
-#ifndef SCPIMM_NO_PERIOD
-	{"PERiod:APERture", SCPIMM_sense_period_aperture},
-	{"PERiod:APERture?", SCPIMM_sense_period_apertureQ},
-#endif
-	{"DETector:BANDwidth", SCPIMM_sense_detector_bandwidth},
-	{"DETector:BANDwidth?", SCPIMM_sense_detector_bandwidthQ},
-	{"ZERO:AUTO", SCPIMM_sense_zero_auto},
-	{"ZERO:AUTO?", SCPIMM_sense_zero_autoQ},
 
     {"SYSTem:BEEPer", SCPIMM_system_beeper},
     {"SYSTem:BEEPer:STATe", SCPIMM_system_beeper_state},

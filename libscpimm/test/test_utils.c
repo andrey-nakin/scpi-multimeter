@@ -55,22 +55,22 @@ void assert_scpi_error(int16_t error) {
 	CU_ASSERT_EQUAL(SCPI_ErrorPop(SCPI_context()), error);
 }
 
-void asset_in_data(const char* s) {
+void assert_in_data(const char* s) {
 	CU_ASSERT_STRING_EQUAL(dm_output_buffer(), s);
 }
 
-void asset_no_data() {
-	asset_in_data("");
+void assert_no_data() {
+	assert_in_data("");
 }
 
-void asset_in_bool(bool_t v) {
-	asset_in_data(v ? "1\r\n" : "0\r\n");
+void assert_in_bool(bool_t v) {
+	assert_in_data(v ? "1\r\n" : "0\r\n");
 }
 
 void assert_in_int(int v) {
 	char buf[32];
 	sprintf(buf, "%d\r\n", v);
-	asset_in_data(buf);
+	assert_in_data(buf);
 }
 
 void assert_in_double(double v) {

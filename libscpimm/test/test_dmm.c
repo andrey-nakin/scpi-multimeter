@@ -155,6 +155,7 @@ void test_readQ() {
 
 void check_after_init_state() {
 	assert_no_scpi_errors();
+	assert_no_data();
 }
 
 void check_after_data_points_state() {
@@ -264,11 +265,76 @@ void test_initiate_generic_impl(const dm_measurement_type_t mt, const char* trig
 	assert_scpi_error(SCPI_ERROR_INSUFFICIENT_MEMORY);
 }
 
+void test_initiate_bus_trigger(const dm_measurement_type_t mt) {
+	char *result = dm_output_buffer();
+	double actual_range, actual_resolution;
+	double values[16];
+
+	reset();
+	dm_multimeter_config.measurement_type = mt;
+	// decrease measurement duration for quicker testing
+	dm_multimeter_config.measurement_duration = 10;
+
+	// read current value range
+	receivef("CONFIGURE?");
+	assert_no_scpi_errors();
+	CU_ASSERT_EQUAL(sscanf(strchr(result, ' ') + 1, "%le,%le", &actual_range, &actual_resolution), 2);
+
+	// read single value from BUS trigger
+	receivef("TRIGGER:SOURCE BUS");
+	dm_reset_counters();
+	receivef("INITIATE");
+	check_after_init_state();
+	receivef("*TRG");
+	assert_no_scpi_errors();
+	assert_no_data();
+	receivef("FETCH?");
+	check_after_fetch_state();
+	read_equal_numbers(1, values, actual_range * 0.5);
+	receivef("DATA:POINTS?");
+	check_after_data_points_state();
+	read_data_points(1);
+
+	// unexpected *TRG command
+	receivef("*TRG");
+	assert_scpi_error(SCPI_ERROR_TRIGGER_IGNORED);
+	assert_no_data();
+
+	// read single value from IMM trigger with unexpected *TRG command
+	receivef("TRIGGER:SOURCE IMM");
+	dm_reset_counters();
+	receivef("INITIATE");
+	check_after_init_state();
+	receivef("*TRG");
+	assert_scpi_error(SCPI_ERROR_TRIGGER_IGNORED);
+	assert_no_data();
+	receivef("FETCH?");
+	check_after_fetch_state();
+	read_equal_numbers(1, values, actual_range * 0.5);
+	receivef("DATA:POINTS?");
+	check_after_data_points_state();
+	read_data_points(1);
+}
+
 void test_initiate() {
 	test_initiate_generic_impl(DM_MEASUREMENT_TYPE_ASYNC, "IMM");
 	test_initiate_generic_impl(DM_MEASUREMENT_TYPE_SYNC, "IMM");
 	test_initiate_generic_impl(DM_MEASUREMENT_TYPE_ASYNC, "EXT");
 	test_initiate_generic_impl(DM_MEASUREMENT_TYPE_SYNC, "EXT");
+
+	test_initiate_bus_trigger(DM_MEASUREMENT_TYPE_ASYNC);
+	test_initiate_bus_trigger(DM_MEASUREMENT_TYPE_SYNC);
+}
+
+void test_unexpected_fetch() {
+	reset();
+	receivef("FETCH?");
+	assert_scpi_error(SCPI_ERROR_DATA_STALE);
+	assert_no_data();
+}
+
+void test_fetch() {
+	test_unexpected_fetch();
 }
 
 int main() {
@@ -286,11 +352,15 @@ int main() {
     }
 
     /* Add the tests to the suite */
-    if ((NULL == CU_add_test(pSuite, "read?", test_readQ))) {
+    if ((NULL == CU_add_test(pSuite, "READ?", test_readQ))) {
         CU_cleanup_registry();
         return CU_get_error();
     }
-    if ((NULL == CU_add_test(pSuite, "init", test_initiate))) {
+    if ((NULL == CU_add_test(pSuite, "INITiate", test_initiate))) {
+        CU_cleanup_registry();
+        return CU_get_error();
+    }
+    if ((NULL == CU_add_test(pSuite, "FETCh?", test_fetch))) {
         CU_cleanup_registry();
         return CU_get_error();
     }

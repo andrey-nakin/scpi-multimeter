@@ -92,7 +92,7 @@ static void test_configure_no_params(const char* function, const scpimm_mode_t m
 
 	receivef("CONFIGURE:%s\r\n", function);
 	assert_no_scpi_errors();
-	asset_no_data();
+	assert_no_data();
 	check_general(mode);
 
 	if (!no_params) {
@@ -134,7 +134,7 @@ static void test_configure_fix_params(const char* function, scpimm_mode_t mode) 
 		dm_reset_counters();
 		receivef("CONFIGURE:%s %s", function, strs[rangeIndex]);
 		assert_no_scpi_errors();
-		asset_no_data();
+		assert_no_data();
 		check_general(mode);
 		check_mode_params(range_indices[rangeIndex], types[rangeIndex] == SCPI_NUM_DEF, MIN_RESOLUTION_INDEX);
 
@@ -143,7 +143,7 @@ static void test_configure_fix_params(const char* function, scpimm_mode_t mode) 
 			dm_reset_counters();
 			receivef("CONFIGURE:%s %s,%s", function, strs[rangeIndex], strs[resolutionIndex]);
 			assert_no_scpi_errors();
-			asset_no_data();
+			assert_no_data();
 			check_general(mode);
 			check_mode_params(range_indices[rangeIndex], types[rangeIndex] == SCPI_NUM_DEF, resolution_indices[resolutionIndex]);
 		}
@@ -155,7 +155,7 @@ static void test_configure_custom_range_and_resolution(const char* function, scp
 	dm_reset_counters();
 	configure_with_range_and_res(function, range, "", resolution, "");
 	assert_no_scpi_errors();
-	asset_no_data();
+	assert_no_data();
 	check_general(mode);
 	check_mode_params(expected_range_index, FALSE, expected_resolution_index);
 }
@@ -169,7 +169,7 @@ static void test_configure_custom_range(const char* function, scpimm_mode_t mode
 	dm_reset_counters();
 	configure_with_range(function, range, "");
 	assert_no_scpi_errors();
-	asset_no_data();
+	assert_no_data();
 	check_general(mode);
 	check_mode_params(expected_range_index, FALSE, MIN_RESOLUTION_INDEX);
 
@@ -214,7 +214,7 @@ static void test_configure_out_of_range(const char* function, scpimm_mode_t mode
 	dm_reset_counters();
 	configure_with_range(function, range, "");
 	assert_no_scpi_errors();
-	asset_no_data();
+	assert_no_data();
 	check_general(mode);
 	check_mode_params(MIN_RANGE_INDEX, FALSE, MIN_RESOLUTION_INDEX);
 
@@ -223,7 +223,7 @@ static void test_configure_out_of_range(const char* function, scpimm_mode_t mode
 	dm_reset_counters();
 	configure_with_range(function, range, "");
 	assert_scpi_error(SCPI_ERROR_DATA_OUT_OF_RANGE);
-	asset_no_data();
+	assert_no_data();
 	check_general_failure();
 	clearscpi_errors();
 
@@ -236,7 +236,7 @@ static void test_configure_out_of_range(const char* function, scpimm_mode_t mode
 		dm_reset_counters();
 		configure_with_range_and_res(function, range, "", resolution, "");
 		assert_scpi_error(SCPI_ERROR_CANNOT_ACHIEVE_REQUESTED_RESOLUTION);
-		asset_no_data();
+		assert_no_data();
 		check_general_failure();
 		clearscpi_errors();
 
@@ -245,7 +245,7 @@ static void test_configure_out_of_range(const char* function, scpimm_mode_t mode
 		dm_reset_counters();
 		configure_with_range_and_res(function, range, "", resolution, "");
 		assert_no_scpi_errors();
-		asset_no_data();
+		assert_no_data();
 		check_general(mode);
 		check_mode_params(range_index, FALSE, max_index(resolutions));
 	}
@@ -271,7 +271,7 @@ static void test_configure_units(const char* function, scpimm_mode_t mode, const
 			dm_reset_counters();
 			configure_with_range(function, range / mults[unit_index], prefs[unit_index]);
 			assert_no_scpi_errors();
-			asset_no_data();
+			assert_no_data();
 			check_general(mode);
 			check_mode_params(range_index, FALSE, MIN_RESOLUTION_INDEX);
 		}
@@ -283,7 +283,7 @@ static void test_configure_units(const char* function, scpimm_mode_t mode, const
 				dm_reset_counters();
 				configure_with_range_and_res(function, range / mults[range_index], prefs[range_index], resolution / mults[range_index], prefs[range_index]);
 				assert_no_scpi_errors();
-				asset_no_data();
+				assert_no_data();
 				check_general(mode);
 				check_mode_params(range_index, FALSE, resolution_index);
 			}
