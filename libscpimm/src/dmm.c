@@ -255,7 +255,9 @@ void SCPIMM_read_value(const scpi_number_t* value) {
 	volatile scpimm_context_t* const ctx = SCPIMM_context();
 
 	if (value) {
-		ctx->last_measured_value = *value;
+		ctx->last_measured_value.type = value->type;
+		ctx->last_measured_value.value = value->value;
+		ctx->last_measured_value.unit = value->unit;
 	} else {
 		ctx->last_measured_value.type = SCPI_NUM_NAN;
 	}
