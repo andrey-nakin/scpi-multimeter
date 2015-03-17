@@ -235,8 +235,8 @@ static scpi_interface_t scpi_interface = {
 ******************************************************************************/
 
 static volatile scpimm_context_t scpimm_context = {
-	.interface = NULL,
-	.beeper_state = TRUE
+	NULL,  //  interface
+	TRUE   //  beeper_state
 };
 
 static scpi_t scpi_context = {
