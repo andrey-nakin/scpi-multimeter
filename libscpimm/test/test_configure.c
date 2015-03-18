@@ -18,10 +18,6 @@ static const char* current_prefixes[] = {"A", "kA", "KA", "mA", "MA", "uA", "UA"
 static const double current_mults[] = {1, 1e3, 1e3, 1e-3, 1e-3, 1e-6, 1e-6, 0.0};
 static const char* resistance_prefixes[] = {"Ohm", "kOhm", "KOhm", "mOhm", "MOhm", NULL};
 static const double resistance_mults[] = {1, 1e3, 1e3, 1e6, 1e6, 0.0};
-static const char* frequency_prefixes[] = {"Hz", "kHz", "KHz", "mHz", "MHz", "gHz", "GHz", NULL};
-static const double frequency_mults[] = {1, 1e3, 1e3, 1e6, 1e6, 1e9, 1e9, 0.0};
-static const char* time_prefixes[] = {"s", "ps", "Ps",   "ns", "Ns", "us", "Us", "ms", "Ms", "min", "hr", NULL};
-static const double time_mults[] =   {1,   1e-12, 1e-12, 1e-9, 1e-9, 1e-6, 1e-6, 1e-3, 1e-3, 60,    3600, 0};
 
 static void reset() {
 	init_scpimm();
@@ -33,7 +29,7 @@ static void reset() {
 static void check_general(const scpimm_mode_t mode) {
 	scpimm_mode_t cur_mode;
 	scpimm_mode_params_t cur_params;
-	const bool_t no_params = SCPIMM_MODE_CONTINUITY == mode || SCPIMM_MODE_DIODE == mode;
+	const bool_t no_params = FALSE;	//	SCPIMM_MODE_CONTINUITY == mode || SCPIMM_MODE_DIODE == mode;
 	scpimm_context_t* const ctx = SCPIMM_context();
 	int16_t err;
 
@@ -85,7 +81,7 @@ static void check_mode_params(const size_t range_index, const bool_t auto_range,
 
 /* configure function without range/resolution specification */
 static void test_configure_no_params(const char* function, const scpimm_mode_t mode) {
-	const bool_t no_params = SCPIMM_MODE_CONTINUITY == mode || SCPIMM_MODE_DIODE == mode;
+	const bool_t no_params = FALSE;	//	SCPIMM_MODE_CONTINUITY == mode || SCPIMM_MODE_DIODE == mode;
 
 	reset();
 	dm_reset_counters();
@@ -293,17 +289,15 @@ static void test_configure_units(const char* function, scpimm_mode_t mode, const
 
 static void test_impl(const char* function, scpimm_mode_t mode, const char* prefs[], const double mults[]) {
 	test_configure_no_params(function, mode);
-	if (SCPIMM_MODE_CONTINUITY != mode && SCPIMM_MODE_DIODE != mode) {
-		test_configure_fix_params(function, mode);
-		test_configure_custom_params(function, mode);
-		test_configure_out_of_range(function, mode);
-		test_configure_units(function, mode, prefs, mults);
-	}
+	test_configure_fix_params(function, mode);
+	test_configure_custom_params(function, mode);
+	test_configure_out_of_range(function, mode);
+	test_configure_units(function, mode, prefs, mults);
 }
 
 static void test_configureQ_impl(const char* function, scpimm_mode_t mode, const char* mode_name) {
 	int16_t err;
-	const bool_t no_params = SCPIMM_MODE_CONTINUITY == mode || SCPIMM_MODE_DIODE == mode;
+	const bool_t no_params = FALSE;	//	SCPIMM_MODE_CONTINUITY == mode || SCPIMM_MODE_DIODE == mode;
 	const double *ranges;
 	size_t range_index;
 	char buf[100], *result = dm_output_buffer();
@@ -394,22 +388,6 @@ void test_configure_fresistance() {
 	test_impl("FRESISTANCE", SCPIMM_MODE_RESISTANCE_4W, resistance_prefixes, resistance_mults);
 }
 
-void test_configure_frequency() {
-	test_impl("FREQUENCY", SCPIMM_MODE_FREQUENCY, frequency_prefixes, frequency_mults);
-}
-
-void test_configure_period() {
-	test_impl("PERIOD", SCPIMM_MODE_PERIOD, time_prefixes, time_mults);
-}
-
-void test_configure_continuity() {
-	test_impl("CONTINUITY", SCPIMM_MODE_CONTINUITY, NULL, NULL);
-}
-
-void test_configure_diode() {
-	test_impl("DIODE", SCPIMM_MODE_DIODE, NULL, NULL);
-}
-
 void test_configureQ() {
 	test_configureQ_impl("VOLTAGE", SCPIMM_MODE_DCV, "VOLT");
 	test_configureQ_impl("VOLTAGE:DC", SCPIMM_MODE_DCV, "VOLT");
@@ -420,10 +398,6 @@ void test_configureQ() {
 	test_configureQ_impl("CURRENT:AC", SCPIMM_MODE_ACC, "CURR:AC");
 	test_configureQ_impl("RESISTANCE", SCPIMM_MODE_RESISTANCE_2W, "RES");
 	test_configureQ_impl("FRESISTANCE", SCPIMM_MODE_RESISTANCE_4W, "FRES");
-	test_configureQ_impl("FREQUENCY", SCPIMM_MODE_FREQUENCY, "FREQ");
-	test_configureQ_impl("PERIOD", SCPIMM_MODE_PERIOD, "PER");
-	test_configureQ_impl("CONTINUITY", SCPIMM_MODE_CONTINUITY, "CONT");
-	test_configureQ_impl("DIODE", SCPIMM_MODE_DIODE, "DIOD");
 }
 
 int main() {
@@ -466,22 +440,6 @@ int main() {
         return CU_get_error();
     }
     if ((NULL == CU_add_test(pSuite, "configure:fresistance", test_configure_fresistance))) {
-        CU_cleanup_registry();
-        return CU_get_error();
-    }
-    if ((NULL == CU_add_test(pSuite, "configure:frequency", test_configure_frequency))) {
-        CU_cleanup_registry();
-        return CU_get_error();
-    }
-    if ((NULL == CU_add_test(pSuite, "configure:period", test_configure_period))) {
-        CU_cleanup_registry();
-        return CU_get_error();
-    }
-    if ((NULL == CU_add_test(pSuite, "configure:continuity", test_configure_continuity))) {
-        CU_cleanup_registry();
-        return CU_get_error();
-    }
-    if ((NULL == CU_add_test(pSuite, "configure:diode", test_configure_diode))) {
         CU_cleanup_registry();
         return CU_get_error();
     }

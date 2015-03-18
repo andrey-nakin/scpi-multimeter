@@ -14,10 +14,6 @@ scpi_result_t SCPIMM_configure_current_dc(scpi_t* context);
 scpi_result_t SCPIMM_configure_current_ac(scpi_t* context);
 scpi_result_t SCPIMM_configure_resistance(scpi_t* context);
 scpi_result_t SCPIMM_configure_fresistance(scpi_t* context);
-scpi_result_t SCPIMM_configure_frequency(scpi_t* context);
-scpi_result_t SCPIMM_configure_period(scpi_t* context);
-scpi_result_t SCPIMM_configure_continuity(scpi_t* context);
-scpi_result_t SCPIMM_configure_diode(scpi_t* context);
 
 #endif	//	__CONFIGURE_H_SCPIMM_
 

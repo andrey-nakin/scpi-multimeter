@@ -8,7 +8,7 @@
 scpi_result_t SCPIMM_sense_function(scpi_t* context) {
     const char* param;
     size_t param_len;
-	uint16_t mode;
+    scpimm_mode_t mode;
 
     if (!SCPI_ParamString(context, &param, &param_len, TRUE)) {
         return SCPI_RES_ERR;
@@ -28,14 +28,6 @@ scpi_result_t SCPIMM_sense_function(scpi_t* context) {
 		mode = SCPIMM_MODE_RESISTANCE_2W;
     } else if (matchCommand("FRESistance", param, param_len)) {
 		mode = SCPIMM_MODE_RESISTANCE_4W;
-    } else if (matchCommand("FREQuency", param, param_len)) {
-		mode = SCPIMM_MODE_FREQUENCY;
-    } else if (matchCommand("PERiod", param, param_len)) {
-		mode = SCPIMM_MODE_PERIOD;
-    } else if (matchCommand("CONTinuity", param, param_len)) {
-		mode = SCPIMM_MODE_CONTINUITY;
-    } else if (matchCommand("DIODe", param, param_len)) {
-		mode = SCPIMM_MODE_DIODE;
 	} else {
 		/* TODO: valid error code */
 		SCPI_ErrorPush(context, SCPI_ERROR_SUFFIX_NOT_ALLOWED);

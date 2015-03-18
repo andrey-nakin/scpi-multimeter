@@ -16,6 +16,7 @@ static void delay_auto_impl(const char* cmd, bool_t expected) {
 }
 
 int init_suite(void) {
+	init_scpimm();
     return 0;
 }
 
@@ -28,8 +29,6 @@ void test_source() {
 	const char* options[] = {"BUS", "IMM", "EXT"};
 	const scpimm_trig_src_t expected[] = {SCPIMM_TRIG_BUS, SCPIMM_TRIG_IMM, SCPIMM_TRIG_EXT};
 	size_t i;
-
-	init_scpimm();
 
 	ctx->trigger_src = (scpimm_trig_src_t) -1;
 	for (i = 0; i < sizeof(options) / sizeof(options[0]); ++i) {
@@ -101,7 +100,7 @@ void test_delay() {
 
 void test_delayQ() {
 	scpimm_context_t* const ctx = SCPIMM_context();
-	float f;
+	double f;
 
 	init_scpimm();
 
@@ -237,35 +236,35 @@ int main() {
     }
 
     /* Add the tests to the suite */
-    if ((NULL == CU_add_test(pSuite, "test trigger:source", test_source))) {
+    if ((NULL == CU_add_test(pSuite, "trigger:source", test_source))) {
         CU_cleanup_registry();
         return CU_get_error();
     }
-    if ((NULL == CU_add_test(pSuite, "test trigger:source?", test_sourceQ))) {
+    if ((NULL == CU_add_test(pSuite, "trigger:source?", test_sourceQ))) {
         CU_cleanup_registry();
         return CU_get_error();
     }
-    if ((NULL == CU_add_test(pSuite, "test trigger:delay", test_delay))) {
+    if ((NULL == CU_add_test(pSuite, "trigger:delay", test_delay))) {
         CU_cleanup_registry();
         return CU_get_error();
     }
-    if ((NULL == CU_add_test(pSuite, "test trigger:delay?", test_delayQ))) {
+    if ((NULL == CU_add_test(pSuite, "trigger:delay?", test_delayQ))) {
         CU_cleanup_registry();
         return CU_get_error();
     }
-    if ((NULL == CU_add_test(pSuite, "test trigger:delay:auto", test_delay_auto))) {
+    if ((NULL == CU_add_test(pSuite, "trigger:delay:auto", test_delay_auto))) {
         CU_cleanup_registry();
         return CU_get_error();
     }
-    if ((NULL == CU_add_test(pSuite, "test trigger:delay:auto?", test_delay_autoQ))) {
+    if ((NULL == CU_add_test(pSuite, "trigger:delay:auto?", test_delay_autoQ))) {
         CU_cleanup_registry();
         return CU_get_error();
     }
-    if ((NULL == CU_add_test(pSuite, "test trigger:count", test_count))) {
+    if ((NULL == CU_add_test(pSuite, "trigger:count", test_count))) {
         CU_cleanup_registry();
         return CU_get_error();
     }
-    if ((NULL == CU_add_test(pSuite, "test trigger:count?", test_countQ))) {
+    if ((NULL == CU_add_test(pSuite, "trigger:count?", test_countQ))) {
         CU_cleanup_registry();
         return CU_get_error();
     }

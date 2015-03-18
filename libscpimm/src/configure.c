@@ -18,12 +18,6 @@ static scpi_unit_t detect_units(scpimm_mode_t mode) {
 		case SCPIMM_MODE_RESISTANCE_2W:
 		case SCPIMM_MODE_RESISTANCE_4W:
 			return SCPI_UNIT_OHM;
-
-		case SCPIMM_MODE_FREQUENCY:
-			return SCPI_UNIT_HERTZ;
-
-		case SCPIMM_MODE_PERIOD:
-			return SCPI_UNIT_SECONDS;
 	}
 	return SCPI_UNIT_NONE;
 }
@@ -80,7 +74,7 @@ static scpi_result_t configure_2arg_impl(scpi_t* context, scpimm_mode_t mode) {
 	return SCPIMM_do_configure(context, mode, &range, &resolution);
 }
 
-static scpi_result_t configure_noarg_impl(scpi_t* context, scpimm_mode_t mode) {
+/* static scpi_result_t configure_noarg_impl(scpi_t* context, scpimm_mode_t mode) {
 	expectNoParams(context);
 
 	if (context->cmd_error) {
@@ -88,7 +82,7 @@ static scpi_result_t configure_noarg_impl(scpi_t* context, scpimm_mode_t mode) {
 	}
 
 	return SCPIMM_do_configure(context, mode, NULL, NULL);
-}
+} */
 
 scpi_result_t SCPIMM_do_configure(scpi_t* context, scpimm_mode_t mode, const scpi_number_t* range, const scpi_number_t* resolution) {
 	int16_t err;
@@ -116,7 +110,7 @@ static int16_t configureQuery(scpi_t* context) {
     const double *ranges, *resolutions;
 
 	CHECK_SCPI_ERROR(SCPIMM_INTERFACE(context)->get_mode(&mode, &params));
-	no_params = SCPIMM_MODE_CONTINUITY == mode || SCPIMM_MODE_DIODE == mode;
+	no_params = FALSE;	// SCPIMM_MODE_CONTINUITY == mode || SCPIMM_MODE_DIODE == mode;
 	if (!no_params) {
 		CHECK_SCPI_ERROR(SCPIMM_INTERFACE(context)->get_allowed_ranges(mode, &ranges, NULL));
 		CHECK_SCPI_ERROR(SCPIMM_INTERFACE(context)->get_allowed_resolutions(mode, params.range_index, &resolutions));
@@ -178,20 +172,3 @@ scpi_result_t SCPIMM_configure_resistance(scpi_t* context) {
 scpi_result_t SCPIMM_configure_fresistance(scpi_t* context) {
 	return configure_2arg_impl(context, SCPIMM_MODE_RESISTANCE_4W);
 }
-
-scpi_result_t SCPIMM_configure_frequency(scpi_t* context) {
-	return configure_2arg_impl(context, SCPIMM_MODE_FREQUENCY);
-}
-
-scpi_result_t SCPIMM_configure_period(scpi_t* context) {
-	return configure_2arg_impl(context, SCPIMM_MODE_PERIOD);
-}
-
-scpi_result_t SCPIMM_configure_continuity(scpi_t* context) {
-	return configure_noarg_impl(context, SCPIMM_MODE_CONTINUITY);
-}
-
-scpi_result_t SCPIMM_configure_diode(scpi_t* context) {
-	return configure_noarg_impl(context, SCPIMM_MODE_DIODE);
-}
-

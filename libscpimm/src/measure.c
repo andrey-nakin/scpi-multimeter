@@ -38,20 +38,3 @@ scpi_result_t SCPIMM_measure_resistanceQ(scpi_t* context) {
 scpi_result_t SCPIMM_measure_fresistanceQ(scpi_t* context) {
 	return do_measure(context, SCPIMM_configure_fresistance);
 }
-
-scpi_result_t SCPIMM_measure_frequencyQ(scpi_t* context) {
-	return do_measure(context, SCPIMM_configure_frequency);
-}
-
-scpi_result_t SCPIMM_measure_periodQ(scpi_t* context) {
-	return do_measure(context, SCPIMM_configure_period);
-}
-
-scpi_result_t SCPIMM_measure_continuityQ(scpi_t* context) {
-	return do_measure(context, SCPIMM_configure_continuity);
-}
-
-scpi_result_t SCPIMM_measure_diodeQ(scpi_t* context) {
-	return do_measure(context, SCPIMM_configure_diode);
-}
-

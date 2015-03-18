@@ -179,10 +179,6 @@ static int16_t dm_validate_mode(const scpimm_mode_t mode) {
 	case SCPIMM_MODE_ACC:
 	case SCPIMM_MODE_RESISTANCE_2W:
 	case SCPIMM_MODE_RESISTANCE_4W:
-	case SCPIMM_MODE_FREQUENCY:
-	case SCPIMM_MODE_PERIOD:
-	case SCPIMM_MODE_CONTINUITY:
-	case SCPIMM_MODE_DIODE:
 		return SCPI_ERROR_OK;
 
 	default:

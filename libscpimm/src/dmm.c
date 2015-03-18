@@ -358,12 +358,6 @@ scpimm_mode_params_t* SCPIMM_mode_params(scpimm_context_t* const ctx, const scpi
 
 		case SCPIMM_MODE_RESISTANCE_4W:
 			return &ctx->mode_params.fresistance;
-
-		case SCPIMM_MODE_FREQUENCY:
-			return &ctx->mode_params.frequency;
-
-		case SCPIMM_MODE_PERIOD:
-			return &ctx->mode_params.period;
 	}
 
 	return NULL;
@@ -523,22 +517,6 @@ const char* SCPIMM_mode_name(const scpimm_mode_t mode) {
 
 		case SCPIMM_MODE_RESISTANCE_4W:
 			res = "FRES";
-			break;
-
-		case SCPIMM_MODE_FREQUENCY:
-			res = "FREQ";
-			break;
-
-		case SCPIMM_MODE_PERIOD:
-			res = "PER";
-			break;
-
-		case SCPIMM_MODE_CONTINUITY:
-			res = "CONT";
-			break;
-
-		case SCPIMM_MODE_DIODE:
-			res = "DIOD";
 			break;
 
 		default:

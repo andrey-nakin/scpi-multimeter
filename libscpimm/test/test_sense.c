@@ -13,7 +13,16 @@ int clean_suite(void) {
     return 0;
 }
 
+static void reset() {
+	init_scpimm();
+	clearscpi_errors();
+	init_test_vars();
+}
+
 void test_functionQ() {
+	reset();
+	receive("*OPC?;SYST:ERR?");
+	printf("*** response %s", dm_output_buffer());
 	//receive("SENSE:FUNCTION?");
 	//assert_no_scpi_errors();
 	//assert_in_data("v1.0\r\n");

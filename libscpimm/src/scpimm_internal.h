@@ -56,8 +56,6 @@ typedef struct {
 		scpimm_mode_params_t acc;
 		scpimm_mode_params_t resistance;
 		scpimm_mode_params_t fresistance;
-		scpimm_mode_params_t frequency;
-		scpimm_mode_params_t period;
 	} mode_params;
 
 } scpimm_context_t;

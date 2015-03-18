@@ -113,51 +113,7 @@ static const scpi_command_t scpi_commands[] = {
     DECL_GENERIC_DC_FUNCTION("FRESistance", fresistance)
 #endif
 
-#ifndef SCPIMM_NO_CONTINUITY
-    DECL_NO_PARAM_FUNCTION("CONTinuity", continuity)
-#endif
-
-#ifndef SCPIMM_NO_DIODE
-    DECL_NO_PARAM_FUNCTION("DIODe", diode)
-#endif
-
     /* declare specific CONFIGURE:* and SENSE:* commands */
-
-#ifndef SCPIMM_NO_FREQUENCY
-    DECL_NO_PARAM_FUNCTION("FREQuency", frequency)
-
-	{"SENSe:FREQuency:VOLTage:RANGe", SCPIMM_sense_frequency_voltage_range},
-	{"SENSe:FREQuency:VOLTage:RANGe?", SCPIMM_sense_frequency_voltage_rangeQ},
-	{"SENSe:FREQuency:VOLTage:RANGe:AUTO", SCPIMM_sense_frequency_voltage_range_auto},
-	{"SENSe:FREQuency:VOLTage:RANGe:AUTO?", SCPIMM_sense_frequency_voltage_range_autoQ},
-	{"SENSe:FREQuency:APERture", SCPIMM_sense_frequency_aperture},
-	{"SENSe:FREQuency:APERture?", SCPIMM_sense_frequency_apertureQ},
-
-	{"FREQuency:VOLTage:RANGe", SCPIMM_sense_frequency_voltage_range},
-	{"FREQuency:VOLTage:RANGe?", SCPIMM_sense_frequency_voltage_rangeQ},
-	{"FREQuency:VOLTage:RANGe:AUTO", SCPIMM_sense_frequency_voltage_range_auto},
-	{"FREQuency:VOLTage:RANGe:AUTO?", SCPIMM_sense_frequency_voltage_range_autoQ},
-	{"FREQuency:APERture", SCPIMM_sense_frequency_aperture},
-	{"FREQuency:APERture?", SCPIMM_sense_frequency_apertureQ},
-#endif
-
-#ifndef SCPIMM_NO_PERIOD
-    DECL_NO_PARAM_FUNCTION("PERiod", period)
-
-	{"SENSe:PERiod:VOLTage:RANGe", SCPIMM_sense_period_voltage_range},
-	{"SENSe:PERiod:VOLTage:RANGe?", SCPIMM_sense_period_voltage_rangeQ},
-	{"SENSe:PERiod:VOLTage:RANGe:AUTO", SCPIMM_sense_period_voltage_range_auto},
-	{"SENSe:PERiod:VOLTage:RANGe:AUTO?", SCPIMM_sense_period_voltage_range_autoQ},
-	{"SENSe:PERiod:APERture", SCPIMM_sense_period_aperture},
-	{"SENSe:PERiod:APERture?", SCPIMM_sense_period_apertureQ},
-
-	{"PERiod:VOLTage:RANGe", SCPIMM_sense_period_voltage_range},
-	{"PERiod:VOLTage:RANGe?", SCPIMM_sense_period_voltage_rangeQ},
-	{"PERiod:VOLTage:RANGe:AUTO", SCPIMM_sense_period_voltage_range_auto},
-	{"PERiod:VOLTage:RANGe:AUTO?", SCPIMM_sense_period_voltage_range_autoQ},
-	{"PERiod:APERture", SCPIMM_sense_period_aperture},
-	{"PERiod:APERture?", SCPIMM_sense_period_apertureQ},
-#endif
 
 	{"SENSe:FUNCtion", SCPIMM_sense_function},
 	{"SENSe:FUNCtion?", SCPIMM_sense_functionQ},
@@ -234,10 +190,7 @@ static scpi_interface_t scpi_interface = {
   Global variables
 ******************************************************************************/
 
-static volatile scpimm_context_t scpimm_context = {
-	NULL,  //  interface
-	TRUE   //  beeper_state
-};
+static volatile scpimm_context_t scpimm_context;
 
 static scpi_t scpi_context = {
     scpi_commands,

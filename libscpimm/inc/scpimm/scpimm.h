@@ -10,31 +10,15 @@ extern "C" {
 #endif
 
 /******************************************************************************
-  Multimeter mode constants (to use in MM_setMode)
-******************************************************************************/
-
-#define SCPIMM_MODE_UNSPECIFIED	0
-#define SCPIMM_MODE_DCV	1
-#define SCPIMM_MODE_DCV_RATIO	2
-#define SCPIMM_MODE_ACV	4
-#define SCPIMM_MODE_DCC	8
-#define SCPIMM_MODE_ACC	16
-#define SCPIMM_MODE_RESISTANCE_2W	32
-#define SCPIMM_MODE_RESISTANCE_4W	64
-#define SCPIMM_MODE_FREQUENCY	128
-#define SCPIMM_MODE_PERIOD	256
-#define SCPIMM_MODE_CONTINUITY	512
-#define SCPIMM_MODE_DIODE	1024
-
-/******************************************************************************
   Types
 ******************************************************************************/
 
 /* Input terminal type */
 typedef enum {SCPIMM_TERM_FRONT, SCPIMM_TERM_REAR} scpimm_terminal_state_t;
 
-/* See SCPIMM_MODE_xxx constants */
-typedef uint16_t scpimm_mode_t;
+/* Multimeter mode type */
+typedef enum {SCPIMM_MODE_DCV, SCPIMM_MODE_DCV_RATIO, SCPIMM_MODE_ACV, SCPIMM_MODE_DCC, SCPIMM_MODE_ACC,
+	SCPIMM_MODE_RESISTANCE_2W, SCPIMM_MODE_RESISTANCE_4W} scpimm_mode_t;
 
 typedef struct _scpimm_mode_params_t {
 	size_t range_index;
