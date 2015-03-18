@@ -93,7 +93,7 @@ typedef struct {
 		Optional
 		Issue a short (up to 500 ms) beep
 	*/
-	void (*beep)();
+	int16_t (*beep)();
 
 	/*
 		Optional

@@ -3,8 +3,9 @@
 #include "utils.h"
 
 scpi_result_t SCPIMM_system_beeper(scpi_t* context) {
+	int16_t err;
 	if (SCPIMM_INTERFACE(context)->beep) {
-		SCPIMM_INTERFACE(context)->beep();
+		CHECK_AND_PUSH_ERROR(SCPIMM_INTERFACE(context)->beep());
 	}
     return SCPI_RES_OK;
 }
