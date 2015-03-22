@@ -13,17 +13,7 @@ static bool_t get_input_terminal(scpimm_terminal_state_t* term) {
 	return terminal_result;
 }
 
-int init_suite(void) {
-    return 0;
-}
-
-int clean_suite(void) {
-    return 0;
-}
-
 void test_terminalsQ() {
-	init_scpimm();
-
 	scpimm_interface_t* intf = SCPIMM_context()->interface;
 
 	intf->get_input_terminal = NULL;

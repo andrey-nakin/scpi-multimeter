@@ -222,6 +222,7 @@ static scpi_t scpi_context = {
 void SCPIMM_setup(const scpimm_interface_t* i) {
 	scpimm_context.interface = (scpimm_interface_t*) i;
 	SCPI_Init(&scpi_context);
+	i->setup();
 	reset(&scpi_context);
 }
 

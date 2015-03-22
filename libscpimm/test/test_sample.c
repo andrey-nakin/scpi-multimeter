@@ -5,19 +5,9 @@
 #include <scpimm/scpimm.h>
 #include "test_utils.h"
 
-int init_suite(void) {
-    return 0;
-}
-
-int clean_suite(void) {
-    return 0;
-}
-
 void test_count() {
 	scpimm_context_t* const ctx = SCPIMM_context();
 	int i;
-
-	init_scpimm();
 
 	ctx->sample_count_num = 0;
 	receive("SAMPLE:COUNT MIN");
@@ -53,8 +43,6 @@ void test_count() {
 void test_countQ() {
 	scpimm_context_t* const ctx = SCPIMM_context();
 	int i;
-
-	init_scpimm();
 
 	receive("SAMPLE:COUNT? MIN");
 	assert_no_scpi_errors();

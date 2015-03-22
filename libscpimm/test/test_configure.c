@@ -2,12 +2,7 @@
 #include <string.h>
 #include "CUnit/Basic.h"
 #include <scpi/scpi.h>
-#include <scpimm/scpimm.h>
 #include "test_utils.h"
-#include "default_multimeter.h"
-
-#define	RESOLUTION_UNDERFLOW RANGE_UNDERFLOW
-#define	RESOLUTION_OVERFLOW RANGE_OVERFLOW
 
 #define	MIN_RANGE_INDEX	0
 #define	MIN_RESOLUTION_INDEX	0
@@ -18,12 +13,6 @@ static const char* current_prefixes[] = {"A", "kA", "KA", "mA", "MA", "uA", "UA"
 static const double current_mults[] = {1, 1e3, 1e3, 1e-3, 1e-3, 1e-6, 1e-6, 0.0};
 static const char* resistance_prefixes[] = {"Ohm", "kOhm", "KOhm", "mOhm", "MOhm", NULL};
 static const double resistance_mults[] = {1, 1e3, 1e3, 1e6, 1e6, 0.0};
-
-static void reset() {
-	init_scpimm();
-	clearscpi_errors();
-	init_test_vars();
-}
 
 /* general checking after CONFIGURE command */
 static void check_general(const scpimm_mode_t mode) {
@@ -43,7 +32,7 @@ static void check_general(const scpimm_mode_t mode) {
     }
 
     // check correctness of current multimeter's mode & params
-    ASSERT_NO_SCPI_ERROR(scpimm_interface()->get_mode(&cur_mode, &cur_params));
+    CHECK_NO_SCPI_ERROR(scpimm_interface()->get_mode(&cur_mode, &cur_params));
     CU_ASSERT_EQUAL(cur_mode, mode);
     if (!no_params) {
     	ASSERT_EQUAL_BOOL(cur_params.auto_range, dm_set_mode_last_args.params.auto_range);
@@ -83,12 +72,11 @@ static void check_mode_params(const size_t range_index, const bool_t auto_range,
 static void test_configure_no_params(const char* function, const scpimm_mode_t mode) {
 	const bool_t no_params = FALSE;	//	SCPIMM_MODE_CONTINUITY == mode || SCPIMM_MODE_DIODE == mode;
 
-	reset();
 	dm_reset_counters();
 
 	receivef("CONFIGURE:%s\r\n", function);
-	assert_no_scpi_errors();
-	assert_no_data();
+	ASSERT_NO_SCPI_ERRORS();
+	ASSERT_NO_RESPONSE();
 	check_general(mode);
 
 	if (!no_params) {
@@ -113,9 +101,7 @@ static void test_configure_fix_params(const char* function, scpimm_mode_t mode) 
 	const double* ranges;
 	int16_t err;
 
-	reset();
-
-	ASSERT_NO_SCPI_ERROR(scpimm_interface()->get_allowed_ranges(mode, &ranges, NULL));
+	CHECK_NO_SCPI_ERROR(scpimm_interface()->get_allowed_ranges(mode, &ranges, NULL));
 	range_indices[0] = MIN_RANGE_INDEX; range_indices[1] = max_index(ranges); range_indices[2] = MIN_RANGE_INDEX;
 
 	for (rangeIndex = 0; rangeIndex < sizeof(types) / sizeof(types[0]); ++rangeIndex) {
@@ -123,14 +109,14 @@ static void test_configure_fix_params(const char* function, scpimm_mode_t mode) 
 		const double* resolutions;
 		size_t resolution_indices[3];
 
-		ASSERT_NO_SCPI_ERROR(scpimm_interface()->get_allowed_resolutions(mode, range_indices[rangeIndex], &resolutions));
+		CHECK_NO_SCPI_ERROR(scpimm_interface()->get_allowed_resolutions(mode, range_indices[rangeIndex], &resolutions));
 		resolution_indices[0] = MIN_RESOLUTION_INDEX; resolution_indices[1] = max_index(resolutions); resolution_indices[2] = MIN_RESOLUTION_INDEX;
 
 		// CONFIGURE:func <range>
 		dm_reset_counters();
 		receivef("CONFIGURE:%s %s", function, strs[rangeIndex]);
-		assert_no_scpi_errors();
-		assert_no_data();
+		ASSERT_NO_SCPI_ERRORS();
+		ASSERT_NO_RESPONSE();
 		check_general(mode);
 		check_mode_params(range_indices[rangeIndex], types[rangeIndex] == SCPI_NUM_DEF, MIN_RESOLUTION_INDEX);
 
@@ -138,8 +124,8 @@ static void test_configure_fix_params(const char* function, scpimm_mode_t mode) 
 			// CONFIGURE:func <range>,<resolution>
 			dm_reset_counters();
 			receivef("CONFIGURE:%s %s,%s", function, strs[rangeIndex], strs[resolutionIndex]);
-			assert_no_scpi_errors();
-			assert_no_data();
+			ASSERT_NO_SCPI_ERRORS();
+			ASSERT_NO_RESPONSE();
 			check_general(mode);
 			check_mode_params(range_indices[rangeIndex], types[rangeIndex] == SCPI_NUM_DEF, resolution_indices[resolutionIndex]);
 		}
@@ -150,8 +136,8 @@ static void test_configure_custom_range_and_resolution(const char* function, scp
 	// CONFIGURE:func <range>,<resolution>
 	dm_reset_counters();
 	configure_with_range_and_res(function, range, "", resolution, "");
-	assert_no_scpi_errors();
-	assert_no_data();
+	ASSERT_NO_SCPI_ERRORS();
+	ASSERT_NO_RESPONSE();
 	check_general(mode);
 	check_mode_params(expected_range_index, FALSE, expected_resolution_index);
 }
@@ -164,12 +150,12 @@ static void test_configure_custom_range(const char* function, scpimm_mode_t mode
 	// CONFIGURE:func <range>
 	dm_reset_counters();
 	configure_with_range(function, range, "");
-	assert_no_scpi_errors();
-	assert_no_data();
+	ASSERT_NO_SCPI_ERRORS();
+	ASSERT_NO_RESPONSE();
 	check_general(mode);
 	check_mode_params(expected_range_index, FALSE, MIN_RESOLUTION_INDEX);
 
-	ASSERT_NO_SCPI_ERROR(scpimm_interface()->get_allowed_resolutions(mode, expected_range_index, &resolutions));
+	CHECK_NO_SCPI_ERROR(scpimm_interface()->get_allowed_resolutions(mode, expected_range_index, &resolutions));
 
 	for (resolution_index = 0; resolutions[resolution_index] >= 0.0; resolution_index++) {
 		test_configure_custom_range_and_resolution(function, mode, range, expected_range_index, resolutions[resolution_index], resolution_index);
@@ -183,9 +169,7 @@ static void test_configure_custom_params(const char* function, const scpimm_mode
 	const double *ranges, *overruns;
 	size_t range_index;
 
-	reset();
-
-	ASSERT_NO_SCPI_ERROR(scpimm_interface()->get_allowed_ranges(mode, &ranges, &overruns));
+	CHECK_NO_SCPI_ERROR(scpimm_interface()->get_allowed_ranges(mode, &ranges, &overruns));
 
 	for (range_index = 0; ranges[range_index] >= 0.0; range_index++) {
 		test_configure_custom_range(function, mode, 0.5 * ranges[range_index], range_index);
@@ -201,16 +185,14 @@ static void test_configure_out_of_range(const char* function, scpimm_mode_t mode
 	double range, resolution;
 	size_t range_index;
 
-	reset();
-
-	ASSERT_NO_SCPI_ERROR(scpimm_interface()->get_allowed_ranges(mode, &ranges, &overruns));
+	CHECK_NO_SCPI_ERROR(scpimm_interface()->get_allowed_ranges(mode, &ranges, &overruns));
 
 	// range < min range
 	range = ranges[0] * 0.5;
 	dm_reset_counters();
 	configure_with_range(function, range, "");
-	assert_no_scpi_errors();
-	assert_no_data();
+	ASSERT_NO_SCPI_ERRORS();
+	ASSERT_NO_RESPONSE();
 	check_general(mode);
 	check_mode_params(MIN_RANGE_INDEX, FALSE, MIN_RESOLUTION_INDEX);
 
@@ -218,21 +200,21 @@ static void test_configure_out_of_range(const char* function, scpimm_mode_t mode
 	range = ranges[max_index(ranges)] * overruns[max_index(ranges)] * 1.01;
 	dm_reset_counters();
 	configure_with_range(function, range, "");
-	assert_scpi_error(SCPI_ERROR_DATA_OUT_OF_RANGE);
-	assert_no_data();
+	ASSERT_SCPI_ERROR(SCPI_ERROR_DATA_OUT_OF_RANGE);
+	ASSERT_NO_RESPONSE();
 	check_general_failure();
 	clearscpi_errors();
 
 	for (range_index = 0; ranges[range_index] >= 0.0; range_index++) {
 		range = ranges[range_index];
-		ASSERT_NO_SCPI_ERROR(scpimm_interface()->get_allowed_resolutions(mode, range_index, &resolutions));
+		CHECK_NO_SCPI_ERROR(scpimm_interface()->get_allowed_resolutions(mode, range_index, &resolutions));
 
 		// resolution < min resolution
 		resolution = resolutions[0] * 0.99;
 		dm_reset_counters();
 		configure_with_range_and_res(function, range, "", resolution, "");
-		assert_scpi_error(SCPI_ERROR_CANNOT_ACHIEVE_REQUESTED_RESOLUTION);
-		assert_no_data();
+		ASSERT_SCPI_ERROR(SCPI_ERROR_CANNOT_ACHIEVE_REQUESTED_RESOLUTION);
+		ASSERT_NO_RESPONSE();
 		check_general_failure();
 		clearscpi_errors();
 
@@ -240,8 +222,8 @@ static void test_configure_out_of_range(const char* function, scpimm_mode_t mode
 		resolution = resolutions[max_index(resolutions)] * 2.0;
 		dm_reset_counters();
 		configure_with_range_and_res(function, range, "", resolution, "");
-		assert_no_scpi_errors();
-		assert_no_data();
+		ASSERT_NO_SCPI_ERRORS();
+		ASSERT_NO_RESPONSE();
 		check_general(mode);
 		check_mode_params(range_index, FALSE, max_index(resolutions));
 	}
@@ -252,22 +234,20 @@ static void test_configure_units(const char* function, scpimm_mode_t mode, const
 	const double *ranges;
 	size_t range_index;
 
-	reset();
-
-	ASSERT_NO_SCPI_ERROR(scpimm_interface()->get_allowed_ranges(mode, &ranges, NULL));
+	CHECK_NO_SCPI_ERROR(scpimm_interface()->get_allowed_ranges(mode, &ranges, NULL));
 
 	for (range_index = 0; ranges[range_index] >= 0.0; range_index++) {
 		const double range = ranges[range_index] * 0.5;
 		const double *resolutions;
 		size_t resolution_index, unit_index;
 
-		ASSERT_NO_SCPI_ERROR(scpimm_interface()->get_allowed_resolutions(mode, range_index, &resolutions));
+		CHECK_NO_SCPI_ERROR(scpimm_interface()->get_allowed_resolutions(mode, range_index, &resolutions));
 
 		for (unit_index = 0; prefs[unit_index] != NULL; ++unit_index) {
 			dm_reset_counters();
 			configure_with_range(function, range / mults[unit_index], prefs[unit_index]);
-			assert_no_scpi_errors();
-			assert_no_data();
+			ASSERT_NO_SCPI_ERRORS();
+			ASSERT_NO_RESPONSE();
 			check_general(mode);
 			check_mode_params(range_index, FALSE, MIN_RESOLUTION_INDEX);
 		}
@@ -278,8 +258,8 @@ static void test_configure_units(const char* function, scpimm_mode_t mode, const
 			for (unit_index = 0; prefs[unit_index] != NULL; ++unit_index) {
 				dm_reset_counters();
 				configure_with_range_and_res(function, range / mults[range_index], prefs[range_index], resolution / mults[range_index], prefs[range_index]);
-				assert_no_scpi_errors();
-				assert_no_data();
+				ASSERT_NO_SCPI_ERRORS();
+				ASSERT_NO_RESPONSE();
 				check_general(mode);
 				check_mode_params(range_index, FALSE, resolution_index);
 			}
@@ -302,19 +282,17 @@ static void test_configureQ_impl(const char* function, scpimm_mode_t mode, const
 	size_t range_index;
 	char buf[100], *result = dm_output_buffer();
 
-	reset();
-
 	if (no_params) {
 		dm_reset_counters();
 		receivef("CONFIGURE:%s\r\n", function);
 		receivef("CONFIGURE?\r\n");
-		assert_no_scpi_errors();
+		ASSERT_NO_SCPI_ERRORS();
 		sprintf(buf, "\"%s\"\r\n", mode_name);
 		CU_ASSERT_STRING_EQUAL(buf, result);
 		return;
 	}
 
-	ASSERT_NO_SCPI_ERROR(scpimm_interface()->get_allowed_ranges(mode, &ranges, NULL));
+	CHECK_NO_SCPI_ERROR(scpimm_interface()->get_allowed_ranges(mode, &ranges, NULL));
 
 	for (range_index = 0; ranges[range_index] >= 0.0; range_index++) {
 		const double range = ranges[range_index] * 0.5;
@@ -322,12 +300,12 @@ static void test_configureQ_impl(const char* function, scpimm_mode_t mode, const
 		size_t resolution_index;
 		double actual_range, actual_resolution;
 
-		ASSERT_NO_SCPI_ERROR(scpimm_interface()->get_allowed_resolutions(mode, range_index, &resolutions));
+		CHECK_NO_SCPI_ERROR(scpimm_interface()->get_allowed_resolutions(mode, range_index, &resolutions));
 
 		dm_reset_counters();
 		configure_with_range(function, ranges[range_index], "");
 		receivef("CONFIGURE?\r\n");
-		assert_no_scpi_errors();
+		ASSERT_NO_SCPI_ERRORS();
 		sprintf(buf, "\"%s ", mode_name);
 		CU_ASSERT_EQUAL(strncmp(buf, result, strlen(buf)), 0);
 		sscanf(result + strlen(buf), "%le,%le", &actual_range, &actual_resolution);
@@ -340,7 +318,7 @@ static void test_configureQ_impl(const char* function, scpimm_mode_t mode, const
 			dm_reset_counters();
 			configure_with_range_and_res(function, range, "", resolution, "");
 			receivef("CONFIGURE?\r\n");
-			assert_no_scpi_errors();
+			ASSERT_NO_SCPI_ERRORS();
 			sprintf(buf, "\"%s ", mode_name);
 			CU_ASSERT_EQUAL(strncmp(buf, result, strlen(buf)), 0);
 			sscanf(result + strlen(buf), "%le,%le", &actual_range, &actual_resolution);
@@ -350,45 +328,37 @@ static void test_configureQ_impl(const char* function, scpimm_mode_t mode, const
 	}
 }
 
-int init_suite(void) {
-    return 0;
-}
-
-int clean_suite(void) {
-    return 0;
-}
-
-void test_configure_voltage_dc() {
+static void test_configure_voltage_dc() {
 	test_impl("VOLTAGE", SCPIMM_MODE_DCV, voltage_prefixes, voltage_mults);
 	test_impl("VOLTAGE:DC", SCPIMM_MODE_DCV, voltage_prefixes, voltage_mults);
 }
 
-void test_configure_voltage_dc_ratio() {
+static void test_configure_voltage_dc_ratio() {
 	test_impl("VOLTAGE:DC:RATIO", SCPIMM_MODE_DCV_RATIO, voltage_prefixes, voltage_mults);
 }
 
-void test_configure_voltage_ac() {
+static void test_configure_voltage_ac() {
 	test_impl("VOLTAGE:AC", SCPIMM_MODE_ACV, voltage_prefixes, voltage_mults);
 }
 
-void test_configure_current_dc() {
+static void test_configure_current_dc() {
 	test_impl("CURRENT", SCPIMM_MODE_DCC, current_prefixes, current_mults);
 	test_impl("CURRENT:DC", SCPIMM_MODE_DCC, current_prefixes, current_mults);
 }
 
-void test_configure_current_ac() {
+static void test_configure_current_ac() {
 	test_impl("CURRENT:AC", SCPIMM_MODE_ACC, current_prefixes, current_mults);
 }
 
-void test_configure_resistance() {
+static void test_configure_resistance() {
 	test_impl("RESISTANCE", SCPIMM_MODE_RESISTANCE_2W, resistance_prefixes, resistance_mults);
 }
 
-void test_configure_fresistance() {
+static void test_configure_fresistance() {
 	test_impl("FRESISTANCE", SCPIMM_MODE_RESISTANCE_4W, resistance_prefixes, resistance_mults);
 }
 
-void test_configureQ() {
+static void test_configureQ() {
 	test_configureQ_impl("VOLTAGE", SCPIMM_MODE_DCV, "VOLT");
 	test_configureQ_impl("VOLTAGE:DC", SCPIMM_MODE_DCV, "VOLT");
 	test_configureQ_impl("VOLTAGE:DC:RATIO", SCPIMM_MODE_DCV_RATIO, "VOLT:DC:RAT");
@@ -408,50 +378,19 @@ int main() {
         return CU_get_error();
 
     /* Add a suite to the registry */
-    pSuite = CU_add_suite("CONFIGURE", init_suite, clean_suite);
-    if (NULL == pSuite) {
-        CU_cleanup_registry();
-        return CU_get_error();
-    }
+    ADD_SUITE("CONFIGURE");
 
     /* Add the tests to the suite */
-    if ((NULL == CU_add_test(pSuite, "configure:voltage:dc", test_configure_voltage_dc))) {
-        CU_cleanup_registry();
-        return CU_get_error();
-    }
-    if ((NULL == CU_add_test(pSuite, "configure:voltage:dc:ratio", test_configure_voltage_dc_ratio))) {
-        CU_cleanup_registry();
-        return CU_get_error();
-    }
-    if ((NULL == CU_add_test(pSuite, "configure:voltage:ac", test_configure_voltage_ac))) {
-        CU_cleanup_registry();
-        return CU_get_error();
-    }
-    if ((NULL == CU_add_test(pSuite, "configure:current:dc", test_configure_current_dc))) {
-        CU_cleanup_registry();
-        return CU_get_error();
-    }
-    if ((NULL == CU_add_test(pSuite, "configure:current:ac", test_configure_current_ac))) {
-        CU_cleanup_registry();
-        return CU_get_error();
-    }
-    if ((NULL == CU_add_test(pSuite, "configure:resistance", test_configure_resistance))) {
-        CU_cleanup_registry();
-        return CU_get_error();
-    }
-    if ((NULL == CU_add_test(pSuite, "configure:fresistance", test_configure_fresistance))) {
-        CU_cleanup_registry();
-        return CU_get_error();
-    }
-    if ((NULL == CU_add_test(pSuite, "configure?", test_configureQ))) {
-        CU_cleanup_registry();
-        return CU_get_error();
-    }
+    ADD_TEST(test_configure_voltage_dc);
+    ADD_TEST(test_configure_voltage_dc_ratio);
+    ADD_TEST(test_configure_voltage_ac);
+    ADD_TEST(test_configure_current_dc);
+    ADD_TEST(test_configure_current_ac);
+    ADD_TEST(test_configure_resistance);
+    ADD_TEST(test_configure_fresistance);
+    ADD_TEST(test_configureQ);
 
     /* Run all tests using the CUnit Basic interface */
-    CU_basic_set_mode(CU_BRM_VERBOSE);
-    CU_basic_run_tests();
-    CU_cleanup_registry();
-    return CU_get_error();
+    return RUN_ALL_TESTS();
 }
 

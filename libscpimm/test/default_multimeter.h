@@ -7,6 +7,7 @@
 
 #include <scpi/scpi.h>
 #include <scpimm/scpimm.h>
+#include "../src/scpimm_internal.h"
 
 typedef enum {
 	DM_MEASUREMENT_TYPE_ASYNC, DM_MEASUREMENT_TYPE_SYNC
@@ -43,7 +44,17 @@ typedef struct {
 } dm_get_allowed_resolutions_args_t;
 
 typedef struct {
-	unsigned set_mode, get_mode, get_allowed_ranges, get_allowed_resolutions, start_measure, set_interrupt_status;
+	bool_t remote;
+	bool_t lock;
+} dm_remote_args_t;
+
+typedef struct {
+	const char* txt;
+} dm_display_text_args_t;
+
+typedef struct {
+	unsigned set_mode, get_mode, get_allowed_ranges, get_allowed_resolutions,
+		start_measure, set_interrupt_status, remote, beep, display_text, setup, reset;
 } dm_counters_t;
 
 typedef double (*dm_measurement_func_t)(uint32_t time);
@@ -55,9 +66,14 @@ typedef struct {
 } dm_multimeter_config_t;
 
 extern dm_multimeter_state_t dm_multimeter_state;
+extern char dm_display[SCPIMM_DISPLAY_LEN + 1];
+
 extern dm_set_mode_args_t dm_set_mode_last_args;
 extern dm_get_allowed_ranges_args_t dm_get_allowed_ranges_last_args;
 extern dm_get_allowed_resolutions_args_t dm_get_allowed_resolutions_last_args;
+extern dm_remote_args_t dm_remote_args;
+extern dm_display_text_args_t dm_display_text_args;
+
 extern scpimm_interface_t dm_interface;
 extern dm_counters_t dm_counters;
 extern dm_multimeter_config_t dm_multimeter_config;
@@ -65,6 +81,7 @@ extern dm_multimeter_config_t dm_multimeter_config;
 void dm_init_in_buffer();
 char* dm_output_buffer();
 void dm_reset_counters();
+void dm_reset_args();
 
 double dm_measurement_func_const(uint32_t time);
 

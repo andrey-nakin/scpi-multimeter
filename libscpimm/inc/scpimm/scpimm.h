@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include <scpi/scpi.h>
-#include "errors.h"
+#include "scpimm/errors.h"
 
 #ifdef  __cplusplus
 extern "C" {
@@ -30,9 +30,9 @@ typedef struct {
 
 	/*
 		Mandatory
-		Initializes multimeter. Call when multimeter is started or *RST command is invoked
+		Initializes multimeter. Call once when multimeter is started
 	*/
-	int16_t (*reset)();
+	int16_t (*setup)();
 
 	/* 
 		Mandatory
@@ -85,6 +85,12 @@ typedef struct {
 
 	/*
 		Optional
+		Resets multimeter. Call when multimeter is started or *RST command is invoked
+	*/
+	int16_t (*reset)();
+
+	/*
+		Optional
 		Turn "remote control" mode to on/off
 	*/
 	int16_t (*remote)(bool_t remote, bool_t lock);
@@ -106,6 +112,12 @@ typedef struct {
 		Set state of the automatic input impedance selection
 	*/
 	bool_t (*set_input_impedance_auto)(bool_t state);
+
+	/*
+		Optional
+		Displays a text on multimeter's display
+	*/
+	int16_t (*display_text)(const char* txt);
 
 } scpimm_interface_t;
 

@@ -15,15 +15,6 @@ static void delay_auto_impl(const char* cmd, bool_t expected) {
     CU_ASSERT_EQUAL(CONTEXT->trigger_auto_delay, expected);
 }
 
-int init_suite(void) {
-	init_scpimm();
-    return 0;
-}
-
-int clean_suite(void) {
-    return 0;
-}
-
 void test_source() {
 	scpimm_context_t* const ctx = SCPIMM_context();
 	const char* options[] = {"BUS", "IMM", "EXT"};
@@ -49,8 +40,6 @@ void test_sourceQ() {
 	const char* expected[] = {"BUS\r\n", "IMM\r\n", "EXT\r\n"};
 	size_t i;
 
-	init_scpimm();
-
 	for (i = 0; i < sizeof(values) / sizeof(values[0]); ++i) {
 		ctx->trigger_src = values[i];
 		receive("TRIGGER:SOURCE?");
@@ -62,8 +51,6 @@ void test_sourceQ() {
 void test_delay() {
 	scpimm_context_t* const ctx = SCPIMM_context();
 	float f;
-
-	init_scpimm();
 
 	ctx->trigger_count_num = 0;
 	ctx->infinite_trigger_count = TRUE;
@@ -101,8 +88,6 @@ void test_delay() {
 void test_delayQ() {
 	scpimm_context_t* const ctx = SCPIMM_context();
 	double f;
-
-	init_scpimm();
 
 	ctx->trigger_delay = 123.45;
 
@@ -150,8 +135,6 @@ void test_count() {
 	scpimm_context_t* const ctx = SCPIMM_context();
 	int i;
 
-	init_scpimm();
-
 	ctx->trigger_count_num = 0;
 	ctx->infinite_trigger_count = TRUE;
 
@@ -196,8 +179,6 @@ void test_count() {
 void test_countQ() {
 	scpimm_context_t* const ctx = SCPIMM_context();
 	int i;
-
-	init_scpimm();
 
 	receive("TRIGGER:COUNT? MIN");
 	assert_no_scpi_errors();

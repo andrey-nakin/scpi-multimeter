@@ -1,93 +1,111 @@
 #include <stdio.h>
 #include <string.h>
 #include "CUnit/Basic.h"
-#include <scpi/scpi.h>
-#include <scpimm/scpimm.h>
 #include "test_utils.h"
 
-#define CONTEXT (SCPIMM_context())
-
-static void delay_auto_impl(const char* cmd, bool_t expected) {
+static void test_display_impl(const char* cmd, bool_t expected) {
 	receive(cmd);
-	assert_no_scpi_errors();
-	assert_no_data();
-    CU_ASSERT_EQUAL(CONTEXT->display, expected);
-}
+	ASSERT_NO_SCPI_ERRORS();
+	ASSERT_NO_RESPONSE();
 
-int init_suite(void) {
-    return 0;
-}
-
-int clean_suite(void) {
-    return 0;
+	receive("DISPLAY?");
+	ASSERT_NO_SCPI_ERRORS();
+	ASSERT_BOOL_RESPONSE(expected);
 }
 
 void test_display() {
-	init_scpimm();
-
-	delay_auto_impl("DISPLAY 0", FALSE);
-	delay_auto_impl("DISPLAY 1", TRUE);
-	delay_auto_impl("DISPLAY +0", FALSE);
-	delay_auto_impl("DISPLAY +1", TRUE);
-	delay_auto_impl("DISPLAY OFF", FALSE);
-	delay_auto_impl("DISPLAY ON", TRUE);
-	delay_auto_impl("DISPLAY Off", FALSE);
-	delay_auto_impl("DISPLAY On", TRUE);
+	test_display_impl("DISPLAY 0", FALSE);
+	test_display_impl("DISPLAY 1", TRUE);
+	test_display_impl("DISPLAY +0", FALSE);
+	test_display_impl("DISPLAY +1", TRUE);
+	test_display_impl("DISPLAY OFF", FALSE);
+	test_display_impl("DISPLAY ON", TRUE);
+	test_display_impl("DISPLAY Off", FALSE);
+	test_display_impl("DISPLAY On", TRUE);
 }
 
 void test_displayQ() {
-	init_scpimm();
-
-	CONTEXT->display = FALSE;
+	receive("DISPLAY OFF");
+	ASSERT_NO_SCPI_ERRORS();
+	ASSERT_NO_RESPONSE();
 	receive("DISPLAY?");
-	assert_no_scpi_errors();
-	assert_in_bool(FALSE);
+	ASSERT_NO_SCPI_ERRORS();
+	ASSERT_BOOL_RESPONSE(FALSE);
 
-	CONTEXT->display = TRUE;
+	receive("DISPLAY ON");
+	ASSERT_NO_SCPI_ERRORS();
+	ASSERT_NO_RESPONSE();
 	receive("DISPLAY?");
-	assert_no_scpi_errors();
-	assert_in_bool(TRUE);
+	ASSERT_NO_SCPI_ERRORS();
+	ASSERT_BOOL_RESPONSE(TRUE);
+
+	receive("DISPLAY OFF");
+	ASSERT_NO_SCPI_ERRORS();
+	ASSERT_NO_RESPONSE();
+	receive("DISPLAY?");
+	ASSERT_NO_SCPI_ERRORS();
+	ASSERT_BOOL_RESPONSE(FALSE);
 }
 
 void test_display_text() {
-	init_scpimm();
-
+	dm_reset_counters();
+	dm_reset_args();
 	receive("DISPLAY:TEXT ''");
-	assert_no_scpi_errors();
-	assert_no_data();
-    CU_ASSERT_STRING_EQUAL(CONTEXT->display_text, "");
+	ASSERT_NO_SCPI_ERRORS();
+	ASSERT_NO_RESPONSE();
+    CU_ASSERT_EQUAL(dm_counters.display_text, CALLED_ONCE);
+    CU_ASSERT_STRING_EQUAL(dm_display_text_args.txt, "");
+    CU_ASSERT_STRING_EQUAL(dm_display, "");
 
+	dm_reset_counters();
+	dm_reset_args();
 	receive("DISPLAY:TEXT '1234567890AB'");
-	assert_no_scpi_errors();
-	assert_no_data();
-    CU_ASSERT_STRING_EQUAL(CONTEXT->display_text, "1234567890AB");
+	ASSERT_NO_SCPI_ERRORS();
+	ASSERT_NO_RESPONSE();
+    CU_ASSERT_EQUAL(dm_counters.display_text, CALLED_ONCE);
+    CU_ASSERT_STRING_EQUAL(dm_display_text_args.txt, "1234567890AB");
+    CU_ASSERT_STRING_EQUAL(dm_display, "1234567890AB");
 
 	receive("DISPLAY:TEXT '1234567890ABC'");
-	assert_scpi_error(SCPI_ERROR_TOO_MUCH_DATA);
-	assert_no_data();
+	ASSERT_SCPI_ERROR(SCPI_ERROR_TOO_MUCH_DATA);
+	ASSERT_NO_RESPONSE();
+    CU_ASSERT_EQUAL(dm_counters.display_text, CALLED_ONCE);
+    CU_ASSERT_STRING_EQUAL(dm_display_text_args.txt, "1234567890AB");
+    CU_ASSERT_STRING_EQUAL(dm_display, "1234567890AB");
 }
 
 void test_display_textQ() {
-	init_scpimm();
-
+	receive("DISPLAY:TEXT ''");
+	ASSERT_NO_SCPI_ERRORS();
+	ASSERT_NO_RESPONSE();
 	receive("DISPLAY:TEXT?");
-	assert_no_scpi_errors();
-	assert_in_data("\"\"\r\n");
+	ASSERT_NO_SCPI_ERRORS();
+	ASSERT_RESPONSE("\"\"\r\n");
 
-	strcpy(CONTEXT->display_text, "1234567890AB");
+	receive("DISPLAY:TEXT '1234567890AB'");
+	ASSERT_NO_SCPI_ERRORS();
+	ASSERT_NO_RESPONSE();
 	receive("DISPLAY:TEXT?");
-	assert_no_scpi_errors();
-	assert_in_data("\"1234567890AB\"\r\n");
+	ASSERT_NO_SCPI_ERRORS();
+	ASSERT_RESPONSE("\"1234567890AB\"\r\n");
 }
 
 void test_display_text_clear() {
-	init_scpimm();
+	dm_reset_counters();
+	dm_reset_args();
+	receive("DISPLAY:TEXT '1234567890AB'");
+	ASSERT_NO_SCPI_ERRORS();
+	ASSERT_NO_RESPONSE();
+    CU_ASSERT_EQUAL(dm_counters.display_text, CALLED_ONCE);
+    CU_ASSERT_STRING_EQUAL(dm_display_text_args.txt, "1234567890AB");
+    CU_ASSERT_STRING_EQUAL(dm_display, "1234567890AB");
 
-	strcpy(CONTEXT->display_text, "1234567890AB");
 	receive("DISPLAY:TEXT:CLEAR");
-	assert_no_scpi_errors();
-	assert_no_data();
-    CU_ASSERT_STRING_EQUAL(CONTEXT->display_text, "");
+	ASSERT_NO_SCPI_ERRORS();
+	ASSERT_NO_RESPONSE();
+    CU_ASSERT_EQUAL(dm_counters.display_text, 2);
+    CU_ASSERT_STRING_EQUAL(dm_display_text_args.txt, "");
+    CU_ASSERT_STRING_EQUAL(dm_display, "");
 }
 
 int main() {

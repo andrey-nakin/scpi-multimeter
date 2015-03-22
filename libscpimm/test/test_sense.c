@@ -5,22 +5,7 @@
 #include <scpimm/scpimm.h>
 #include "test_utils.h"
 
-int init_suite(void) {
-    return 0;
-}
-
-int clean_suite(void) {
-    return 0;
-}
-
-static void reset() {
-	init_scpimm();
-	clearscpi_errors();
-	init_test_vars();
-}
-
 void test_functionQ() {
-	reset();
 	receive("*OPC?;SYST:ERR?");
 	printf("*** response %s", dm_output_buffer());
 	//receive("SENSE:FUNCTION?");

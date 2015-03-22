@@ -7,6 +7,7 @@
 
 #define DEFAULT_MEAS_DURATION 500
 
+static int16_t dm_setup();
 static int16_t dm_reset();
 static int16_t dm_set_mode(scpimm_mode_t mode, const scpimm_mode_params_t* const params);
 static int16_t dm_get_mode(scpimm_mode_t* mode, scpimm_mode_params_t* const params);
@@ -17,16 +18,25 @@ static size_t dm_send(const uint8_t* buf, size_t len);
 static int16_t dm_get_milliseconds(uint32_t* tm);
 static int16_t dm_sleep_milliseconds(uint32_t);
 static int16_t dm_set_interrupt_status(bool_t disabled);
+static int16_t dm_remote(bool_t remote, bool_t lock);
+static int16_t dm_beep();
+static int16_t dm_display_text(const char* txt);
 
 /***************************************************************
  * Global variables
  **************************************************************/
 
 dm_multimeter_state_t dm_multimeter_state;
+char dm_display[SCPIMM_DISPLAY_LEN + 1];
+
 dm_set_mode_args_t dm_set_mode_last_args;
 dm_get_allowed_ranges_args_t dm_get_allowed_ranges_last_args;
 dm_get_allowed_resolutions_args_t dm_get_allowed_resolutions_last_args;
+dm_remote_args_t dm_remote_args;
+dm_display_text_args_t dm_display_text_args;
+
 scpimm_interface_t dm_interface = {
+		.setup = dm_setup,
 		.reset = dm_reset,
 		.set_mode = dm_set_mode,
 		.get_mode = dm_get_mode,
@@ -36,7 +46,10 @@ scpimm_interface_t dm_interface = {
 		.send = dm_send,
 		.get_milliseconds = dm_get_milliseconds,
 		.sleep_milliseconds = dm_sleep_milliseconds,
-		.set_interrupt_status = dm_set_interrupt_status
+		.set_interrupt_status = dm_set_interrupt_status,
+		.remote = dm_remote,
+		.beep = dm_beep,
+		.display_text = dm_display_text
 };
 dm_counters_t dm_counters;
 dm_multimeter_config_t dm_multimeter_config = {
@@ -119,6 +132,17 @@ void dm_reset_counters() {
 	memset(&dm_counters, 0, sizeof(dm_counters));
 }
 
+void dm_reset_args() {
+#define RESET_ARG(v) memset(&v, 0xfe, sizeof(v))
+
+	RESET_ARG(dm_set_mode_last_args);
+	RESET_ARG(dm_get_allowed_ranges_last_args);
+	RESET_ARG(dm_get_allowed_resolutions_last_args);
+	RESET_ARG(dm_remote_args);
+	RESET_ARG(dm_display_text_args);
+	RESET_ARG(dm_display);
+}
+
 double dm_measurement_func_const(uint32_t time) {
 	(void) time;
 
@@ -131,7 +155,9 @@ double dm_measurement_func_const(uint32_t time) {
  * Multimeter interface
  **************************************************************/
 
-static int16_t dm_reset() {
+static int16_t dm_setup() {
+	dm_counters.setup++;
+
 	if (!measure_thread_created) {
 		int err;
 
@@ -159,6 +185,14 @@ static int16_t dm_reset() {
 		}
 		trigger_thread_created = TRUE;
 	}
+
+	return SCPI_ERROR_OK;
+}
+
+static int16_t dm_reset() {
+	dm_counters.reset++;
+
+	dm_reset_args();
 
 	dm_multimeter_state.interrrupt_disable_counter = 0;
 	dm_multimeter_state.measurement_failure_counter = 0;
@@ -376,6 +410,29 @@ static int16_t dm_set_interrupt_status(const bool_t disabled) {
 	} else {
 		dm_multimeter_state.interrrupt_disable_counter--;
 	}
+
+	return SCPI_ERROR_OK;
+}
+
+static int16_t dm_remote(bool_t remote, bool_t lock) {
+	dm_counters.remote++;
+	dm_remote_args.remote = remote;
+	dm_remote_args.lock = lock;
+
+	return SCPI_ERROR_OK;
+}
+
+static int16_t dm_beep() {
+	dm_counters.beep++;
+	return SCPI_ERROR_OK;
+}
+
+static int16_t dm_display_text(const char* txt) {
+	dm_counters.display_text++;
+	dm_display_text_args.txt = txt;
+
+	strncpy(dm_display, txt, sizeof(dm_display) - 1);
+	dm_display[sizeof(dm_display) - 1] = '\0';
 
 	return SCPI_ERROR_OK;
 }

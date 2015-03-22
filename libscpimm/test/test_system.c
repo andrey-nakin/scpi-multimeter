@@ -4,24 +4,9 @@
 #include <scpi/scpi.h>
 #include <scpimm/scpimm.h>
 #include "test_utils.h"
+#include "default_multimeter.h"
 
 #define CONTEXT (SCPIMM_context())
-
-static unsigned beeper_counter = 0;
-static unsigned remove_counter = 0;
-static bool_t last_remote = 0xff;
-static bool_t last_lock = 0xff;
-
-static void beeper() {
-	++beeper_counter;
-}
-
-static int16_t remote(bool_t remote, bool_t lock) {
-	++remove_counter;
-	last_remote = remote;
-	last_lock = lock;
-	return SCPI_ERROR_OK;
-}
 
 static void beeper_state_impl(const char* cmd, bool_t expected) {
 	receive(cmd);
@@ -31,17 +16,16 @@ static void beeper_state_impl(const char* cmd, bool_t expected) {
 }
 
 static void remote_impl(const char* cmd, bool_t expected_remote, bool_t expected_lock) {
-	remove_counter = 0;
-	last_remote = 0xff;
-	last_lock = 0xff;
+	dm_reset_counters();
+	dm_reset_args();
 
 	receive(cmd);
 	assert_no_scpi_errors();
 	assert_no_data();
 
-    CU_ASSERT_EQUAL(remove_counter, 1);
-    CU_ASSERT_EQUAL(last_remote, expected_remote);
-    CU_ASSERT_EQUAL(last_lock, expected_lock);
+    CU_ASSERT_EQUAL(dm_counters.remote, 1);
+    CU_ASSERT_EQUAL(dm_remote_args.remote, expected_remote);
+    CU_ASSERT_EQUAL(dm_remote_args.lock, expected_lock);
 }
 
 static void error_impl(const char* cmd) {
@@ -56,26 +40,14 @@ static void error_impl(const char* cmd) {
 	assert_in_data("0, \"No error\"\r\n");
 }
 
-int init_suite(void) {
-	init_scpimm();
-	CONTEXT->interface->beep = beeper;
-	CONTEXT->interface->remote = remote;
-	clearscpi_errors();
-	init_test_vars();
-    return 0;
-}
-
-int clean_suite(void) {
-    return 0;
-}
-
 void test_beeper() {
 	/* issue single beep */
-	beeper_counter = 0;
+	dm_reset_counters();
+
 	receive("SYSTEM:BEEPER");
 	assert_no_scpi_errors();
 	assert_no_data();
-    CU_ASSERT_EQUAL(beeper_counter, 1);
+    CU_ASSERT_EQUAL(dm_counters.beep, 1);
 }
 
 void test_beeper_state() {

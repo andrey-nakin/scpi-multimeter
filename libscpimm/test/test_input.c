@@ -15,18 +15,7 @@ static bool_t set_input_impedance_auto(bool_t state) {
 	return result;
 }
 
-
-int init_suite(void) {
-    return 0;
-}
-
-int clean_suite(void) {
-    return 0;
-}
-
 void test_impedance_auto() {
-	init_scpimm();
-
 	scpimm_context_t* const ctx = SCPIMM_context();
 	scpimm_interface_t* const intf = ctx->interface;
 
@@ -72,7 +61,6 @@ void test_impedance_auto() {
 }
 
 void test_impedance_autoQ() {
-	init_scpimm();
 	scpimm_context_t* const ctx = SCPIMM_context();
 
 	ctx->input_impedance_auto_state = TRUE;

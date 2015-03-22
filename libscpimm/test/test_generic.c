@@ -42,15 +42,6 @@ static void test_double_to_str() {
 
 }
 
-int init_suite(void) {
-	init_scpimm();
-    return 0;
-}
-
-int clean_suite(void) {
-    return 0;
-}
-
 int main() {
     CU_pSuite pSuite = NULL;
 
