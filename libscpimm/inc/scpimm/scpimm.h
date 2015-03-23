@@ -22,7 +22,7 @@ typedef enum {SCPIMM_MODE_DCV, SCPIMM_MODE_DCV_RATIO, SCPIMM_MODE_ACV, SCPIMM_MO
 
 typedef struct _scpimm_mode_params_t {
 	size_t range_index;
-	bool_t auto_range;
+	scpi_bool_t auto_range;
 	size_t resolution_index;
 } scpimm_mode_params_t;
 
@@ -81,7 +81,7 @@ typedef struct {
 		Mandatory
 		Disables or enables interrupts
 	*/
-	int16_t (*set_interrupt_status)(bool_t disabled);
+	int16_t (*set_interrupt_status)(scpi_bool_t disabled);
 
 	/*
 		Optional
@@ -93,7 +93,7 @@ typedef struct {
 		Optional
 		Turn "remote control" mode to on/off
 	*/
-	int16_t (*remote)(bool_t remote, bool_t lock);
+	int16_t (*remote)(scpi_bool_t remote, scpi_bool_t lock);
 
 	/* 
 		Optional
@@ -105,13 +105,13 @@ typedef struct {
 		Optional
 		Returns selected input terminal
 	*/
-	bool_t (*get_input_terminal)(scpimm_terminal_state_t* term);
+	scpi_bool_t (*get_input_terminal)(scpimm_terminal_state_t* term);
 
 	/*
 		Optional
 		Set state of the automatic input impedance selection
 	*/
-	bool_t (*set_input_impedance_auto)(bool_t state);
+	scpi_bool_t (*set_input_impedance_auto)(scpi_bool_t state);
 
 	/*
 		Optional

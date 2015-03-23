@@ -4,7 +4,7 @@
 #include "utils.h"
 
 scpi_result_t SCPIMM_display(scpi_t* context) {
-	bool_t b;
+	scpi_bool_t b;
 
     if (!SCPI_ParamBool(context, &b, TRUE)) {
 		return SCPI_RES_ERR;

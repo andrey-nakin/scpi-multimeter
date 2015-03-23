@@ -3,7 +3,7 @@
 #include "scpimm_internal.h"
 #include "utils.h"
 
-scpi_result_t SCPIMM_do_set_input_impedance_auto(scpi_t* context, bool_t state) {
+scpi_result_t SCPIMM_do_set_input_impedance_auto(scpi_t* context, scpi_bool_t state) {
 	scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
 	const scpimm_interface_t* const intf = ctx->interface;
 
@@ -19,7 +19,7 @@ scpi_result_t SCPIMM_do_set_input_impedance_auto(scpi_t* context, bool_t state) 
 }
 
 scpi_result_t SCPIMM_input_impedance_auto(scpi_t* context) {
-	bool_t b;
+	scpi_bool_t b;
     if (SCPI_ParamBool(context, &b, TRUE)) {
 		return SCPIMM_do_set_input_impedance_auto(context, b);
 	}

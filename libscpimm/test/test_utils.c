@@ -22,7 +22,6 @@ int clean_suite(void) {
 }
 
 void receive(const char* s) {
-	dm_init_in_buffer();
 //	printf("SEND: %s\n", s);
 	SCPIMM_parse_in_buffer(s, strlen(s));
 	SCPIMM_parse_in_buffer("\r\n", 2);
@@ -37,10 +36,6 @@ void receivef(const char* fmt, ...) {
 	va_end(params);
 
 	receive(buf);
-}
-
-void dump_in_data() {
-	printf("IN DATA [%s] LENGTH [%u]\n", dm_output_buffer(), (unsigned) strlen(dm_output_buffer()));
 }
 
 void clearscpi_errors() {

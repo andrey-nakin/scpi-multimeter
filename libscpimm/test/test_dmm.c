@@ -7,7 +7,7 @@
 #include "default_multimeter.h"
 
 static void read_numbers(const unsigned expected_num_of_values, double* values) {
-	char * const result = dm_output_buffer(), *s;
+	const char * const result = dm_read_entire_output_buffer(), *s;
 	int pos = 0;
 	unsigned actual_num_of_values;
 	double value;
@@ -35,7 +35,7 @@ static void read_numbers(const unsigned expected_num_of_values, double* values) 
 }
 
 static void read_data_points(const unsigned expected_num_of_values) {
-	const char* const result = dm_output_buffer();
+	const char* const result = dm_read_entire_output_buffer();
 	int pos = 0;
 	double value;
 
@@ -59,8 +59,8 @@ void check_after_read_state() {
 	ASSERT_INTERRUPTS_ARE_ENABLED();
 }
 
-void test_readQ_generic_impl(const dm_measurement_type_t mt, const char* trigger_src) {
-	char *result = dm_output_buffer();
+void test_readQ_generic_impl(const dm_measurement_type_t mt, const char* const trigger_src) {
+	const char* const result = dm_read_entire_output_buffer();
 	double actual_range, actual_resolution;
 	double values[16];
 	const int sample_count = 5, trigger_count = 3;
@@ -151,8 +151,8 @@ void check_after_fetch_state() {
 	check_after_read_state();
 }
 
-void test_initiate_generic_impl(const dm_measurement_type_t mt, const char* trigger_src) {
-	char *result = dm_output_buffer();
+void test_initiate_generic_impl(const dm_measurement_type_t mt, const char* const trigger_src) {
+	const char* const result = dm_read_entire_output_buffer();
 	double actual_range, actual_resolution;
 	double values[16];
 	const int sample_count = 2, trigger_count = 3;
@@ -250,7 +250,7 @@ void test_initiate_generic_impl(const dm_measurement_type_t mt, const char* trig
 }
 
 void test_initiate_bus_trigger(const dm_measurement_type_t mt) {
-	char *result = dm_output_buffer();
+	const char* result;
 	double actual_range, actual_resolution;
 	double values[16];
 
@@ -261,6 +261,7 @@ void test_initiate_bus_trigger(const dm_measurement_type_t mt) {
 	// read current value range
 	receivef("CONFIGURE?");
 	ASSERT_NO_SCPI_ERRORS();
+	result = dm_read_entire_output_buffer();
 	CU_ASSERT_EQUAL(sscanf(strchr(result, ' ') + 1, "%le,%le", &actual_range, &actual_resolution), 2);
 
 	// read single value from BUS trigger

@@ -42,9 +42,9 @@
 #define ASSERT_SCPI_ERROR(error)	\
 	CU_ASSERT_EQUAL(SCPI_ErrorCount(SCPI_context()), 1);	\
 	CU_ASSERT_EQUAL(SCPI_ErrorPop(SCPI_context()), error)
-#define ASSERT_NO_RESPONSE() CU_ASSERT_STRING_EQUAL(dm_output_buffer(), "");
-#define ASSERT_RESPONSE(expected) CU_ASSERT_STRING_EQUAL(dm_output_buffer(), expected);
-#define ASSERT_BOOL_RESPONSE(expected) CU_ASSERT_STRING_EQUAL(dm_output_buffer(), (expected) ? "1\r\n" : "0\r\n");
+#define ASSERT_NO_RESPONSE() CU_ASSERT_STRING_EQUAL(dm_read_entire_output_buffer(), "");
+#define ASSERT_RESPONSE(expected) CU_ASSERT_STRING_EQUAL(dm_read_entire_output_buffer(), expected);
+#define ASSERT_BOOL_RESPONSE(expected) CU_ASSERT_STRING_EQUAL(dm_read_entire_output_buffer(), (expected) ? "1\r\n" : "0\r\n");
 
 //void assert_in_data(const char* s);
 //void assert_in_bool(bool_t v);

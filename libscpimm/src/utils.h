@@ -27,12 +27,12 @@ void SCPIMM_stop_mesurement(void);
 void SCPIMM_clear_return_buffer(void);
 size_t SCPIMM_ResultDouble(scpi_t * context, double val);
 
-bool_t expectNoParams(scpi_t* context);
+scpi_bool_t expectNoParams(scpi_t* context);
 
 void signalInternalError(scpi_t* context);
 
-bool_t matchPattern(const char * pattern, size_t pattern_len, const char * str, size_t str_len);
-bool_t matchCommand(const char * pattern, const char * cmd, size_t len);
+scpi_bool_t matchPattern(const char * pattern, size_t pattern_len, const char * str, size_t str_len);
+scpi_bool_t matchCommand(const char * pattern, const char * cmd, size_t len);
 size_t strToDouble(const char * str, double * val);
 
 size_t double_to_str(char* dest, double v);

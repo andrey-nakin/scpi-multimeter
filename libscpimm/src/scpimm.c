@@ -202,7 +202,12 @@ static scpi_t scpi_context = {
     {
       NULL,
       NULL,
-      0
+      0,
+      {
+        0,
+        0,
+        NULL
+      }
     },
     &scpi_interface,
     0,
@@ -212,7 +217,8 @@ static scpi_t scpi_context = {
     NULL,
     scpi_units_def,
     scpi_special_numbers_def,
-	(void*) &scpimm_context
+	(void*) &scpimm_context,
+	{NULL, NULL, NULL, NULL}
 };
 
 /******************************************************************************

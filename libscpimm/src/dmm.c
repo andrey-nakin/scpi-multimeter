@@ -383,7 +383,7 @@ static int find_greater_than(const double* values, const double v) {
 	return -1;
 }
 
-int16_t SCPIMM_set_mode(scpi_t* const context, const scpimm_mode_t mode, const scpi_number_t* const range, const bool_t auto_detect_auto_range, const bool_t* const auto_range, const scpi_number_t* const resolution) {
+int16_t SCPIMM_set_mode(scpi_t* const context, const scpimm_mode_t mode, const scpi_number_t* const range, const scpi_bool_t auto_detect_auto_range, const scpi_bool_t* const auto_range, const scpi_number_t* const resolution) {
 	scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
 	const scpimm_interface_t* const intf = ctx->interface;
 	scpimm_mode_params_t* const ctx_params = SCPIMM_mode_params(ctx, mode);
@@ -432,6 +432,7 @@ int16_t SCPIMM_set_mode(scpi_t* const context, const scpimm_mode_t mode, const s
 				break;
 
 			case SCPI_NUM_DEF:
+			case SCPI_NUM_AUTO:
 				new_params.auto_range = TRUE;
 				break;
 

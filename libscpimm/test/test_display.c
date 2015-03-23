@@ -3,7 +3,7 @@
 #include "CUnit/Basic.h"
 #include "test_utils.h"
 
-static void test_display_impl(const char* cmd, bool_t expected) {
+static void test_display_impl(const char* cmd, scpi_bool_t expected) {
 	receive(cmd);
 	ASSERT_NO_SCPI_ERRORS();
 	ASSERT_NO_RESPONSE();

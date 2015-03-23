@@ -18,7 +18,7 @@ static const double resistance_mults[] = {1, 1e3, 1e3, 1e6, 1e6, 0.0};
 static void check_general(const scpimm_mode_t mode) {
 	scpimm_mode_t cur_mode;
 	scpimm_mode_params_t cur_params;
-	const bool_t no_params = FALSE;	//	SCPIMM_MODE_CONTINUITY == mode || SCPIMM_MODE_DIODE == mode;
+	const scpi_bool_t no_params = FALSE;	//	SCPIMM_MODE_CONTINUITY == mode || SCPIMM_MODE_DIODE == mode;
 	scpimm_context_t* const ctx = SCPIMM_context();
 	int16_t err;
 
@@ -62,7 +62,7 @@ static void configure_with_range_and_res(const char* function, const double rang
 	receivef("CONFIGURE:%s %0.6g %s,%0.6g %s", function, range, range_units, resolution, resolution_units);
 }
 
-static void check_mode_params(const size_t range_index, const bool_t auto_range, const size_t resolution_index) {
+static void check_mode_params(const size_t range_index, const scpi_bool_t auto_range, const size_t resolution_index) {
 	ASSERT_EQUAL_BOOL(auto_range, dm_set_mode_last_args.params.auto_range);
 	CU_ASSERT_EQUAL(range_index, dm_set_mode_last_args.params.range_index);
 	CU_ASSERT_EQUAL(resolution_index, dm_set_mode_last_args.params.resolution_index);
@@ -70,7 +70,7 @@ static void check_mode_params(const size_t range_index, const bool_t auto_range,
 
 /* configure function without range/resolution specification */
 static void test_configure_no_params(const char* function, const scpimm_mode_t mode) {
-	const bool_t no_params = FALSE;	//	SCPIMM_MODE_CONTINUITY == mode || SCPIMM_MODE_DIODE == mode;
+	const scpi_bool_t no_params = FALSE;	//	SCPIMM_MODE_CONTINUITY == mode || SCPIMM_MODE_DIODE == mode;
 
 	dm_reset_counters();
 
@@ -94,40 +94,42 @@ static size_t max_index(const double* values) {
 
 /* configure function with fixed range and resolution values */
 static void test_configure_fix_params(const char* function, scpimm_mode_t mode) {
-	const scpi_special_number_t types[] = {SCPI_NUM_MIN, SCPI_NUM_MAX, SCPI_NUM_DEF};
-	const char* strs[] = {"MIN", "MAX", "DEF"};
+	const scpi_special_number_t types[] = {SCPI_NUM_MIN, SCPI_NUM_MAX, SCPI_NUM_DEF, SCPI_NUM_AUTO};
+	const char* range_values[] = {"MIN", "MAX", "DEF", "AUTO"};
+	const char* resolution_values[] = {"MIN", "MAX", "DEF"};
 	size_t rangeIndex;
-	size_t range_indices[3];
+	size_t range_indices[4];
 	const double* ranges;
 	int16_t err;
 
 	CHECK_NO_SCPI_ERROR(scpimm_interface()->get_allowed_ranges(mode, &ranges, NULL));
-	range_indices[0] = MIN_RANGE_INDEX; range_indices[1] = max_index(ranges); range_indices[2] = MIN_RANGE_INDEX;
+	range_indices[0] = MIN_RANGE_INDEX; range_indices[1] = max_index(ranges); range_indices[2] = MIN_RANGE_INDEX; range_indices[3] = MIN_RANGE_INDEX;
 
-	for (rangeIndex = 0; rangeIndex < sizeof(types) / sizeof(types[0]); ++rangeIndex) {
+	for (rangeIndex = 0; rangeIndex < sizeof(range_values) / sizeof(range_values[0]); ++rangeIndex) {
 		size_t resolutionIndex;
 		const double* resolutions;
 		size_t resolution_indices[3];
+		const scpi_bool_t auto_range = types[rangeIndex] == SCPI_NUM_DEF || types[rangeIndex] == SCPI_NUM_AUTO;
 
 		CHECK_NO_SCPI_ERROR(scpimm_interface()->get_allowed_resolutions(mode, range_indices[rangeIndex], &resolutions));
 		resolution_indices[0] = MIN_RESOLUTION_INDEX; resolution_indices[1] = max_index(resolutions); resolution_indices[2] = MIN_RESOLUTION_INDEX;
 
 		// CONFIGURE:func <range>
 		dm_reset_counters();
-		receivef("CONFIGURE:%s %s", function, strs[rangeIndex]);
+		receivef("CONFIGURE:%s %s", function, range_values[rangeIndex]);
 		ASSERT_NO_SCPI_ERRORS();
 		ASSERT_NO_RESPONSE();
 		check_general(mode);
-		check_mode_params(range_indices[rangeIndex], types[rangeIndex] == SCPI_NUM_DEF, MIN_RESOLUTION_INDEX);
+		check_mode_params(range_indices[rangeIndex], auto_range, MIN_RESOLUTION_INDEX);
 
-		for (resolutionIndex = 0; resolutionIndex < sizeof(types) / sizeof(types[0]); ++resolutionIndex) {
+		for (resolutionIndex = 0; resolutionIndex < sizeof(resolution_values) / sizeof(resolution_values[0]); ++resolutionIndex) {
 			// CONFIGURE:func <range>,<resolution>
 			dm_reset_counters();
-			receivef("CONFIGURE:%s %s,%s", function, strs[rangeIndex], strs[resolutionIndex]);
+			receivef("CONFIGURE:%s %s,%s", function, range_values[rangeIndex], resolution_values[resolutionIndex]);
 			ASSERT_NO_SCPI_ERRORS();
 			ASSERT_NO_RESPONSE();
 			check_general(mode);
-			check_mode_params(range_indices[rangeIndex], types[rangeIndex] == SCPI_NUM_DEF, resolution_indices[resolutionIndex]);
+			check_mode_params(range_indices[rangeIndex], auto_range, resolution_indices[resolutionIndex]);
 		}
 	}
 }
@@ -277,10 +279,10 @@ static void test_impl(const char* function, scpimm_mode_t mode, const char* pref
 
 static void test_configureQ_impl(const char* function, scpimm_mode_t mode, const char* mode_name) {
 	int16_t err;
-	const bool_t no_params = FALSE;	//	SCPIMM_MODE_CONTINUITY == mode || SCPIMM_MODE_DIODE == mode;
+	const scpi_bool_t no_params = FALSE;	//	SCPIMM_MODE_CONTINUITY == mode || SCPIMM_MODE_DIODE == mode;
 	const double *ranges;
 	size_t range_index;
-	char buf[100], *result = dm_output_buffer();
+	char buf[100];
 
 	if (no_params) {
 		dm_reset_counters();
@@ -288,7 +290,7 @@ static void test_configureQ_impl(const char* function, scpimm_mode_t mode, const
 		receivef("CONFIGURE?\r\n");
 		ASSERT_NO_SCPI_ERRORS();
 		sprintf(buf, "\"%s\"\r\n", mode_name);
-		CU_ASSERT_STRING_EQUAL(buf, result);
+		ASSERT_RESPONSE(buf);
 		return;
 	}
 
@@ -299,6 +301,7 @@ static void test_configureQ_impl(const char* function, scpimm_mode_t mode, const
 		const double *resolutions;
 		size_t resolution_index;
 		double actual_range, actual_resolution;
+		const char* result;
 
 		CHECK_NO_SCPI_ERROR(scpimm_interface()->get_allowed_resolutions(mode, range_index, &resolutions));
 
@@ -307,6 +310,7 @@ static void test_configureQ_impl(const char* function, scpimm_mode_t mode, const
 		receivef("CONFIGURE?\r\n");
 		ASSERT_NO_SCPI_ERRORS();
 		sprintf(buf, "\"%s ", mode_name);
+		result = dm_read_entire_output_buffer();
 		CU_ASSERT_EQUAL(strncmp(buf, result, strlen(buf)), 0);
 		sscanf(result + strlen(buf), "%le,%le", &actual_range, &actual_resolution);
 		ASSERT_DOUBLE_EQUAL(actual_range, ranges[range_index]);
@@ -320,6 +324,7 @@ static void test_configureQ_impl(const char* function, scpimm_mode_t mode, const
 			receivef("CONFIGURE?\r\n");
 			ASSERT_NO_SCPI_ERRORS();
 			sprintf(buf, "\"%s ", mode_name);
+			result = dm_read_entire_output_buffer();
 			CU_ASSERT_EQUAL(strncmp(buf, result, strlen(buf)), 0);
 			sscanf(result + strlen(buf), "%le,%le", &actual_range, &actual_resolution);
 			ASSERT_DOUBLE_EQUAL(actual_range, ranges[range_index]);

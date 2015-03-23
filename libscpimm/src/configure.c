@@ -22,10 +22,11 @@ static scpi_unit_t detect_units(scpimm_mode_t mode) {
 	return SCPI_UNIT_NONE;
 }
 
-static bool_t validate_number(scpi_t* context, scpimm_mode_t mode, const scpi_number_t* num) {
+static scpi_bool_t validate_range(scpi_t* context, scpimm_mode_t mode, const scpi_number_t* num) {
 	if (	num->type != SCPI_NUM_MIN 
 			&& num->type != SCPI_NUM_MAX
 			&& num->type != SCPI_NUM_DEF
+			&& num->type != SCPI_NUM_AUTO
 			&& num->type != SCPI_NUM_NUMBER ) {
 		/* invalid value */
 		/* TODO: correct error number */
@@ -46,11 +47,35 @@ static bool_t validate_number(scpi_t* context, scpimm_mode_t mode, const scpi_nu
 	return TRUE;
 }
 
+static scpi_bool_t validate_resolution(scpi_t* context, scpimm_mode_t mode, const scpi_number_t* num) {
+	if (	num->type != SCPI_NUM_MIN
+			&& num->type != SCPI_NUM_MAX
+			&& num->type != SCPI_NUM_DEF
+			&& num->type != SCPI_NUM_NUMBER ) {
+		/* invalid value */
+		/* TODO: correct error number */
+		SCPI_ErrorPush(context, SCPI_ERROR_UNDEFINED_HEADER);
+		return FALSE;
+	}
+
+	if (	num->type == SCPI_NUM_NUMBER
+			&& num->unit != SCPI_UNIT_NONE
+			&& num->unit != detect_units(mode)) {
+
+		/* invalid units */
+		/* TODO: correct error number */
+		SCPI_ErrorPush(context, SCPI_ERROR_UNDEFINED_HEADER);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
 static scpi_result_t configure_2arg_impl(scpi_t* context, scpimm_mode_t mode) {
     scpi_number_t range, resolution;
 
     if (SCPI_ParamNumber(context, &range, FALSE)) {
-		if (!validate_number(context, mode, &range)) {
+		if (!validate_range(context, mode, &range)) {
 			return SCPI_RES_ERR;
 		}
 	} else {
@@ -58,7 +83,7 @@ static scpi_result_t configure_2arg_impl(scpi_t* context, scpimm_mode_t mode) {
 	}
 
     if (SCPI_ParamNumber(context, &resolution, FALSE)) {
-		if (!validate_number(context, mode, &resolution)) {
+		if (!validate_resolution(context, mode, &resolution)) {
 			return SCPI_RES_ERR;
 		}
 	} else {
@@ -87,6 +112,7 @@ static scpi_result_t configure_2arg_impl(scpi_t* context, scpimm_mode_t mode) {
 scpi_result_t SCPIMM_do_configure(scpi_t* context, scpimm_mode_t mode, const scpi_number_t* range, const scpi_number_t* resolution) {
 	int16_t err;
 
+	// TODO is all the stuff below actual?
 	SCPIMM_stop_mesurement();
 	SCPIMM_clear_return_buffer();
 	SCPIMM_measure_preset(context);	/* TODO returning error code is not checked */
@@ -102,7 +128,7 @@ scpi_result_t SCPIMM_do_configure(scpi_t* context, scpimm_mode_t mode, const scp
 
 static int16_t configureQuery(scpi_t* context) {
 	scpimm_mode_t mode;
-	bool_t no_params;
+	scpi_bool_t no_params;
 	scpimm_mode_params_t params;
 	int16_t err;
 	const char* mode_name;

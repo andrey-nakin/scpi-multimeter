@@ -9,8 +9,8 @@
 
 size_t strToDouble(const char * str, double * val);
 size_t patternSeparatorShortPos(const char * pattern, size_t len);
-bool_t compareStr(const char * str1, size_t len1, const char * str2, size_t len2);
-bool_t matchPattern(const char * pattern, size_t pattern_len, const char * str, size_t str_len);
+scpi_bool_t compareStr(const char * str1, size_t len1, const char * str2, size_t len2);
+scpi_bool_t matchPattern(const char * pattern, size_t pattern_len, const char * str, size_t str_len);
 
 static size_t writeData(scpi_t * context, const char * data, size_t len) {
     return context->interface->write(context, data, len);
@@ -43,7 +43,7 @@ size_t SCPIMM_ResultDouble(scpi_t * context, double val) {
 
 }
 
-bool_t expectNoParams(scpi_t* context) {
+scpi_bool_t expectNoParams(scpi_t* context) {
     const char * param;
     size_t param_len;
 
@@ -106,7 +106,7 @@ size_t double_to_str(char* dest, double v) {
 
 #ifdef	ARDUINO
 
-static bool_t iscolon(char ch) {
+static scpi_bool_t iscolon(char ch) {
     return (':' == ch) ? TRUE : FALSE;
 }
 
@@ -126,7 +126,7 @@ size_t patternSeparatorShortPos(const char * pattern, size_t len) {
     return i;
 }
 
-bool_t compareStr(const char * str1, size_t len1, const char * str2, size_t len2) {
+scpi_bool_t compareStr(const char * str1, size_t len1, const char * str2, size_t len2) {
     if (len1 != len2) {
         return FALSE;
     }
@@ -138,7 +138,7 @@ bool_t compareStr(const char * str1, size_t len1, const char * str2, size_t len2
     return FALSE;
 }
 
-bool_t matchPattern(const char * pattern, size_t pattern_len, const char * str, size_t str_len) {
+scpi_bool_t matchPattern(const char * pattern, size_t pattern_len, const char * str, size_t str_len) {
     int pattern_sep_pos_short = patternSeparatorShortPos(pattern, pattern_len);
     return compareStr(pattern, pattern_len, str, str_len) ||
             compareStr(pattern, pattern_sep_pos_short, str, str_len);
@@ -179,7 +179,7 @@ size_t cmdSeparatorPos(const char * cmd, size_t len) {
     return result;
 }
 
-bool_t matchCommand(const char * pattern, const char * cmd, size_t len) {
+scpi_bool_t matchCommand(const char * pattern, const char * cmd, size_t len) {
     int result = FALSE;
     
     const char * pattern_ptr = pattern;

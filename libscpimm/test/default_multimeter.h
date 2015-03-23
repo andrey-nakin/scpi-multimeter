@@ -15,9 +15,9 @@ typedef enum {
 
 typedef struct {
 	scpimm_mode_t mode;
-	bool_t mode_initialized;
+	scpi_bool_t mode_initialized;
 	scpimm_mode_params_t mode_params;
-	bool_t mode_params_initialized;
+	scpi_bool_t mode_params_initialized;
 	unsigned interrrupt_disable_counter;
 	unsigned measurement_failure_counter;
 } dm_multimeter_state_t;
@@ -25,27 +25,27 @@ typedef struct {
 typedef struct {
 	scpimm_mode_t mode;
 	scpimm_mode_params_t params;
-	bool_t params_is_null;
+	scpi_bool_t params_is_null;
 } dm_set_mode_args_t;
 
 typedef struct {
 	scpimm_mode_t mode;
 	const double* ranges;
-	bool_t ranges_is_null;
+	scpi_bool_t ranges_is_null;
 	const double* overruns;
-	bool_t overruns_is_null;
+	scpi_bool_t overruns_is_null;
 } dm_get_allowed_ranges_args_t;
 
 typedef struct {
 	scpimm_mode_t mode;
 	size_t range_index;
 	const double* resolutions;
-	bool_t resolutions_is_null;
+	scpi_bool_t resolutions_is_null;
 } dm_get_allowed_resolutions_args_t;
 
 typedef struct {
-	bool_t remote;
-	bool_t lock;
+	scpi_bool_t remote;
+	scpi_bool_t lock;
 } dm_remote_args_t;
 
 typedef struct {
@@ -78,8 +78,7 @@ extern scpimm_interface_t dm_interface;
 extern dm_counters_t dm_counters;
 extern dm_multimeter_config_t dm_multimeter_config;
 
-void dm_init_in_buffer();
-char* dm_output_buffer();
+const char* dm_read_entire_output_buffer();
 void dm_reset_counters();
 void dm_reset_args();
 

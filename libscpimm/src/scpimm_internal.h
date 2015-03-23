@@ -27,26 +27,26 @@ typedef enum {SCPIMM_STATE_IDLE, SCPIMM_STATE_WAIT_FOR_TRIGGER, SCPIMM_STATE_TRI
 
 typedef struct {
 	scpimm_interface_t* interface;
-	bool_t beeper_state;
-	bool_t input_impedance_auto_state;
+	scpi_bool_t beeper_state;
+	scpi_bool_t input_impedance_auto_state;
 	uint16_t sample_count_num, trigger_count_num, sample_count, trigger_count;
-	bool_t infinite_trigger_count;
+	scpi_bool_t infinite_trigger_count;
 	scpimm_trig_src_t trigger_src;
 	float trigger_delay;
-	bool_t trigger_auto_delay;
+	scpi_bool_t trigger_auto_delay;
 	scpimm_dst_t dst;
 	double buf[SCPIMM_BUF_LEN];
 	unsigned buf_count;
 	scpimm_state_t state;
 	uint32_t state_time;
-	bool_t display;
+	scpi_bool_t display;
 	char display_text[SCPIMM_DISPLAY_LEN + 1];
 	uint32_t measurement_timeout;
 
 	scpi_number_t last_measured_value;
 	uint32_t measure_start_time;
 	int16_t measurement_error;
-	bool_t is_first_measured_value;
+	scpi_bool_t is_first_measured_value;
 
 	struct {
 		scpimm_mode_params_t dcv;

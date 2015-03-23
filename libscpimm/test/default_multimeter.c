@@ -17,8 +17,8 @@ static int16_t dm_start_measure();
 static size_t dm_send(const uint8_t* buf, size_t len);
 static int16_t dm_get_milliseconds(uint32_t* tm);
 static int16_t dm_sleep_milliseconds(uint32_t);
-static int16_t dm_set_interrupt_status(bool_t disabled);
-static int16_t dm_remote(bool_t remote, bool_t lock);
+static int16_t dm_set_interrupt_status(scpi_bool_t disabled);
+static int16_t dm_remote(scpi_bool_t remote, scpi_bool_t lock);
 static int16_t dm_beep();
 static int16_t dm_display_text(const char* txt);
 
@@ -57,8 +57,9 @@ dm_multimeter_config_t dm_multimeter_config = {
 	.measurement_func = dm_measurement_func_const
 };
 
-static char inbuffer[1024];
-static char* inpuffer_pos = inbuffer;
+static char out_buffer[1024];
+static size_t out_buffer_counter = 0;
+static char out_buffer_read[sizeof(out_buffer) / sizeof(out_buffer[0])];
 
 static const double RANGES[] =   {0.1, 1.0, 10.0, 100.0, 1000.0, -1.0};
 static const double OVERRUNS[] = {1.2, 1.2, 1.2,  1.2,   1.2,    -1.0};
@@ -71,8 +72,8 @@ static const double RESOLUTIONS[][5] = {
 };
 
 static pthread_t measure_thread, trigger_thread;
-static bool_t measure_thread_created = FALSE;
-static bool_t trigger_thread_created = FALSE;
+static scpi_bool_t measure_thread_created = FALSE;
+static scpi_bool_t trigger_thread_created = FALSE;
 static sem_t measure_sem;
 
 /***************************************************************
@@ -119,13 +120,15 @@ static void* trigger_thread_routine(void* args) {
  * Interface functions
  **************************************************************/
 
-void dm_init_in_buffer() {
-	inpuffer_pos = inbuffer;
-	*inpuffer_pos = '\0';
-}
+const char* dm_read_entire_output_buffer() {
+	// copy all the data from output buffer to intermediate buffer
+	memcpy(out_buffer_read, out_buffer, out_buffer_counter);
+	out_buffer_read[out_buffer_counter] = '\0';
 
-char* dm_output_buffer() {
-	return inbuffer;
+	// reset output buffer pointer
+	out_buffer_counter = 0;
+
+	return out_buffer_read;
 }
 
 void dm_reset_counters() {
@@ -200,6 +203,8 @@ static int16_t dm_reset() {
 	dm_multimeter_config.measurement_type = DM_MEASUREMENT_TYPE_ASYNC;
 	dm_multimeter_config.measurement_func = dm_measurement_func_const;
 	dm_multimeter_config.measurement_duration = DEFAULT_MEAS_DURATION;
+
+	out_buffer_counter = 0;
 
 	return SCPI_ERROR_OK;
 }
@@ -375,9 +380,8 @@ static int16_t dm_start_measure() {
 }
 
 static size_t dm_send(const uint8_t* data, const size_t len) {
-	memcpy(inpuffer_pos, (const char*) data, len);
-	inpuffer_pos += len;
-	*inpuffer_pos = '\0';
+	memcpy(out_buffer + out_buffer_counter, (const char*) data, len);
+	out_buffer_counter += len;
 	return len;
 }
 
@@ -402,7 +406,7 @@ static int16_t dm_sleep_milliseconds(const uint32_t ms) {
 	return SCPI_ERROR_OK;
 }
 
-static int16_t dm_set_interrupt_status(const bool_t disabled) {
+static int16_t dm_set_interrupt_status(const scpi_bool_t disabled) {
 	dm_counters.set_interrupt_status++;
 
 	if (disabled) {
@@ -414,7 +418,7 @@ static int16_t dm_set_interrupt_status(const bool_t disabled) {
 	return SCPI_ERROR_OK;
 }
 
-static int16_t dm_remote(bool_t remote, bool_t lock) {
+static int16_t dm_remote(scpi_bool_t remote, scpi_bool_t lock) {
 	dm_counters.remote++;
 	dm_remote_args.remote = remote;
 	dm_remote_args.lock = lock;

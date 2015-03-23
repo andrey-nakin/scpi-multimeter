@@ -16,7 +16,7 @@ static long max_trigger_count() {
 
 scpi_result_t SCPIMM_trigger_source(scpi_t* context) {
 	static const scpimm_trig_src_t values[] = {SCPIMM_TRIG_BUS, SCPIMM_TRIG_IMM, SCPIMM_TRIG_EXT};
-	size_t choice;
+	int32_t choice;
 
     if (!SCPI_ParamChoice(context, options, &choice, TRUE)) {
 		return SCPI_RES_ERR;
@@ -111,7 +111,7 @@ scpi_result_t SCPIMM_trigger_delayQ(scpi_t* context) {
 }
 
 scpi_result_t SCPIMM_trigger_delay_auto(scpi_t* context) {
-	bool_t b;
+	scpi_bool_t b;
 
     if (!SCPI_ParamBool(context, &b, TRUE)) {
 		return SCPI_RES_ERR;

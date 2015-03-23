@@ -11,7 +11,7 @@ scpi_result_t SCPIMM_system_beeper(scpi_t* context) {
 }
 
 scpi_result_t SCPIMM_system_beeper_state(scpi_t* context) {
-	bool_t b;
+	scpi_bool_t b;
     if (SCPI_ParamBool(context, &b, TRUE)) {
 		SCPIMM_CONTEXT(context)->beeper_state = b;
 	}
@@ -41,7 +41,7 @@ scpi_result_t SCPIMM_system_rwlock(scpi_t* context) {
     return SCPI_RES_OK;
 }
 
-int16_t SCPIMM_set_remote(scpi_t* context, bool_t remote, bool_t lock) {
+int16_t SCPIMM_set_remote(scpi_t* context, scpi_bool_t remote, scpi_bool_t lock) {
 	if (SCPIMM_INTERFACE(context)->remote) {
 		return SCPIMM_INTERFACE(context)->remote(remote, lock);
 	} else {
