@@ -121,6 +121,12 @@ typedef struct {
 	*/
 	int16_t (*display_text)(const char* txt);
 
+	/*
+		Optional
+		Returns multimeter identification string, e.g. HEWLETT-PACKARD,34401A,0,11-5-2
+	*/
+	const char* (*get_idn)();
+
 } scpimm_interface_t;
 
 /******************************************************************************

@@ -117,15 +117,11 @@ static const scpi_command_t scpi_commands[] = {
 
 	{"SENSe:FUNCtion", SCPIMM_sense_function},
 	{"SENSe:FUNCtion?", SCPIMM_sense_functionQ},
-	{"SENSe:DETector:BANDwidth", SCPIMM_sense_detector_bandwidth},
-	{"SENSe:DETector:BANDwidth?", SCPIMM_sense_detector_bandwidthQ},
 	{"SENSe:ZERO:AUTO", SCPIMM_sense_zero_auto},
 	{"SENSe:ZERO:AUTO?", SCPIMM_sense_zero_autoQ},
 
 	{"FUNCtion", SCPIMM_sense_function},
 	{"FUNCtion?", SCPIMM_sense_functionQ},
-	{"DETector:BANDwidth", SCPIMM_sense_detector_bandwidth},
-	{"DETector:BANDwidth?", SCPIMM_sense_detector_bandwidthQ},
 	{"ZERO:AUTO", SCPIMM_sense_zero_auto},
 	{"ZERO:AUTO?", SCPIMM_sense_zero_autoQ},
 

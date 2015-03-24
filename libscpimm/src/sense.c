@@ -309,16 +309,6 @@ scpi_result_t SCPIMM_sense_period_apertureQ(scpi_t* context) {
 	return SCPI_RES_OK;
 }
 
-scpi_result_t SCPIMM_sense_detector_bandwidth(scpi_t* context) {
-	(void) context;
-	return SCPI_RES_OK;
-}
-
-scpi_result_t SCPIMM_sense_detector_bandwidthQ(scpi_t* context) {
-	(void) context;
-	return SCPI_RES_OK;
-}
-
 scpi_result_t SCPIMM_sense_zero_auto(scpi_t* context) {
 	(void) context;
 	return SCPI_RES_OK;
