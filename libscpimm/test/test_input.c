@@ -1,77 +1,66 @@
 #include <stdio.h>
 #include <string.h>
 #include "CUnit/Basic.h"
-#include <scpi/scpi.h>
-#include <scpimm/scpimm.h>
 #include "test_utils.h"
 
-static unsigned counter;
-static bool_t last_state;
-static bool_t result = TRUE;
+static void test_impedance_auto() {
+	const scpimm_context_t* const ctx = SCPIMM_context();
 
-static bool_t set_input_impedance_auto(bool_t state) {
-	++counter;
-	last_state = state;
-	return result;
-}
-
-void test_impedance_auto() {
-	scpimm_context_t* const ctx = SCPIMM_context();
-	scpimm_interface_t* const intf = ctx->interface;
-
-	intf->set_input_impedance_auto = NULL;
-
+	dm_reset_counters();
+	dm_reset_args();
 	receive("INPUT:IMPEDANCE:AUTO ON");
-	assert_no_scpi_errors();
-	assert_no_data();
+	ASSERT_NO_SCPI_ERRORS();
+	ASSERT_NO_RESPONSE();
+	CU_ASSERT_EQUAL(dm_counters.set_global_bool_option, CALLED_ONCE);
+	CU_ASSERT_EQUAL(dm_set_global_bool_option_args.option, SCPIMM_OPTION_INPUT_IMPEDANCE_AUTO);
+	CU_ASSERT_EQUAL(dm_set_global_bool_option_args.value, TRUE);
 	CU_ASSERT_EQUAL(ctx->input_impedance_auto_state, TRUE);
 	
+	dm_reset_counters();
+	dm_reset_args();
 	receive("INPUT:IMPEDANCE:AUTO OFF");
-	assert_no_scpi_errors();
-	assert_no_data();
+	ASSERT_NO_SCPI_ERRORS();
+	ASSERT_NO_RESPONSE();
+	CU_ASSERT_EQUAL(dm_counters.set_global_bool_option, CALLED_ONCE);
+	CU_ASSERT_EQUAL(dm_set_global_bool_option_args.option, SCPIMM_OPTION_INPUT_IMPEDANCE_AUTO);
+	CU_ASSERT_EQUAL(dm_set_global_bool_option_args.value, FALSE);
 	CU_ASSERT_EQUAL(ctx->input_impedance_auto_state, FALSE);
 
+	dm_reset_counters();
 	receive("INPUT:IMPEDANCE:AUTO");
-	assert_scpi_error(SCPI_ERROR_MISSING_PARAMETER);
-	assert_no_data();
-
-	intf->set_input_impedance_auto = set_input_impedance_auto;
-	result = TRUE;
-
-	counter = 0;
-	last_state = FALSE;
-	receive("INPUT:IMPEDANCE:AUTO ON");
-	assert_no_scpi_errors();
-	assert_no_data();
-	CU_ASSERT_EQUAL(ctx->input_impedance_auto_state, TRUE);
-	CU_ASSERT_EQUAL(counter, 1);
-	CU_ASSERT_EQUAL(last_state, TRUE);
-
-	receive("INPUT:IMPEDANCE:AUTO OFF");
-	assert_no_scpi_errors();
-	assert_no_data();
+	ASSERT_SCPI_ERROR(SCPI_ERROR_MISSING_PARAMETER);
+	ASSERT_NO_RESPONSE();
+	CU_ASSERT_EQUAL(dm_counters.set_global_bool_option, NOT_CALLED);
 	CU_ASSERT_EQUAL(ctx->input_impedance_auto_state, FALSE);
-	CU_ASSERT_EQUAL(counter, 2);
-	CU_ASSERT_EQUAL(last_state, FALSE);
 
-	result = FALSE;
+	// emulate error
+	dm_returns.set_global_bool_option = SCPI_ERROR_UNKNOWN;
+	dm_reset_counters();
+	dm_reset_args();
 	receive("INPUT:IMPEDANCE:AUTO ON");
-	assert_scpi_error(SCPI_ERROR_UNKNOWN);
-	assert_no_data();
+	ASSERT_SCPI_ERROR(SCPI_ERROR_UNKNOWN);
+	ASSERT_NO_RESPONSE();
+	CU_ASSERT_EQUAL(dm_counters.set_global_bool_option, CALLED_ONCE);
+	CU_ASSERT_EQUAL(dm_set_global_bool_option_args.option, SCPIMM_OPTION_INPUT_IMPEDANCE_AUTO);
+	CU_ASSERT_EQUAL(dm_set_global_bool_option_args.value, TRUE);
+	CU_ASSERT_EQUAL(ctx->input_impedance_auto_state, FALSE);
+
+	// reset error
+	dm_returns.set_global_bool_option = SCPI_ERROR_OK;
 }
 
-void test_impedance_autoQ() {
+static void test_impedance_autoQ() {
 	scpimm_context_t* const ctx = SCPIMM_context();
 
 	ctx->input_impedance_auto_state = TRUE;
 	receive("INPUT:IMPEDANCE:AUTO?");
-	assert_no_scpi_errors();
-	assert_in_bool(TRUE);
+	ASSERT_NO_SCPI_ERRORS();
+	ASSERT_BOOL_RESPONSE(TRUE);
 
 	ctx->input_impedance_auto_state = FALSE;
 	receive("INPUT:IMPEDANCE:AUTO?");
-	assert_no_scpi_errors();
-	assert_in_bool(FALSE);
+	ASSERT_NO_SCPI_ERRORS();
+	ASSERT_BOOL_RESPONSE(FALSE);
 }
 
 int main() {
@@ -82,26 +71,13 @@ int main() {
         return CU_get_error();
 
     /* Add a suite to the registry */
-    pSuite = CU_add_suite("INPUT", init_suite, clean_suite);
-    if (NULL == pSuite) {
-        CU_cleanup_registry();
-        return CU_get_error();
-    }
+    ADD_SUITE("INPUT");
 
     /* Add the tests to the suite */
-    if ((NULL == CU_add_test(pSuite, "test input:impedance:auto", test_impedance_auto))) {
-        CU_cleanup_registry();
-        return CU_get_error();
-    }
-    if ((NULL == CU_add_test(pSuite, "test input:impedance:auto?", test_impedance_autoQ))) {
-        CU_cleanup_registry();
-        return CU_get_error();
-    }
+    ADD_TEST(test_impedance_auto);
+    ADD_TEST(test_impedance_autoQ);
 
     /* Run all tests using the CUnit Basic interface */
-    CU_basic_set_mode(CU_BRM_VERBOSE);
-    CU_basic_run_tests();
-    CU_cleanup_registry();
-    return CU_get_error();
+    return RUN_ALL_TESTS();
 }
 

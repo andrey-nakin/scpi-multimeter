@@ -20,6 +20,7 @@ typedef struct {
 	scpi_bool_t mode_params_initialized;
 	unsigned interrrupt_disable_counter;
 	unsigned measurement_failure_counter;
+	scpimm_terminal_state_t terminal_state;
 } dm_multimeter_state_t;
 
 typedef struct {
@@ -44,6 +45,11 @@ typedef struct {
 } dm_get_allowed_resolutions_args_t;
 
 typedef struct {
+	scpimm_option_t option;
+	scpi_bool_t value;
+} dm_set_global_bool_option_args_t;
+
+typedef struct {
 	scpi_bool_t remote;
 	scpi_bool_t lock;
 } dm_remote_args_t;
@@ -54,8 +60,13 @@ typedef struct {
 
 typedef struct {
 	unsigned set_mode, get_mode, get_allowed_ranges, get_allowed_resolutions,
-		start_measure, set_interrupt_status, remote, beep, display_text, setup, reset;
+		start_measure, set_interrupt_status, remote, beep, display_text, setup, reset,
+		set_global_bool_option;
 } dm_counters_t;
+
+typedef struct {
+	int16_t get_input_terminal, set_global_bool_option;
+} dm_returns_t;
 
 typedef double (*dm_measurement_func_t)(uint32_t time);
 
@@ -71,11 +82,13 @@ extern char dm_display[SCPIMM_DISPLAY_LEN + 1];
 extern dm_set_mode_args_t dm_set_mode_last_args;
 extern dm_get_allowed_ranges_args_t dm_get_allowed_ranges_last_args;
 extern dm_get_allowed_resolutions_args_t dm_get_allowed_resolutions_last_args;
+extern dm_set_global_bool_option_args_t dm_set_global_bool_option_args;
 extern dm_remote_args_t dm_remote_args;
 extern dm_display_text_args_t dm_display_text_args;
 
 extern scpimm_interface_t dm_interface;
 extern dm_counters_t dm_counters;
+extern dm_returns_t dm_returns;
 extern dm_multimeter_config_t dm_multimeter_config;
 
 const char* dm_read_entire_output_buffer();

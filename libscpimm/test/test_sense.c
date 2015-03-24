@@ -1,15 +1,11 @@
 #include <stdio.h>
 #include <string.h>
 #include "CUnit/Basic.h"
-#include <scpi/scpi.h>
-#include <scpimm/scpimm.h>
 #include "test_utils.h"
 
 void test_functionQ() {
-	receive("*OPC?;SYST:ERR?");
-	printf("*** response %s", dm_output_buffer());
-	//receive("SENSE:FUNCTION?");
-	//assert_no_scpi_errors();
+	receive("SENSE:FUNCTION?");
+	ASSERT_NO_SCPI_ERRORS();
 	//assert_in_data("v1.0\r\n");
 }
 
@@ -21,22 +17,12 @@ int main() {
         return CU_get_error();
 
     /* Add a suite to the registry */
-    pSuite = CU_add_suite("SENSE", init_suite, clean_suite);
-    if (NULL == pSuite) {
-        CU_cleanup_registry();
-        return CU_get_error();
-    }
+    ADD_SUITE("SENSE");
 
     /* Add the tests to the suite */
-    if ((NULL == CU_add_test(pSuite, "test sense:function?", test_functionQ))) {
-        CU_cleanup_registry();
-        return CU_get_error();
-    }
+    ADD_TEST(test_functionQ);
 
     /* Run all tests using the CUnit Basic interface */
-    CU_basic_set_mode(CU_BRM_VERBOSE);
-    CU_basic_run_tests();
-    CU_cleanup_registry();
-    return CU_get_error();
+    return RUN_ALL_TESTS();
 }
 

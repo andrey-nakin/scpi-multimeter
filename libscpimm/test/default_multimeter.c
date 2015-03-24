@@ -18,8 +18,10 @@ static size_t dm_send(const uint8_t* buf, size_t len);
 static int16_t dm_get_milliseconds(uint32_t* tm);
 static int16_t dm_sleep_milliseconds(uint32_t);
 static int16_t dm_set_interrupt_status(scpi_bool_t disabled);
+static int16_t dm_set_global_bool_option(scpimm_option_t option, scpi_bool_t value);
 static int16_t dm_remote(scpi_bool_t remote, scpi_bool_t lock);
 static int16_t dm_beep();
+static int16_t dm_get_input_terminal(scpimm_terminal_state_t* term);
 static int16_t dm_display_text(const char* txt);
 
 /***************************************************************
@@ -32,6 +34,7 @@ char dm_display[SCPIMM_DISPLAY_LEN + 1];
 dm_set_mode_args_t dm_set_mode_last_args;
 dm_get_allowed_ranges_args_t dm_get_allowed_ranges_last_args;
 dm_get_allowed_resolutions_args_t dm_get_allowed_resolutions_last_args;
+dm_set_global_bool_option_args_t dm_set_global_bool_option_args;
 dm_remote_args_t dm_remote_args;
 dm_display_text_args_t dm_display_text_args;
 
@@ -47,11 +50,14 @@ scpimm_interface_t dm_interface = {
 		.get_milliseconds = dm_get_milliseconds,
 		.sleep_milliseconds = dm_sleep_milliseconds,
 		.set_interrupt_status = dm_set_interrupt_status,
+		.set_global_bool_option = dm_set_global_bool_option,
 		.remote = dm_remote,
 		.beep = dm_beep,
+		.get_input_terminal = dm_get_input_terminal,
 		.display_text = dm_display_text
 };
 dm_counters_t dm_counters;
+dm_returns_t dm_returns;
 dm_multimeter_config_t dm_multimeter_config = {
 	.measurement_type = DM_MEASUREMENT_TYPE_ASYNC,
 	.measurement_func = dm_measurement_func_const
@@ -196,9 +202,11 @@ static int16_t dm_reset() {
 	dm_counters.reset++;
 
 	dm_reset_args();
+	memset(&dm_returns, 0, sizeof(dm_returns));
 
 	dm_multimeter_state.interrrupt_disable_counter = 0;
 	dm_multimeter_state.measurement_failure_counter = 0;
+	dm_multimeter_state.terminal_state = SCPIMM_TERM_FRONT;
 
 	dm_multimeter_config.measurement_type = DM_MEASUREMENT_TYPE_ASYNC;
 	dm_multimeter_config.measurement_func = dm_measurement_func_const;
@@ -418,6 +426,14 @@ static int16_t dm_set_interrupt_status(const scpi_bool_t disabled) {
 	return SCPI_ERROR_OK;
 }
 
+static int16_t dm_set_global_bool_option(const scpimm_option_t option, const scpi_bool_t value) {
+	dm_counters.set_global_bool_option++;
+	dm_set_global_bool_option_args.option = option;
+	dm_set_global_bool_option_args.value = value;
+
+	return dm_returns.set_global_bool_option;
+}
+
 static int16_t dm_remote(scpi_bool_t remote, scpi_bool_t lock) {
 	dm_counters.remote++;
 	dm_remote_args.remote = remote;
@@ -429,6 +445,13 @@ static int16_t dm_remote(scpi_bool_t remote, scpi_bool_t lock) {
 static int16_t dm_beep() {
 	dm_counters.beep++;
 	return SCPI_ERROR_OK;
+}
+
+static int16_t dm_get_input_terminal(scpimm_terminal_state_t* term) {
+	if (term) {
+		*term = dm_multimeter_state.terminal_state;
+	}
+	return dm_returns.get_input_terminal;
 }
 
 static int16_t dm_display_text(const char* txt) {

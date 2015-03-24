@@ -7,7 +7,7 @@
 #include "default_multimeter.h"
 
 static void read_numbers(const unsigned expected_num_of_values, double* values) {
-	const char * const result = dm_read_entire_output_buffer(), *s;
+	const char* const result = dm_read_entire_output_buffer(), *s;
 	int pos = 0;
 	unsigned actual_num_of_values;
 	double value;
@@ -53,27 +53,37 @@ static void read_equal_numbers(const unsigned expected_num_of_values, double* co
 	}
 }
 
-void check_after_read_state() {
+static void check_after_read_state() {
 	ASSERT_NO_SCPI_ERRORS();
 	CU_ASSERT_EQUAL(SCPIMM_context()->state, SCPIMM_STATE_IDLE);
 	ASSERT_INTERRUPTS_ARE_ENABLED();
 }
 
-void test_readQ_generic_impl(const dm_measurement_type_t mt, const char* const trigger_src) {
-	const char* const result = dm_read_entire_output_buffer();
+static void determine_range_and_resolution(double* const actual_range, double* const actual_resolution) {
+	const char* result;
+
+	receivef("CONFIGURE?");
+	ASSERT_NO_SCPI_ERRORS();
+	result = dm_read_entire_output_buffer();
+	CU_ASSERT_EQUAL(sscanf(strchr(result, ' ') + 1, "%le,%le", actual_range, actual_resolution), 2);
+}
+
+static void test_readQ_generic_impl(const dm_measurement_type_t mt, const char* const trigger_src) {
 	double actual_range, actual_resolution;
 	double values[16];
 	const int sample_count = 5, trigger_count = 3;
 
 	dm_multimeter_config.measurement_type = mt;
+	determine_range_and_resolution(&actual_range, &actual_resolution);
 
-	// read current value range
-	receivef("CONFIGURE?");
+	// reset default settings
+	receivef("TRIGGER:SOURCE %s", trigger_src);
+	receivef("TRIGGER:COUNT 1");
+	receivef("SAMPLE:COUNT 1");
 	ASSERT_NO_SCPI_ERRORS();
-	CU_ASSERT_EQUAL(sscanf(strchr(result, ' ') + 1, "%le,%le", &actual_range, &actual_resolution), 2);
+	ASSERT_NO_RESPONSE();
 
 	// read single value
-	receivef("TRIGGER:SOURCE %s", trigger_src);
 	dm_reset_counters();
 	receivef("READ?");
 	check_after_read_state();
@@ -123,6 +133,7 @@ void test_readQ_generic_impl(const dm_measurement_type_t mt, const char* const t
 	receivef("READ?");
 	ASSERT_SCPI_ERROR(SCPI_ERROR_IO_PROCESSOR_DOES_NOT_RESPOND);
 	check_after_read_state();
+	dm_read_entire_output_buffer();	//	clear out buffer
 
 	// read values again after failure
 	dm_reset_counters();
@@ -131,41 +142,42 @@ void test_readQ_generic_impl(const dm_measurement_type_t mt, const char* const t
 	read_equal_numbers(sample_count * trigger_count, values, actual_range * 0.5);
 }
 
-void test_readQ() {
+static void test_readQ() {
 	test_readQ_generic_impl(DM_MEASUREMENT_TYPE_ASYNC, "IMM");
 	test_readQ_generic_impl(DM_MEASUREMENT_TYPE_SYNC, "IMM");
-	//!!!test_readQ_generic_impl(DM_MEASUREMENT_TYPE_ASYNC, "EXT");
-	//!!!test_readQ_generic_impl(DM_MEASUREMENT_TYPE_SYNC, "EXT");
+	test_readQ_generic_impl(DM_MEASUREMENT_TYPE_ASYNC, "EXT");
+	test_readQ_generic_impl(DM_MEASUREMENT_TYPE_SYNC, "EXT");
 }
 
-void check_after_init_state() {
+static void check_after_init_state() {
 	ASSERT_NO_SCPI_ERRORS();
 	ASSERT_NO_RESPONSE();
 }
 
-void check_after_data_points_state() {
+static void check_after_data_points_state() {
 	check_after_read_state();
 }
 
-void check_after_fetch_state() {
+static void check_after_fetch_state() {
 	check_after_read_state();
 }
 
-void test_initiate_generic_impl(const dm_measurement_type_t mt, const char* const trigger_src) {
-	const char* const result = dm_read_entire_output_buffer();
+static void test_initiate_generic_impl(const dm_measurement_type_t mt, const char* const trigger_src) {
 	double actual_range, actual_resolution;
 	double values[16];
 	const int sample_count = 2, trigger_count = 3;
 
 	dm_multimeter_config.measurement_type = mt;
+	determine_range_and_resolution(&actual_range, &actual_resolution);
 
-	// read current value range
-	receivef("CONFIGURE?");
+	// reset default settings
+	receivef("TRIGGER:SOURCE %s", trigger_src);
+	receivef("TRIGGER:COUNT 1");
+	receivef("SAMPLE:COUNT 1");
 	ASSERT_NO_SCPI_ERRORS();
-	CU_ASSERT_EQUAL(sscanf(strchr(result, ' ') + 1, "%le,%le", &actual_range, &actual_resolution), 2);
+	ASSERT_NO_RESPONSE();
 
 	// read single value
-	receivef("TRIGGER:SOURCE %s", trigger_src);
 	dm_reset_counters();
 	receivef("INITIATE");
 	check_after_init_state();
@@ -182,6 +194,7 @@ void test_initiate_generic_impl(const dm_measurement_type_t mt, const char* cons
 	// read SAMPLE_COUNT values
 	receivef("SAMPLE:COUNT %d", sample_count);
 	ASSERT_NO_SCPI_ERRORS();
+	ASSERT_NO_RESPONSE();
 	dm_reset_counters();
 	receivef("INITIATE");
 	check_after_init_state();
@@ -249,23 +262,23 @@ void test_initiate_generic_impl(const dm_measurement_type_t mt, const char* cons
 	ASSERT_SCPI_ERROR(SCPI_ERROR_INSUFFICIENT_MEMORY);
 }
 
-void test_initiate_bus_trigger(const dm_measurement_type_t mt) {
-	const char* result;
+static void test_initiate_bus_trigger(const dm_measurement_type_t mt) {
 	double actual_range, actual_resolution;
 	double values[16];
 
 	dm_multimeter_config.measurement_type = mt;
 	// decrease measurement duration for quicker testing
 	dm_multimeter_config.measurement_duration = 10;
+	determine_range_and_resolution(&actual_range, &actual_resolution);
 
-	// read current value range
-	receivef("CONFIGURE?");
+	// reset default settings
+	receivef("TRIGGER:SOURCE BUS");
+	receivef("TRIGGER:COUNT 1");
+	receivef("SAMPLE:COUNT 1");
 	ASSERT_NO_SCPI_ERRORS();
-	result = dm_read_entire_output_buffer();
-	CU_ASSERT_EQUAL(sscanf(strchr(result, ' ') + 1, "%le,%le", &actual_range, &actual_resolution), 2);
+	ASSERT_NO_RESPONSE();
 
 	// read single value from BUS trigger
-	receivef("TRIGGER:SOURCE BUS");
 	dm_reset_counters();
 	receivef("INITIATE");
 	check_after_init_state();
@@ -300,7 +313,7 @@ void test_initiate_bus_trigger(const dm_measurement_type_t mt) {
 	read_data_points(1);
 }
 
-void test_initiate() {
+static void test_initiate() {
 	test_initiate_generic_impl(DM_MEASUREMENT_TYPE_ASYNC, "IMM");
 	test_initiate_generic_impl(DM_MEASUREMENT_TYPE_SYNC, "IMM");
 	test_initiate_generic_impl(DM_MEASUREMENT_TYPE_ASYNC, "EXT");
@@ -310,13 +323,28 @@ void test_initiate() {
 	test_initiate_bus_trigger(DM_MEASUREMENT_TYPE_SYNC);
 }
 
-void test_unexpected_fetch() {
+static void test_unexpected_fetch() {
+	double actual_range, actual_resolution;
+	double values[16];
+
+	receivef("*RST");
+	ASSERT_NO_SCPI_ERRORS();
+	ASSERT_NO_RESPONSE();
+
+	determine_range_and_resolution(&actual_range, &actual_resolution);
+
+	// read single value
+	dm_reset_counters();
+	receivef("READ?");
+	check_after_read_state();
+	read_equal_numbers(1, values, actual_range * 0.5);
+
 	receivef("FETCH?");
 	ASSERT_SCPI_ERROR(SCPI_ERROR_DATA_STALE);
 	ASSERT_NO_RESPONSE();
 }
 
-void test_fetch() {
+static void test_fetch() {
 	test_unexpected_fetch();
 }
 
@@ -328,30 +356,14 @@ int main() {
         return CU_get_error();
 
     /* Add a suite to the registry */
-    pSuite = CU_add_suite("DMM", init_suite, clean_suite);
-    if (NULL == pSuite) {
-        CU_cleanup_registry();
-        return CU_get_error();
-    }
+    ADD_SUITE("DMM");
 
     /* Add the tests to the suite */
-    if ((NULL == CU_add_test(pSuite, "READ?", test_readQ))) {
-        CU_cleanup_registry();
-        return CU_get_error();
-    }
-    /*!!!if ((NULL == CU_add_test(pSuite, "INITiate", test_initiate))) {
-        CU_cleanup_registry();
-        return CU_get_error();
-    }
-    if ((NULL == CU_add_test(pSuite, "FETCh?", test_fetch))) {
-        CU_cleanup_registry();
-        return CU_get_error();
-    }*/
+    ADD_TEST(test_readQ);
+    ADD_TEST(test_initiate);
+    ADD_TEST(test_fetch);
 
     /* Run all tests using the CUnit Basic interface */
-    CU_basic_set_mode(CU_BRM_VERBOSE);
-    CU_basic_run_tests();
-    CU_cleanup_registry();
-    return CU_get_error();
+    return RUN_ALL_TESTS();
 }
 

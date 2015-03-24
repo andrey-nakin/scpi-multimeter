@@ -13,7 +13,7 @@
 
 // test configuration
 #define ADD_SUITE(name)	\
-    pSuite = CU_add_suite("CONFIGURE", init_suite, clean_suite);	\
+    pSuite = CU_add_suite(name, init_suite, clean_suite);	\
     if (NULL == pSuite) {	\
         CU_cleanup_registry();	\
         return CU_get_error();	\
@@ -39,12 +39,12 @@
 #define ASSERT_DOUBLE_EQUAL(a, b) CU_ASSERT_DOUBLE_EQUAL(a, b, FLOAT_DELTA)
 #define ASSERT_INTERRUPTS_ARE_ENABLED() CU_ASSERT_EQUAL(dm_multimeter_state.interrrupt_disable_counter, 0)
 #define ASSERT_NO_SCPI_ERRORS() CU_ASSERT_EQUAL(SCPI_ErrorCount(SCPI_context()), 0)
-#define ASSERT_SCPI_ERROR(error)	\
-	CU_ASSERT_EQUAL(SCPI_ErrorCount(SCPI_context()), 1);	\
-	CU_ASSERT_EQUAL(SCPI_ErrorPop(SCPI_context()), error)
+#define ASSERT_SCPI_ERROR(error) { CU_ASSERT_EQUAL(SCPI_ErrorCount(SCPI_context()), 1); CU_ASSERT_EQUAL(SCPI_ErrorPop(SCPI_context()), error); }
 #define ASSERT_NO_RESPONSE() CU_ASSERT_STRING_EQUAL(dm_read_entire_output_buffer(), "");
 #define ASSERT_RESPONSE(expected) CU_ASSERT_STRING_EQUAL(dm_read_entire_output_buffer(), expected);
 #define ASSERT_BOOL_RESPONSE(expected) CU_ASSERT_STRING_EQUAL(dm_read_entire_output_buffer(), (expected) ? "1\r\n" : "0\r\n");
+#define ASSERT_INT_RESPONSE(expected) {double v_; CU_ASSERT_EQUAL(sscanf(dm_read_entire_output_buffer(), "%lg", &v_), 1); CU_ASSERT_EQUAL((int) v_, expected); }
+#define ASSERT_DOUBLE_RESPONSE(expected) {double v_; CU_ASSERT_EQUAL(sscanf(dm_read_entire_output_buffer(), "%lg", &v_), 1); CU_ASSERT_DOUBLE_EQUAL(v_, expected, FLOAT_DELTA); }
 
 //void assert_in_data(const char* s);
 //void assert_in_bool(bool_t v);

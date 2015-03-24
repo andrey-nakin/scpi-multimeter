@@ -20,6 +20,8 @@ typedef enum {SCPIMM_TERM_FRONT, SCPIMM_TERM_REAR} scpimm_terminal_state_t;
 typedef enum {SCPIMM_MODE_DCV, SCPIMM_MODE_DCV_RATIO, SCPIMM_MODE_ACV, SCPIMM_MODE_DCC, SCPIMM_MODE_ACC,
 	SCPIMM_MODE_RESISTANCE_2W, SCPIMM_MODE_RESISTANCE_4W} scpimm_mode_t;
 
+typedef enum {SCPIMM_OPTION_INPUT_IMPEDANCE_AUTO} scpimm_option_t;
+
 typedef struct _scpimm_mode_params_t {
 	size_t range_index;
 	scpi_bool_t auto_range;
@@ -84,6 +86,12 @@ typedef struct {
 	int16_t (*set_interrupt_status)(scpi_bool_t disabled);
 
 	/*
+		Mandatory
+		Set measurement option globally, i.e. for all modes
+	*/
+	int16_t (*set_global_bool_option)(scpimm_option_t option, scpi_bool_t value);
+
+	/*
 		Optional
 		Resets multimeter. Call when multimeter is started or *RST command is invoked
 	*/
@@ -105,13 +113,7 @@ typedef struct {
 		Optional
 		Returns selected input terminal
 	*/
-	scpi_bool_t (*get_input_terminal)(scpimm_terminal_state_t* term);
-
-	/*
-		Optional
-		Set state of the automatic input impedance selection
-	*/
-	scpi_bool_t (*set_input_impedance_auto)(scpi_bool_t state);
+	int16_t (*get_input_terminal)(scpimm_terminal_state_t* term);
 
 	/*
 		Optional

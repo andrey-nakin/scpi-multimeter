@@ -1,41 +1,35 @@
 #include <stdio.h>
 #include <string.h>
 #include "CUnit/Basic.h"
-#include <scpi/scpi.h>
-#include <scpimm/scpimm.h>
 #include "test_utils.h"
 
-static scpimm_terminal_state_t terminal;
-static bool_t terminal_result;
-
-static bool_t get_input_terminal(scpimm_terminal_state_t* term) {
-	*term = terminal;
-	return terminal_result;
-}
-
 void test_terminalsQ() {
-	scpimm_interface_t* intf = SCPIMM_context()->interface;
+	scpimm_interface_t* const intf = SCPIMM_context()->interface;
 
+	receive("*RST");
+	ASSERT_NO_SCPI_ERRORS();
+	ASSERT_NO_RESPONSE();
+
+	receive("ROUTE:TERMINALS?");
+	ASSERT_NO_SCPI_ERRORS();
+	ASSERT_RESPONSE("FRON\r\n");
+
+	dm_multimeter_state.terminal_state = SCPIMM_TERM_REAR;
+	receive("ROUTE:TERMINALS?");
+	ASSERT_NO_SCPI_ERRORS();
+	ASSERT_RESPONSE("REAR\r\n");
+
+	// emulate error
+	dm_returns.get_input_terminal = SCPI_ERROR_UNKNOWN;
+	receive("ROUTE:TERMINALS?");
+	ASSERT_SCPI_ERROR(SCPI_ERROR_UNKNOWN);
+	dm_returns.get_input_terminal = SCPI_ERROR_OK;
+
+	// emulate "handler not specified" case
 	intf->get_input_terminal = NULL;
 	receive("ROUTE:TERMINALS?");
-	assert_no_scpi_errors();
-	assert_in_data("FRON\r\n");
-
-	intf->get_input_terminal = get_input_terminal;
-	terminal = SCPIMM_TERM_FRONT;
-	terminal_result = TRUE;
-	receive("ROUTE:TERMINALS?");
-	assert_no_scpi_errors();
-	assert_in_data("FRON\r\n");
-
-	terminal = SCPIMM_TERM_REAR;
-	receive("ROUTE:TERMINALS?");
-	assert_no_scpi_errors();
-	assert_in_data("REAR\r\n");
-
-	terminal_result = FALSE;
-	receive("ROUTE:TERMINALS?");
-	assert_scpi_error(SCPI_ERROR_UNKNOWN);
+	ASSERT_NO_SCPI_ERRORS();
+	ASSERT_RESPONSE("FRON\r\n");
 }
 
 int main() {
@@ -46,22 +40,11 @@ int main() {
         return CU_get_error();
 
     /* Add a suite to the registry */
-    pSuite = CU_add_suite("ROUTE", init_suite, clean_suite);
-    if (NULL == pSuite) {
-        CU_cleanup_registry();
-        return CU_get_error();
-    }
+    ADD_SUITE("ROUTE");
 
     /* Add the tests to the suite */
-    if ((NULL == CU_add_test(pSuite, "test route:terminals?", test_terminalsQ))) {
-        CU_cleanup_registry();
-        return CU_get_error();
-    }
+    ADD_TEST(test_terminalsQ);
 
     /* Run all tests using the CUnit Basic interface */
-    CU_basic_set_mode(CU_BRM_VERBOSE);
-    CU_basic_run_tests();
-    CU_cleanup_registry();
-    return CU_get_error();
+    return RUN_ALL_TESTS();
 }
-
