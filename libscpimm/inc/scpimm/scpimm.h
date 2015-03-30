@@ -20,7 +20,9 @@ typedef enum {SCPIMM_TERM_FRONT, SCPIMM_TERM_REAR} scpimm_terminal_state_t;
 typedef enum {SCPIMM_MODE_DCV, SCPIMM_MODE_DCV_RATIO, SCPIMM_MODE_ACV, SCPIMM_MODE_DCC, SCPIMM_MODE_ACC,
 	SCPIMM_MODE_RESISTANCE_2W, SCPIMM_MODE_RESISTANCE_4W} scpimm_mode_t;
 
-typedef enum {SCPIMM_OPTION_INPUT_IMPEDANCE_AUTO} scpimm_option_t;
+typedef enum {SCPIMM_PARAM_RANGE, SCPIMM_PARAM_RANGE_OVERRUN, SCPIMM_PARAM_NPLC} scpimm_numeric_param_t;
+
+typedef enum {SCPIMM_PARAM_RANGE_AUTO, SCPIMM_PARAM_ZERO_AUTO, SCPIMM_PARAM_INPUT_IMPEDANCE_AUTO} scpimm_bool_param_t;
 
 typedef struct _scpimm_mode_params_t {
 	size_t range_index;
@@ -87,9 +89,40 @@ typedef struct {
 
 	/*
 		Mandatory
-		Set measurement option globally, i.e. for all modes
+		Get boolean value of global measurement parameter
 	*/
-	int16_t (*set_global_bool_option)(scpimm_option_t option, scpi_bool_t value);
+	int16_t (*get_global_bool_param)(scpimm_bool_param_t param, scpi_bool_t* value);
+
+	/*
+		Mandatory
+		Set measurement parameter globally, i.e. for all modes
+	*/
+	int16_t (*set_global_bool_param)(scpimm_bool_param_t param, scpi_bool_t value);
+
+	/*
+		Mandatory
+	*/
+	int16_t (*get_bool_param)(scpimm_mode_t mode, scpimm_bool_param_t param, scpi_bool_t* value);
+
+	/*
+		Mandatory
+	*/
+	int16_t (*set_bool_param)(scpimm_mode_t mode, scpimm_bool_param_t param, scpi_bool_t value);
+
+	/*
+		Mandatory
+	*/
+	int16_t (*get_numeric_param_values)(scpimm_mode_t mode, scpimm_numeric_param_t param, const double** values);
+
+	/*
+		Mandatory
+	*/
+	int16_t (*get_numeric_param)(scpimm_mode_t mode, scpimm_numeric_param_t param, size_t* value_index);
+
+	/*
+		Mandatory
+	*/
+	int16_t (*set_numeric_param)(scpimm_mode_t mode, scpimm_numeric_param_t param, size_t value_index);
 
 	/*
 		Optional

@@ -18,7 +18,10 @@ static size_t dm_send(const uint8_t* buf, size_t len);
 static int16_t dm_get_milliseconds(uint32_t* tm);
 static int16_t dm_sleep_milliseconds(uint32_t);
 static int16_t dm_set_interrupt_status(scpi_bool_t disabled);
-static int16_t dm_set_global_bool_option(scpimm_option_t option, scpi_bool_t value);
+static int16_t dm_set_global_bool_param(scpimm_bool_param_t param, scpi_bool_t value);
+static int16_t dm_get_numeric_param_values(scpimm_mode_t mode, scpimm_numeric_param_t param, const double** values);
+static int16_t dm_get_numeric_param(scpimm_mode_t mode, scpimm_numeric_param_t param, size_t* value_index);
+static int16_t dm_set_numeric_param(scpimm_mode_t mode, scpimm_numeric_param_t param, size_t value_index);
 static int16_t dm_remote(scpi_bool_t remote, scpi_bool_t lock);
 static int16_t dm_beep();
 static int16_t dm_get_input_terminal(scpimm_terminal_state_t* term);
@@ -34,7 +37,7 @@ char dm_display[SCPIMM_DISPLAY_LEN + 1];
 dm_set_mode_args_t dm_set_mode_last_args;
 dm_get_allowed_ranges_args_t dm_get_allowed_ranges_last_args;
 dm_get_allowed_resolutions_args_t dm_get_allowed_resolutions_last_args;
-dm_set_global_bool_option_args_t dm_set_global_bool_option_args;
+dm_set_global_bool_param_args_t dm_set_global_bool_param_args;
 dm_remote_args_t dm_remote_args;
 dm_display_text_args_t dm_display_text_args;
 
@@ -50,7 +53,10 @@ scpimm_interface_t dm_interface = {
 		.get_milliseconds = dm_get_milliseconds,
 		.sleep_milliseconds = dm_sleep_milliseconds,
 		.set_interrupt_status = dm_set_interrupt_status,
-		.set_global_bool_option = dm_set_global_bool_option,
+		.set_global_bool_param = dm_set_global_bool_param,
+		.get_numeric_param_values = dm_get_numeric_param_values,
+		.get_numeric_param = dm_get_numeric_param,
+		.set_numeric_param = dm_set_numeric_param,
 		.remote = dm_remote,
 		.beep = dm_beep,
 		.get_input_terminal = dm_get_input_terminal,
@@ -426,12 +432,30 @@ static int16_t dm_set_interrupt_status(const scpi_bool_t disabled) {
 	return SCPI_ERROR_OK;
 }
 
-static int16_t dm_set_global_bool_option(const scpimm_option_t option, const scpi_bool_t value) {
-	dm_counters.set_global_bool_option++;
-	dm_set_global_bool_option_args.option = option;
-	dm_set_global_bool_option_args.value = value;
+static int16_t dm_set_global_bool_param(const scpimm_bool_param_t param, const scpi_bool_t value) {
+	dm_counters.set_global_bool_param++;
+	dm_set_global_bool_param_args.param = param;
+	dm_set_global_bool_param_args.value = value;
 
-	return dm_returns.set_global_bool_option;
+	return dm_returns.set_global_bool_param;
+}
+
+static int16_t dm_get_numeric_param_values(scpimm_mode_t mode, scpimm_numeric_param_t param, const double** values) {
+	dm_counters.get_numeric_param_values++;
+
+	return dm_returns.get_numeric_param_values;
+}
+
+static int16_t dm_get_numeric_param(scpimm_mode_t mode, scpimm_numeric_param_t param, size_t* value_index) {
+	dm_counters.get_numeric_param++;
+
+	return dm_returns.get_numeric_param;
+}
+
+static int16_t dm_set_numeric_param(scpimm_mode_t mode, scpimm_numeric_param_t param, size_t value_index) {
+	dm_counters.set_numeric_param++;
+
+	return dm_returns.set_numeric_param;
 }
 
 static int16_t dm_remote(scpi_bool_t remote, scpi_bool_t lock) {

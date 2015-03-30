@@ -8,8 +8,8 @@ scpi_result_t SCPIMM_do_set_input_impedance_auto(scpi_t* const context, const sc
 	scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
 	const scpimm_interface_t* const intf = ctx->interface;
 
-	if (intf->set_global_bool_option) {
-		CHECK_AND_PUSH_ERROR(intf->set_global_bool_option(SCPIMM_OPTION_INPUT_IMPEDANCE_AUTO, state));
+	if (intf->set_global_bool_param) {
+		CHECK_AND_PUSH_ERROR(intf->set_global_bool_param(SCPIMM_PARAM_INPUT_IMPEDANCE_AUTO, state));
 	}
 
 	ctx->input_impedance_auto_state = state;

@@ -45,9 +45,9 @@ typedef struct {
 } dm_get_allowed_resolutions_args_t;
 
 typedef struct {
-	scpimm_option_t option;
+	scpimm_bool_param_t param;
 	scpi_bool_t value;
-} dm_set_global_bool_option_args_t;
+} dm_set_global_bool_param_args_t;
 
 typedef struct {
 	scpi_bool_t remote;
@@ -61,11 +61,13 @@ typedef struct {
 typedef struct {
 	unsigned set_mode, get_mode, get_allowed_ranges, get_allowed_resolutions,
 		start_measure, set_interrupt_status, remote, beep, display_text, setup, reset,
-		set_global_bool_option;
+		get_global_bool_param, set_global_bool_param, get_bool_param, set_bool_param,
+		get_numeric_param_values, get_numeric_param, set_numeric_param;
 } dm_counters_t;
 
 typedef struct {
-	int16_t get_input_terminal, set_global_bool_option;
+	int16_t get_input_terminal, set_global_bool_param,
+	get_numeric_param_values, get_numeric_param, set_numeric_param;
 } dm_returns_t;
 
 typedef double (*dm_measurement_func_t)(uint32_t time);
@@ -82,7 +84,7 @@ extern char dm_display[SCPIMM_DISPLAY_LEN + 1];
 extern dm_set_mode_args_t dm_set_mode_last_args;
 extern dm_get_allowed_ranges_args_t dm_get_allowed_ranges_last_args;
 extern dm_get_allowed_resolutions_args_t dm_get_allowed_resolutions_last_args;
-extern dm_set_global_bool_option_args_t dm_set_global_bool_option_args;
+extern dm_set_global_bool_param_args_t dm_set_global_bool_param_args;
 extern dm_remote_args_t dm_remote_args;
 extern dm_display_text_args_t dm_display_text_args;
 

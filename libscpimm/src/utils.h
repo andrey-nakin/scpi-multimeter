@@ -5,6 +5,9 @@
 #include <scpi/scpi.h>
 #include <scpimm/scpimm.h>
 
+#ifndef SIZE_MAX
+#define SIZE_MAX ((size_t)-1)
+#endif
 /* 
 	Helpful macros to access SCPIMM global context from SCPI command handlers 
 	<context> is a scpi_t* value
@@ -17,6 +20,8 @@
 	    SCPI_ErrorPush(context, err);	\
 		return SCPI_RES_ERR;	\
 	}
+
+#define	EXPECT_NO_PARAMS(context) if (!expectNoParams(context)) return SCPI_RES_ERR
 
 #define	ATOMIC_READ_BOOL(var) (var)
 #define	ATOMIC_WRITE_BOOL(var, value) (var) = (value)
@@ -36,6 +41,9 @@ scpi_bool_t matchCommand(const char * pattern, const char * cmd, size_t len);
 size_t strToDouble(const char * str, double * val);
 
 size_t double_to_str(char* dest, double v);
+size_t min_value_index(const double* const values);
+size_t max_value_index(const double* const values);
+size_t greater_or_equal_index(const double* values, const double v);
 
 #endif	//	__UTILS_H_SCPIMM_
 

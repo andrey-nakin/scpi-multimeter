@@ -104,6 +104,48 @@ size_t double_to_str(char* dest, double v) {
 	return p - dest;
 }
 
+size_t min_value_index(const double* const values) {
+	size_t result = SIZE_MAX;
+	double min_value = 0.0;
+	const double* v = values;
+
+	for (; *v >= 0.0; v++) {
+		if (v == values || min_value > *v) {
+			min_value = *v;
+			result = v - values;;
+		}
+	}
+
+	return result;
+}
+
+size_t max_value_index(const double* const values) {
+	size_t result = SIZE_MAX;
+	double max_value = 0.0;
+	const double* v = values;
+
+	for (; *v >= 0.0; v++) {
+		if (v == values || max_value < *v) {
+			max_value = *v;
+			result = v - values;;
+		}
+	}
+
+	return result;
+}
+
+size_t greater_or_equal_index(const double* values, const double v) {
+	size_t result;
+
+	for (result = 0; values[result] >= 0; result++) {
+		if (values[result] >= v) {
+			return result;
+		}
+	}
+
+	return SIZE_MAX;
+}
+
 #ifdef	ARDUINO
 
 static scpi_bool_t iscolon(char ch) {
