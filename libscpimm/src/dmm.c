@@ -398,7 +398,8 @@ int16_t SCPIMM_set_mode(scpi_t* const context, const scpimm_mode_t mode, const s
 			const double* ranges, *overruns;
 
 			new_params.range_index = 0;
-			CHECK_SCPI_ERROR(intf->get_allowed_ranges(mode, &ranges, &overruns));
+			CHECK_SCPI_ERROR(intf->get_numeric_param_values(mode, SCPIMM_PARAM_RANGE, &ranges));
+			CHECK_SCPI_ERROR(intf->get_numeric_param_values(mode, SCPIMM_PARAM_RANGE_OVERRUN, &overruns));
 
 			switch (range->type) {
 			case SCPI_NUM_NUMBER:

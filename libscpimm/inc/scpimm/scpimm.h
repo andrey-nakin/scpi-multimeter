@@ -54,7 +54,6 @@ typedef struct {
 	 */
 	int16_t (*get_mode)(scpimm_mode_t* mode, scpimm_mode_params_t* dest);
 
-	int16_t (*get_allowed_ranges)(scpimm_mode_t mode, const double** ranges, const double** overruns);
 	int16_t (*get_allowed_resolutions)(scpimm_mode_t mode, size_t range_index, const double** resolutions);
 
 	/* 

@@ -102,7 +102,7 @@ static void test_configure_fix_params(const char* function, scpimm_mode_t mode) 
 	const double* ranges;
 	int16_t err;
 
-	CHECK_NO_SCPI_ERROR(scpimm_interface()->get_allowed_ranges(mode, &ranges, NULL));
+	CHECK_NO_SCPI_ERROR(scpimm_interface()->get_numeric_param_values(mode, SCPIMM_PARAM_RANGE, &ranges));
 	range_indices[0] = MIN_RANGE_INDEX; range_indices[1] = max_index(ranges); range_indices[2] = MIN_RANGE_INDEX; range_indices[3] = MIN_RANGE_INDEX;
 
 	for (rangeIndex = 0; rangeIndex < sizeof(range_values) / sizeof(range_values[0]); ++rangeIndex) {
@@ -171,7 +171,8 @@ static void test_configure_custom_params(const char* function, const scpimm_mode
 	const double *ranges, *overruns;
 	size_t range_index;
 
-	CHECK_NO_SCPI_ERROR(scpimm_interface()->get_allowed_ranges(mode, &ranges, &overruns));
+	CHECK_NO_SCPI_ERROR(scpimm_interface()->get_numeric_param_values(mode, SCPIMM_PARAM_RANGE, &ranges));
+	CHECK_NO_SCPI_ERROR(scpimm_interface()->get_numeric_param_values(mode, SCPIMM_PARAM_RANGE_OVERRUN, &overruns));
 
 	for (range_index = 0; ranges[range_index] >= 0.0; range_index++) {
 		test_configure_custom_range(function, mode, 0.5 * ranges[range_index], range_index);
@@ -187,7 +188,8 @@ static void test_configure_out_of_range(const char* function, scpimm_mode_t mode
 	double range, resolution;
 	size_t range_index;
 
-	CHECK_NO_SCPI_ERROR(scpimm_interface()->get_allowed_ranges(mode, &ranges, &overruns));
+	CHECK_NO_SCPI_ERROR(scpimm_interface()->get_numeric_param_values(mode, SCPIMM_PARAM_RANGE, &ranges));
+	CHECK_NO_SCPI_ERROR(scpimm_interface()->get_numeric_param_values(mode, SCPIMM_PARAM_RANGE_OVERRUN, &overruns));
 
 	// range < min range
 	range = ranges[0] * 0.5;
@@ -236,7 +238,7 @@ static void test_configure_units(const char* function, scpimm_mode_t mode, const
 	const double *ranges;
 	size_t range_index;
 
-	CHECK_NO_SCPI_ERROR(scpimm_interface()->get_allowed_ranges(mode, &ranges, NULL));
+	CHECK_NO_SCPI_ERROR(scpimm_interface()->get_numeric_param_values(mode, SCPIMM_PARAM_RANGE, &ranges));
 
 	for (range_index = 0; ranges[range_index] >= 0.0; range_index++) {
 		const double range = ranges[range_index] * 0.5;
@@ -294,7 +296,7 @@ static void test_configureQ_impl(const char* function, scpimm_mode_t mode, const
 		return;
 	}
 
-	CHECK_NO_SCPI_ERROR(scpimm_interface()->get_allowed_ranges(mode, &ranges, NULL));
+	CHECK_NO_SCPI_ERROR(scpimm_interface()->get_numeric_param_values(mode, SCPIMM_PARAM_RANGE, &ranges));
 
 	for (range_index = 0; ranges[range_index] >= 0.0; range_index++) {
 		const double range = ranges[range_index] * 0.5;

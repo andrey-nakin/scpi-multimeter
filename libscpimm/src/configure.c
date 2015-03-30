@@ -138,7 +138,7 @@ static int16_t configureQuery(scpi_t* context) {
 	CHECK_SCPI_ERROR(SCPIMM_INTERFACE(context)->get_mode(&mode, &params));
 	no_params = FALSE;	// SCPIMM_MODE_CONTINUITY == mode || SCPIMM_MODE_DIODE == mode;
 	if (!no_params) {
-		CHECK_SCPI_ERROR(SCPIMM_INTERFACE(context)->get_allowed_ranges(mode, &ranges, NULL));
+		CHECK_SCPI_ERROR(SCPIMM_INTERFACE(context)->get_numeric_param_values(mode, SCPIMM_PARAM_RANGE, &ranges));
 		CHECK_SCPI_ERROR(SCPIMM_INTERFACE(context)->get_allowed_resolutions(mode, params.range_index, &resolutions));
 	}
 
