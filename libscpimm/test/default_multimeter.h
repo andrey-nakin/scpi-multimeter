@@ -14,15 +14,25 @@ typedef enum {
 } dm_measurement_type_t;
 
 typedef struct {
+	size_t range_index;
+	size_t resolution_index;
+	size_t nplc_index;
+	scpi_bool_t auto_range;
+} dm_mode_state_t;
+
+typedef struct {
 	scpimm_mode_t mode;
 	scpi_bool_t mode_initialized;
-	scpimm_mode_params_t mode_params;
-	scpi_bool_t mode_params_initialized;
 	unsigned interrrupt_disable_counter;
 	unsigned measurement_failure_counter;
 	scpimm_terminal_state_t terminal_state;
 	scpi_bool_t input_impedance_auto_state;
 	scpi_bool_t zero_auto, zero_auto_once;
+
+	struct {
+		dm_mode_state_t dcv, dcv_ratio, acv, dcc, acc, resistance, fresistance;
+	} mode_states;
+
 } dm_multimeter_state_t;
 
 typedef struct {
@@ -50,9 +60,33 @@ typedef struct {
 
 typedef struct {
 	scpimm_mode_t mode;
+	scpimm_bool_param_t param;
+	scpi_bool_t value_is_null;
+} dm_get_bool_param_args_t;
+
+typedef struct {
+	scpimm_mode_t mode;
+	scpimm_bool_param_t param;
+	scpi_bool_t value;
+} dm_set_bool_param_args_t;
+
+typedef struct {
+	scpimm_mode_t mode;
 	scpimm_numeric_param_t param;
 	scpi_bool_t values_is_null;
 } dm_get_numeric_param_values_args_t;
+
+typedef struct {
+	scpimm_mode_t mode;
+	scpimm_numeric_param_t param;
+	scpi_bool_t value_is_null;
+} dm_get_numeric_param_args_t;
+
+typedef struct {
+	scpimm_mode_t mode;
+	scpimm_numeric_param_t param;
+	size_t value_index;
+} dm_set_numeric_param_args_t;
 
 typedef struct {
 	scpi_bool_t remote;
@@ -73,6 +107,7 @@ typedef struct {
 typedef struct {
 	int16_t get_input_terminal,
 	get_global_bool_param, set_global_bool_param,
+	get_bool_param, set_bool_param,
 	get_numeric_param_values, get_numeric_param, set_numeric_param;
 } dm_returns_t;
 
@@ -91,7 +126,11 @@ extern dm_set_mode_args_t dm_set_mode_last_args;
 extern dm_get_allowed_resolutions_args_t dm_get_allowed_resolutions_last_args;
 extern dm_get_global_bool_param_args_t dm_get_global_bool_param_args;
 extern dm_set_global_bool_param_args_t dm_set_global_bool_param_args;
+extern dm_get_bool_param_args_t dm_get_bool_param_args;
+extern dm_set_bool_param_args_t dm_set_bool_param_args;
 extern dm_get_numeric_param_values_args_t dm_get_numeric_param_values_args;
+extern dm_get_numeric_param_args_t dm_get_numeric_param_args;
+extern dm_set_numeric_param_args_t dm_set_numeric_param_args;
 extern dm_remote_args_t dm_remote_args;
 extern dm_display_text_args_t dm_display_text_args;
 

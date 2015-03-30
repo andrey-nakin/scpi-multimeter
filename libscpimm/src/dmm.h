@@ -15,7 +15,6 @@ scpi_result_t SCPIMM_fetchQ(scpi_t* context);
 scpi_result_t SCPIMM_trg(scpi_t* context);
 scpi_result_t SCPIMM_data_pointsQ(scpi_t* context);
 
-scpimm_mode_params_t* SCPIMM_mode_params(scpimm_context_t* ctx, scpimm_mode_t mode);
 int16_t SCPIMM_set_mode(scpi_t* context, scpimm_mode_t mode, const scpi_number_t* range, scpi_bool_t auto_detect_auto_range, const scpi_bool_t* auto_range, const scpi_number_t* resolution);
 const char* SCPIMM_mode_name(scpimm_mode_t mode);
 

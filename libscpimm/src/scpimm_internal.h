@@ -47,16 +47,6 @@ typedef struct {
 	int16_t measurement_error;
 	scpi_bool_t is_first_measured_value;
 
-	struct {
-		scpimm_mode_params_t dcv;
-		scpimm_mode_params_t dcv_ratio;
-		scpimm_mode_params_t acv;
-		scpimm_mode_params_t dcc;
-		scpimm_mode_params_t acc;
-		scpimm_mode_params_t resistance;
-		scpimm_mode_params_t fresistance;
-	} mode_params;
-
 } scpimm_context_t;
 
 /* For debug purposes */

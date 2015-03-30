@@ -134,12 +134,14 @@ static int16_t configureQuery(scpi_t* context) {
 	const char* mode_name;
     char buf[48], *end;
     const double *ranges, *resolutions;
+    size_t current_range;
 
 	CHECK_SCPI_ERROR(SCPIMM_INTERFACE(context)->get_mode(&mode, &params));
 	no_params = FALSE;	// SCPIMM_MODE_CONTINUITY == mode || SCPIMM_MODE_DIODE == mode;
 	if (!no_params) {
+		CHECK_SCPI_ERROR(SCPIMM_INTERFACE(context)->get_numeric_param(mode, SCPIMM_PARAM_RANGE, &current_range));
 		CHECK_SCPI_ERROR(SCPIMM_INTERFACE(context)->get_numeric_param_values(mode, SCPIMM_PARAM_RANGE, &ranges));
-		CHECK_SCPI_ERROR(SCPIMM_INTERFACE(context)->get_allowed_resolutions(mode, params.range_index, &resolutions));
+		CHECK_SCPI_ERROR(SCPIMM_INTERFACE(context)->get_allowed_resolutions(mode, current_range, &resolutions));
 	}
 
 	mode_name = SCPIMM_mode_name(mode);
@@ -151,7 +153,7 @@ static int16_t configureQuery(scpi_t* context) {
 	if (!no_params) {
 		strcat(buf, " ");
 		end = strchr(buf, '\0');
-		end += double_to_str(end, ranges[params.range_index]);
+		end += double_to_str(end, ranges[current_range]);
 		*end++ = ',';
 		end += double_to_str(end, resolutions[params.resolution_index]);
 		*end = '\0';

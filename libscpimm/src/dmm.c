@@ -101,6 +101,7 @@ static int16_t wait_for_idle(volatile scpimm_context_t* const ctx) {
 }
 
 scpi_result_t SCPIMM_measure_preset(scpi_t* context) {
+	int16_t err;
 	scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
 
 	ATOMIC_WRITE_INT(ctx->state, SCPIMM_STATE_IDLE);
@@ -113,13 +114,7 @@ scpi_result_t SCPIMM_measure_preset(scpi_t* context) {
 	ctx->buf_count = 0;
 	ctx->measurement_timeout = MEASUREMENT_TIMEOUT;
 
-	/* TODO
-AC Filter (DET:BAND)                20 Hz (medium filter)
-Autozero (ZERO:AUTO)                OFF if resolution setting results in NPLC < 1;
-                                    ON if resolution setting results in NPLC ≥ 1
-                                    OFF (fixed at 10 MΩ for all dc voltage ranges)
-Math Function (CALCulate subsystem) OFF
-	*/
+	CHECK_AND_PUSH_ERROR(ctx->interface->reset());
 
 	return SCPIMM_do_set_input_impedance_auto(context, FALSE);
 }
@@ -336,33 +331,6 @@ scpi_result_t SCPIMM_data_pointsQ(scpi_t* context) {
 	return SCPI_RES_OK;
 }
 
-scpimm_mode_params_t* SCPIMM_mode_params(scpimm_context_t* const ctx, const scpimm_mode_t mode) {
-	switch (mode) {
-		case SCPIMM_MODE_DCV:
-			return &ctx->mode_params.dcv;
-
-		case SCPIMM_MODE_DCV_RATIO:
-			return &ctx->mode_params.dcv_ratio;
-
-		case SCPIMM_MODE_ACV:
-			return &ctx->mode_params.acv;
-
-		case SCPIMM_MODE_DCC:
-			return &ctx->mode_params.dcc;
-
-		case SCPIMM_MODE_ACC:
-			return &ctx->mode_params.acc;
-
-		case SCPIMM_MODE_RESISTANCE_2W:
-			return &ctx->mode_params.resistance;
-
-		case SCPIMM_MODE_RESISTANCE_4W:
-			return &ctx->mode_params.fresistance;
-	}
-
-	return NULL;
-}
-
 static size_t max_index(const double* values) {
 	size_t result;
 
@@ -386,105 +354,99 @@ static int find_greater_than(const double* values, const double v) {
 int16_t SCPIMM_set_mode(scpi_t* const context, const scpimm_mode_t mode, const scpi_number_t* const range, const scpi_bool_t auto_detect_auto_range, const scpi_bool_t* const auto_range, const scpi_number_t* const resolution) {
 	scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
 	const scpimm_interface_t* const intf = ctx->interface;
-	scpimm_mode_params_t* const ctx_params = SCPIMM_mode_params(ctx, mode);
 	scpimm_mode_params_t new_params;
 	int16_t err;
 
-	if (ctx_params) {
-		/* given mode needs parameters: range, resolution etc */
-		new_params = *ctx_params;
+	new_params.range_index = 0;
+	new_params.auto_range = TRUE;
+	new_params.resolution_index = 0;
 
-		if (range) {
-			const double* ranges, *overruns;
+	if (range) {
+		const double* ranges, *overruns;
 
-			new_params.range_index = 0;
-			CHECK_SCPI_ERROR(intf->get_numeric_param_values(mode, SCPIMM_PARAM_RANGE, &ranges));
-			CHECK_SCPI_ERROR(intf->get_numeric_param_values(mode, SCPIMM_PARAM_RANGE_OVERRUN, &overruns));
+		new_params.range_index = 0;
+		CHECK_SCPI_ERROR(intf->get_numeric_param_values(mode, SCPIMM_PARAM_RANGE, &ranges));
+		CHECK_SCPI_ERROR(intf->get_numeric_param_values(mode, SCPIMM_PARAM_RANGE_OVERRUN, &overruns));
 
-			switch (range->type) {
-			case SCPI_NUM_NUMBER:
-				for (; ranges[new_params.range_index] >= 0.0; new_params.range_index++) {
-					if (range->value <= ranges[new_params.range_index] * overruns[new_params.range_index]) {
-						break;
-					}
-				}
-
-				if (ranges[new_params.range_index] < 0) {
-					return SCPI_ERROR_DATA_OUT_OF_RANGE;
-				}
-
-				if (auto_detect_auto_range) {
-					new_params.auto_range = FALSE;
-				}
-				break;
-
-			case SCPI_NUM_MIN:
-				if (auto_detect_auto_range) {
-					new_params.auto_range = FALSE;
-				}
-				break;
-
-			case SCPI_NUM_MAX:
-				new_params.range_index = max_index(ranges);
-
-				if (auto_detect_auto_range) {
-					new_params.auto_range = FALSE;
-				}
-				break;
-
-			case SCPI_NUM_DEF:
-			case SCPI_NUM_AUTO:
-				new_params.auto_range = TRUE;
-				break;
-
-			default:
-				return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
-			}
-		}
-
-		if (auto_range) {
-			new_params.auto_range = *auto_range;
-		}
-
-		if (resolution) {
-			const double* resolutions;
-
-			new_params.resolution_index = 0;
-			CHECK_SCPI_ERROR(intf->get_allowed_resolutions(mode, new_params.range_index, &resolutions));
-
-			switch (resolution->type) {
-			case SCPI_NUM_NUMBER: {
-				const int idx = find_greater_than(resolutions, resolution->value * (1.0 + 1.e-6));
-				if (idx < 0) {
-					new_params.resolution_index = max_index(resolutions);
-				} else if (idx > 0) {
-					new_params.resolution_index = idx - 1;
-				} else {
-					return SCPI_ERROR_CANNOT_ACHIEVE_REQUESTED_RESOLUTION;
+		switch (range->type) {
+		case SCPI_NUM_NUMBER:
+			for (; ranges[new_params.range_index] >= 0.0; new_params.range_index++) {
+				if (range->value <= ranges[new_params.range_index] * overruns[new_params.range_index]) {
+					break;
 				}
 			}
-				break;
 
-			case SCPI_NUM_DEF:
-			case SCPI_NUM_MIN:
-				break;
+			if (ranges[new_params.range_index] < 0) {
+				return SCPI_ERROR_DATA_OUT_OF_RANGE;
+			}
 
-			case SCPI_NUM_MAX:
+			if (auto_detect_auto_range) {
+				new_params.auto_range = FALSE;
+			}
+			break;
+
+		case SCPI_NUM_MIN:
+			if (auto_detect_auto_range) {
+				new_params.auto_range = FALSE;
+			}
+			break;
+
+		case SCPI_NUM_MAX:
+			new_params.range_index = max_index(ranges);
+
+			if (auto_detect_auto_range) {
+				new_params.auto_range = FALSE;
+			}
+			break;
+
+		case SCPI_NUM_DEF:
+		case SCPI_NUM_AUTO:
+			new_params.auto_range = TRUE;
+			break;
+
+		default:
+			return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
+		}
+	}
+
+	if (auto_range) {
+		new_params.auto_range = *auto_range;
+	}
+
+	if (resolution) {
+		const double* resolutions;
+
+		new_params.resolution_index = 0;
+		CHECK_SCPI_ERROR(intf->get_allowed_resolutions(mode, new_params.range_index, &resolutions));
+
+		switch (resolution->type) {
+		case SCPI_NUM_NUMBER: {
+			const int idx = find_greater_than(resolutions, resolution->value * (1.0 + 1.e-6));
+			if (idx < 0) {
 				new_params.resolution_index = max_index(resolutions);
-				break;
-
-			default:
-				return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
+			} else if (idx > 0) {
+				new_params.resolution_index = idx - 1;
+			} else {
+				return SCPI_ERROR_CANNOT_ACHIEVE_REQUESTED_RESOLUTION;
 			}
+		}
+			break;
+
+		case SCPI_NUM_DEF:
+		case SCPI_NUM_MIN:
+			break;
+
+		case SCPI_NUM_MAX:
+			new_params.resolution_index = max_index(resolutions);
+			break;
+
+		default:
+			return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
 		}
 	}
 
 	// set mode and parameters
-	CHECK_SCPI_ERROR(intf->set_mode(mode, ctx_params ? &new_params : NULL));
-
-	if (ctx_params) {
-		*ctx_params = new_params;
-	}
+	CHECK_SCPI_ERROR(intf->set_mode(mode, &new_params));
 
 	return SCPI_ERROR_OK;
 }

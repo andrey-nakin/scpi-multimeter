@@ -40,7 +40,11 @@ dm_set_mode_args_t dm_set_mode_last_args;
 dm_get_allowed_resolutions_args_t dm_get_allowed_resolutions_last_args;
 dm_get_global_bool_param_args_t dm_get_global_bool_param_args;
 dm_set_global_bool_param_args_t dm_set_global_bool_param_args;
+dm_get_bool_param_args_t dm_get_bool_param_args;
+dm_set_bool_param_args_t dm_set_bool_param_args;
 dm_get_numeric_param_values_args_t dm_get_numeric_param_values_args;
+dm_get_numeric_param_args_t dm_get_numeric_param_args;
+dm_set_numeric_param_args_t dm_set_numeric_param_args;
 dm_remote_args_t dm_remote_args;
 dm_display_text_args_t dm_display_text_args;
 
@@ -97,6 +101,26 @@ static sem_t measure_sem;
 /***************************************************************
  * Private functions
  **************************************************************/
+
+static dm_mode_state_t* get_mode_state(const scpimm_mode_t mode) {
+	switch (mode) {
+	case SCPIMM_MODE_DCV:
+		return &dm_multimeter_state.mode_states.dcv;
+	case SCPIMM_MODE_DCV_RATIO:
+		return &dm_multimeter_state.mode_states.dcv_ratio;
+	case SCPIMM_MODE_ACV:
+		return &dm_multimeter_state.mode_states.acv;
+	case SCPIMM_MODE_DCC:
+		return &dm_multimeter_state.mode_states.dcc;
+	case SCPIMM_MODE_ACC:
+		return &dm_multimeter_state.mode_states.acc;
+	case SCPIMM_MODE_RESISTANCE_2W:
+		return &dm_multimeter_state.mode_states.resistance;
+	case SCPIMM_MODE_RESISTANCE_4W:
+		return &dm_multimeter_state.mode_states.fresistance;
+	}
+	return NULL;
+}
 
 static uint32_t get_milliseconds() {
 	struct timespec tp;
@@ -164,11 +188,11 @@ void dm_reset_args() {
 }
 
 double dm_measurement_func_const(uint32_t time) {
+	const dm_mode_state_t* const mode_state = get_mode_state(dm_multimeter_state.mode);
+
 	(void) time;
 
-	return dm_multimeter_state.mode_initialized && dm_multimeter_state.mode_params_initialized ?
-			0.5 * RANGES[dm_multimeter_state.mode_params.range_index]
-			: 0.0;
+	return 0.5 * RANGES[mode_state ? mode_state->range_index : 0];
 }
 
 /***************************************************************
@@ -209,6 +233,11 @@ static int16_t dm_setup() {
 	return SCPI_ERROR_OK;
 }
 
+static void reset_mode_state(dm_mode_state_t* dest) {
+	memset(dest, 0, sizeof(*dest));
+	dest->auto_range = TRUE;
+}
+
 static int16_t dm_reset() {
 	dm_counters.reset++;
 
@@ -221,6 +250,14 @@ static int16_t dm_reset() {
 	dm_multimeter_state.input_impedance_auto_state = FALSE;
 	dm_multimeter_state.zero_auto = TRUE;
 	dm_multimeter_state.zero_auto_once = FALSE;
+
+	reset_mode_state(&dm_multimeter_state.mode_states.dcv);
+	reset_mode_state(&dm_multimeter_state.mode_states.dcv_ratio);
+	reset_mode_state(&dm_multimeter_state.mode_states.acv);
+	reset_mode_state(&dm_multimeter_state.mode_states.dcc);
+	reset_mode_state(&dm_multimeter_state.mode_states.acc);
+	reset_mode_state(&dm_multimeter_state.mode_states.resistance);
+	reset_mode_state(&dm_multimeter_state.mode_states.fresistance);
 
 	dm_multimeter_config.measurement_type = DM_MEASUREMENT_TYPE_ASYNC;
 	dm_multimeter_config.measurement_func = dm_measurement_func_const;
@@ -275,6 +312,12 @@ static int16_t dm_set_mode(const scpimm_mode_t mode, const scpimm_mode_params_t*
 	}
 
 	if (params) {
+		dm_mode_state_t* const mode_state = get_mode_state(mode);
+
+		if (!mode_state) {
+			return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
+		}
+
 		if (sizeof(RANGES) / sizeof(RANGES[0]) - 1 <= params->range_index) {
 			return SCPI_ERROR_DATA_OUT_OF_RANGE;
 		}
@@ -282,8 +325,9 @@ static int16_t dm_set_mode(const scpimm_mode_t mode, const scpimm_mode_params_t*
 			return SCPI_ERROR_DATA_OUT_OF_RANGE;
 		}
 
-		dm_multimeter_state.mode_params = *params;
-		dm_multimeter_state.mode_params_initialized = TRUE;
+		mode_state->range_index = params->range_index;
+		mode_state->auto_range = params->auto_range;
+		mode_state->resolution_index = params->resolution_index;
 	}
 
 	dm_multimeter_state.mode = mode;
@@ -295,18 +339,23 @@ static int16_t dm_set_mode(const scpimm_mode_t mode, const scpimm_mode_params_t*
 static int16_t dm_get_mode(scpimm_mode_t* mode, scpimm_mode_params_t* const params) {
 	dm_counters.get_mode++;
 
+	if (!dm_multimeter_state.mode_initialized) {
+		return SCPI_ERROR_INTERNAL_START;
+	}
+
 	if (mode) {
-		if (!dm_multimeter_state.mode_initialized) {
-			return SCPI_ERROR_INTERNAL_START;
-		}
 		*mode = dm_multimeter_state.mode;
 	}
 
 	if (params) {
-		if (!dm_multimeter_state.mode_params_initialized) {
-			return SCPI_ERROR_INTERNAL_START;
+		const dm_mode_state_t* const mode_state = get_mode_state(dm_multimeter_state.mode);
+		if (!mode_state) {
+			return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
 		}
-		*params = dm_multimeter_state.mode_params;
+
+		params->range_index = mode_state->range_index;
+		params->auto_range = mode_state->auto_range;
+		params->resolution_index = mode_state->resolution_index;
 	}
 
 	return SCPI_ERROR_OK;
@@ -469,13 +518,63 @@ static int16_t dm_set_global_bool_param(const scpimm_bool_param_t param, const s
 	return SCPI_ERROR_OK;
 }
 
-static int16_t dm_get_bool_param(scpimm_mode_t mode, const scpimm_bool_param_t param, scpi_bool_t* const value) {
-	// TODO
+static int16_t dm_get_bool_param(const scpimm_mode_t mode, const scpimm_bool_param_t param, scpi_bool_t* const value) {
+	const dm_mode_state_t* const mode_state = get_mode_state(mode);
+	scpi_bool_t v = FALSE;
+
+	dm_counters.get_bool_param++;
+
+	dm_get_bool_param_args.mode = mode;
+	dm_get_bool_param_args.param = param;
+	dm_get_bool_param_args.value_is_null = !value;
+
+	if (!mode_state) {
+		return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
+	}
+
+	switch (param) {
+	case SCPIMM_PARAM_RANGE_AUTO:
+		v = mode_state->auto_range;
+		break;
+
+	case SCPIMM_PARAM_ZERO_AUTO:
+	case SCPIMM_PARAM_ZERO_AUTO_ONCE:
+	case SCPIMM_PARAM_INPUT_IMPEDANCE_AUTO:
+		return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
+	}
+
+	if (value) {
+		*value = v;
+	}
+
+	return dm_returns.get_bool_param;
 }
 
-static int16_t dm_set_bool_param(scpimm_mode_t mode, const scpimm_bool_param_t param, const scpi_bool_t value) {
+static int16_t dm_set_bool_param(const scpimm_mode_t mode, const scpimm_bool_param_t param, const scpi_bool_t value) {
+	dm_mode_state_t* const mode_state = get_mode_state(mode);
 
-	// TODO
+	dm_counters.set_bool_param++;
+
+	dm_set_bool_param_args.mode = mode;
+	dm_set_bool_param_args.param = param;
+	dm_set_bool_param_args.value = value;
+
+	if (!mode_state) {
+		return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
+	}
+
+	switch (param) {
+	case SCPIMM_PARAM_RANGE_AUTO:
+		mode_state->auto_range = value;
+		break;
+
+	case SCPIMM_PARAM_ZERO_AUTO:
+	case SCPIMM_PARAM_ZERO_AUTO_ONCE:
+	case SCPIMM_PARAM_INPUT_IMPEDANCE_AUTO:
+		return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
+	}
+
+	return dm_returns.set_bool_param;
 }
 
 static int16_t dm_get_numeric_param_values(const scpimm_mode_t mode, const scpimm_numeric_param_t param, const double** values) {
@@ -504,6 +603,9 @@ static int16_t dm_get_numeric_param_values(const scpimm_mode_t mode, const scpim
 	case SCPIMM_PARAM_NPLC:
 		v = NPLCS;
 		break;
+
+	case SCPIMM_PARAM_RESOLUTION:
+		return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
 	}
 
 	if (!v) {
@@ -518,17 +620,72 @@ static int16_t dm_get_numeric_param_values(const scpimm_mode_t mode, const scpim
 }
 
 static int16_t dm_get_numeric_param(scpimm_mode_t mode, scpimm_numeric_param_t param, size_t* value_index) {
+	const dm_mode_state_t* const mode_state = get_mode_state(mode);
+	size_t v = SIZE_MAX;
+
 	dm_counters.get_numeric_param++;
 
-	// TODO
+	dm_get_numeric_param_args.mode = mode;
+	dm_get_numeric_param_args.param = param;
+	dm_get_numeric_param_args.value_is_null = !value_index;
+
+	if (!mode_state) {
+		return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
+	}
+
+	switch (param) {
+	case SCPIMM_PARAM_RANGE:
+		v = mode_state->range_index;
+		break;
+
+	case SCPIMM_PARAM_RESOLUTION:
+		v = mode_state->resolution_index;
+		break;
+
+	case SCPIMM_PARAM_NPLC:
+		v = mode_state->nplc_index;
+		break;
+
+	case SCPIMM_PARAM_RANGE_OVERRUN:
+		return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
+	}
+
+	if (value_index) {
+		*value_index = v;
+	}
 
 	return dm_returns.get_numeric_param;
 }
 
 static int16_t dm_set_numeric_param(scpimm_mode_t mode, scpimm_numeric_param_t param, size_t value_index) {
+	dm_mode_state_t* const mode_state = get_mode_state(mode);
+
 	dm_counters.set_numeric_param++;
 
-	// TODO
+	dm_set_numeric_param_args.mode = mode;
+	dm_set_numeric_param_args.param = param;
+	dm_set_numeric_param_args.value_index = value_index;
+
+	if (!mode_state) {
+		return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
+	}
+
+	switch (param) {
+	case SCPIMM_PARAM_RANGE:
+		mode_state->range_index = value_index;
+		break;
+
+	case SCPIMM_PARAM_RESOLUTION:
+		mode_state->resolution_index = value_index;
+		break;
+
+	case SCPIMM_PARAM_NPLC:
+		mode_state->nplc_index = value_index;
+		break;
+
+	case SCPIMM_PARAM_RANGE_OVERRUN:
+		return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
+	}
 
 	return dm_returns.set_numeric_param;
 }
