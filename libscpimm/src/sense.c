@@ -168,20 +168,6 @@ static scpi_result_t query_bool_param(scpi_t* const context, const scpimm_mode_t
     return SCPI_RES_OK;
 }
 
-static scpi_result_t set_global_bool_param(scpi_t* const context, const scpimm_bool_param_t param) {
-	int16_t err;
-    scpi_bool_t value;
-
-	if (!SCPI_ParamBool(context, &value, TRUE)) {
-		return SCPI_RES_ERR;
-	}
-    EXPECT_NO_PARAMS(context);
-
-	CHECK_AND_PUSH_ERROR(SCPIMM_INTERFACE(context)->set_global_bool_param(param, value));
-
-	return SCPI_RES_OK;
-}
-
 static scpi_result_t query_global_bool_param(scpi_t* const context, const scpimm_bool_param_t param) {
 	int16_t err;
     scpi_bool_t value;
@@ -195,30 +181,30 @@ static scpi_result_t query_global_bool_param(scpi_t* const context, const scpimm
 }
 
 #define DECL_SENSE_HANDLERS(mode, func) \
-	scpi_result_t SCPIMM_sense_ ## func ## _range(scpi_t* context) {	\
+	scpi_result_t SCPIMM_sense_ ## func ## _range(scpi_t* const context) {	\
 		return set_numeric_param(context, SCPIMM_MODE_ ## mode, SCPIMM_PARAM_RANGE, TRUE);	\
 	}	\
 	\
-	scpi_result_t SCPIMM_sense_ ## func ## _rangeQ(scpi_t* context) {	\
+	scpi_result_t SCPIMM_sense_ ## func ## _rangeQ(scpi_t* const context) {	\
 		return query_numeric_param(context, SCPIMM_MODE_ ## mode, SCPIMM_PARAM_RANGE, TRUE);	\
 	}	\
 	\
-	scpi_result_t SCPIMM_sense_ ## func ## _range_auto(scpi_t* context) {	\
+	scpi_result_t SCPIMM_sense_ ## func ## _range_auto(scpi_t* const context) {	\
 		return set_bool_param(context, SCPIMM_MODE_ ## mode, SCPIMM_PARAM_RANGE_AUTO);	\
 	}	\
 	\
-	scpi_result_t SCPIMM_sense_ ## func ## _range_autoQ(scpi_t* context) {	\
+	scpi_result_t SCPIMM_sense_ ## func ## _range_autoQ(scpi_t* const context) {	\
 		return query_bool_param(context, SCPIMM_MODE_ ## mode, SCPIMM_PARAM_RANGE_AUTO);	\
 	}
 
 #define DECL_SENSE_DC_HANDLERS(mode, func) \
 	DECL_SENSE_HANDLERS(mode, func)	\
 	\
-	scpi_result_t SCPIMM_sense_ ## func ## _nplcycles(scpi_t* context) {	\
+	scpi_result_t SCPIMM_sense_ ## func ## _nplcycles(scpi_t* const context) {	\
 		return set_numeric_param(context, SCPIMM_MODE_ ## mode, SCPIMM_PARAM_NPLC, TRUE);	\
 	}	\
 	\
-	scpi_result_t SCPIMM_sense_ ## func ## _nplcyclesQ(scpi_t* context) {	\
+	scpi_result_t SCPIMM_sense_ ## func ## _nplcyclesQ(scpi_t* const context) {	\
 		return query_numeric_param(context, SCPIMM_MODE_ ## mode, SCPIMM_PARAM_NPLC, TRUE);	\
 	}
 
@@ -289,10 +275,38 @@ scpi_result_t SCPIMM_sense_fresistance_resolutionQ(scpi_t* context) {
 	return SCPI_RES_OK;
 }
 
-scpi_result_t SCPIMM_sense_zero_auto(scpi_t* context) {
-	return set_global_bool_param(context, SCPIMM_PARAM_ZERO_AUTO);
+scpi_result_t SCPIMM_sense_zero_auto(scpi_t* const context) {
+	int16_t err;
+    scpimm_interface_t* const intf = SCPIMM_INTERFACE(context);
+    const char* param;
+    size_t param_len;
+    scpi_bool_t auto_zero, auto_zero_once = FALSE;
+
+    if (!SCPI_ParamString(context, &param, &param_len, TRUE)) {
+        return SCPI_RES_ERR;
+    }
+
+    if (matchCommand("ON", param, param_len) || matchCommand("1", param, param_len)) {
+		auto_zero = TRUE;
+    } else if (matchCommand("OFF", param, param_len) || matchCommand("0", param, param_len)) {
+		auto_zero = FALSE;
+    } else if (matchCommand("ONCE", param, param_len)) {
+		auto_zero = TRUE;
+		auto_zero_once = TRUE;
+	} else {
+		/* TODO: valid error code */
+		SCPI_ErrorPush(context, SCPI_ERROR_SUFFIX_NOT_ALLOWED);
+		return SCPI_RES_ERR;
+	}
+
+    EXPECT_NO_PARAMS(context);
+
+	CHECK_AND_PUSH_ERROR(intf->set_global_bool_param(SCPIMM_PARAM_ZERO_AUTO, auto_zero));
+	CHECK_AND_PUSH_ERROR(intf->set_global_bool_param(SCPIMM_PARAM_ZERO_AUTO_ONCE, auto_zero_once));
+
+	return SCPI_RES_OK;
 }
 
-scpi_result_t SCPIMM_sense_zero_autoQ(scpi_t* context) {
+scpi_result_t SCPIMM_sense_zero_autoQ(scpi_t* const context) {
 	return query_global_bool_param(context, SCPIMM_PARAM_ZERO_AUTO);
 }

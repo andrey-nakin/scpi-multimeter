@@ -18,6 +18,7 @@ static size_t dm_send(const uint8_t* buf, size_t len);
 static int16_t dm_get_milliseconds(uint32_t* tm);
 static int16_t dm_sleep_milliseconds(uint32_t);
 static int16_t dm_set_interrupt_status(scpi_bool_t disabled);
+static int16_t dm_get_global_bool_param(scpimm_bool_param_t param, scpi_bool_t* value);
 static int16_t dm_set_global_bool_param(scpimm_bool_param_t param, scpi_bool_t value);
 static int16_t dm_get_numeric_param_values(scpimm_mode_t mode, scpimm_numeric_param_t param, const double** values);
 static int16_t dm_get_numeric_param(scpimm_mode_t mode, scpimm_numeric_param_t param, size_t* value_index);
@@ -37,6 +38,7 @@ char dm_display[SCPIMM_DISPLAY_LEN + 1];
 dm_set_mode_args_t dm_set_mode_last_args;
 dm_get_allowed_ranges_args_t dm_get_allowed_ranges_last_args;
 dm_get_allowed_resolutions_args_t dm_get_allowed_resolutions_last_args;
+dm_get_global_bool_param_args_t dm_get_global_bool_param_args;
 dm_set_global_bool_param_args_t dm_set_global_bool_param_args;
 dm_remote_args_t dm_remote_args;
 dm_display_text_args_t dm_display_text_args;
@@ -53,6 +55,7 @@ scpimm_interface_t dm_interface = {
 		.get_milliseconds = dm_get_milliseconds,
 		.sleep_milliseconds = dm_sleep_milliseconds,
 		.set_interrupt_status = dm_set_interrupt_status,
+		.get_global_bool_param = dm_get_global_bool_param,
 		.set_global_bool_param = dm_set_global_bool_param,
 		.get_numeric_param_values = dm_get_numeric_param_values,
 		.get_numeric_param = dm_get_numeric_param,
@@ -213,6 +216,9 @@ static int16_t dm_reset() {
 	dm_multimeter_state.interrrupt_disable_counter = 0;
 	dm_multimeter_state.measurement_failure_counter = 0;
 	dm_multimeter_state.terminal_state = SCPIMM_TERM_FRONT;
+	dm_multimeter_state.input_impedance_auto_state = FALSE;
+	dm_multimeter_state.zero_auto = TRUE;
+	dm_multimeter_state.zero_auto_once = FALSE;
 
 	dm_multimeter_config.measurement_type = DM_MEASUREMENT_TYPE_ASYNC;
 	dm_multimeter_config.measurement_func = dm_measurement_func_const;
@@ -381,6 +387,11 @@ static int16_t dm_start_measure() {
 		}
 	}
 
+	if (dm_multimeter_state.zero_auto_once) {
+		dm_multimeter_state.zero_auto = FALSE;
+		dm_multimeter_state.zero_auto_once = FALSE;
+	}
+
 	switch (dm_multimeter_config.measurement_type) {
 	case DM_MEASUREMENT_TYPE_ASYNC:
 		sem_post(&measure_sem);
@@ -432,12 +443,65 @@ static int16_t dm_set_interrupt_status(const scpi_bool_t disabled) {
 	return SCPI_ERROR_OK;
 }
 
+static int16_t dm_get_global_bool_param(const scpimm_bool_param_t param, scpi_bool_t* const value) {
+	scpi_bool_t res;
+
+	dm_counters.get_global_bool_param++;
+	dm_get_global_bool_param_args.param = param;
+	dm_get_global_bool_param_args.value_is_null = !value;
+
+	switch (param) {
+	case SCPIMM_PARAM_INPUT_IMPEDANCE_AUTO:
+		res = dm_multimeter_state.input_impedance_auto_state;
+		break;
+
+	case SCPIMM_PARAM_ZERO_AUTO:
+		res = dm_multimeter_state.zero_auto;
+		break;
+
+	case SCPIMM_PARAM_ZERO_AUTO_ONCE:
+		res = dm_multimeter_state.zero_auto_once;
+		break;
+
+	case SCPIMM_PARAM_RANGE_AUTO:
+		return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
+	}
+
+	if (value) {
+		*value = res;
+	}
+
+	return dm_returns.get_global_bool_param;
+}
+
 static int16_t dm_set_global_bool_param(const scpimm_bool_param_t param, const scpi_bool_t value) {
 	dm_counters.set_global_bool_param++;
 	dm_set_global_bool_param_args.param = param;
 	dm_set_global_bool_param_args.value = value;
 
-	return dm_returns.set_global_bool_param;
+	if (SCPI_ERROR_OK != dm_returns.set_global_bool_param) {
+		return dm_returns.set_global_bool_param;
+	}
+
+	switch (param) {
+	case SCPIMM_PARAM_INPUT_IMPEDANCE_AUTO:
+		dm_multimeter_state.input_impedance_auto_state = value;
+		break;
+
+
+	case SCPIMM_PARAM_ZERO_AUTO:
+		dm_multimeter_state.zero_auto = value;
+		break;
+
+	case SCPIMM_PARAM_ZERO_AUTO_ONCE:
+		dm_multimeter_state.zero_auto_once = value;
+		break;
+
+	case SCPIMM_PARAM_RANGE_AUTO:
+		return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
+	}
+
+	return SCPI_ERROR_OK;
 }
 
 static int16_t dm_get_numeric_param_values(scpimm_mode_t mode, scpimm_numeric_param_t param, const double** values) {
@@ -487,3 +551,5 @@ static int16_t dm_display_text(const char* txt) {
 
 	return SCPI_ERROR_OK;
 }
+
+ddd;

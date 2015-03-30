@@ -22,7 +22,7 @@ typedef enum {SCPIMM_MODE_DCV, SCPIMM_MODE_DCV_RATIO, SCPIMM_MODE_ACV, SCPIMM_MO
 
 typedef enum {SCPIMM_PARAM_RANGE, SCPIMM_PARAM_RANGE_OVERRUN, SCPIMM_PARAM_NPLC} scpimm_numeric_param_t;
 
-typedef enum {SCPIMM_PARAM_RANGE_AUTO, SCPIMM_PARAM_ZERO_AUTO, SCPIMM_PARAM_INPUT_IMPEDANCE_AUTO} scpimm_bool_param_t;
+typedef enum {SCPIMM_PARAM_RANGE_AUTO, SCPIMM_PARAM_ZERO_AUTO, SCPIMM_PARAM_ZERO_AUTO_ONCE, SCPIMM_PARAM_INPUT_IMPEDANCE_AUTO} scpimm_bool_param_t;
 
 typedef struct _scpimm_mode_params_t {
 	size_t range_index;

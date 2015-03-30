@@ -28,7 +28,6 @@ typedef enum {SCPIMM_STATE_IDLE, SCPIMM_STATE_WAIT_FOR_TRIGGER, SCPIMM_STATE_TRI
 typedef struct {
 	scpimm_interface_t* interface;
 	scpi_bool_t beeper_state;
-	scpi_bool_t input_impedance_auto_state;
 	uint16_t sample_count_num, trigger_count_num, sample_count, trigger_count;
 	scpi_bool_t infinite_trigger_count;
 	scpimm_trig_src_t trigger_src;
