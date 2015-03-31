@@ -15,7 +15,6 @@ static int16_t dm_get_allowed_resolutions(scpimm_mode_t mode, size_t range_index
 static int16_t dm_start_measure();
 static size_t dm_send(const uint8_t* buf, size_t len);
 static int16_t dm_get_milliseconds(uint32_t* tm);
-static int16_t dm_sleep_milliseconds(uint32_t);
 static int16_t dm_set_interrupt_status(scpi_bool_t disabled);
 static int16_t dm_get_global_bool_param(scpimm_bool_param_t param, scpi_bool_t* value);
 static int16_t dm_set_global_bool_param(scpimm_bool_param_t param, scpi_bool_t value);
@@ -24,7 +23,6 @@ static int16_t dm_set_bool_param(scpimm_mode_t mode, scpimm_bool_param_t param, 
 static int16_t dm_get_numeric_param_values(scpimm_mode_t mode, scpimm_numeric_param_t param, const double** values);
 static int16_t dm_get_numeric_param(scpimm_mode_t mode, scpimm_numeric_param_t param, size_t* value_index);
 static int16_t dm_set_numeric_param(scpimm_mode_t mode, scpimm_numeric_param_t param, size_t value_index);
-static int16_t dm_remote(scpi_bool_t remote, scpi_bool_t lock);
 static int16_t dm_beep();
 static int16_t dm_get_input_terminal(scpimm_terminal_state_t* term);
 static int16_t dm_display_text(const char* txt);
@@ -36,16 +34,14 @@ static int16_t dm_display_text(const char* txt);
 dm_multimeter_state_t dm_multimeter_state;
 char dm_display[SCPIMM_DISPLAY_LEN + 1];
 
-dm_set_mode_args_t dm_set_mode_last_args;
+dm_args_t dm_args, dm_prev_args;
+
 dm_get_allowed_resolutions_args_t dm_get_allowed_resolutions_last_args;
-dm_get_global_bool_param_args_t dm_get_global_bool_param_args;
-dm_set_global_bool_param_args_t dm_set_global_bool_param_args;
 dm_get_bool_param_args_t dm_get_bool_param_args;
 dm_set_bool_param_args_t dm_set_bool_param_args;
 dm_get_numeric_param_values_args_t dm_get_numeric_param_values_args;
 dm_get_numeric_param_args_t dm_get_numeric_param_args;
 dm_set_numeric_param_args_t dm_set_numeric_param_args;
-dm_remote_args_t dm_remote_args;
 dm_display_text_args_t dm_display_text_args;
 
 scpimm_interface_t dm_interface = {
@@ -57,7 +53,6 @@ scpimm_interface_t dm_interface = {
 		.start_measure = dm_start_measure,
 		.send = dm_send,
 		.get_milliseconds = dm_get_milliseconds,
-		.sleep_milliseconds = dm_sleep_milliseconds,
 		.set_interrupt_status = dm_set_interrupt_status,
 		.get_global_bool_param = dm_get_global_bool_param,
 		.set_global_bool_param = dm_set_global_bool_param,
@@ -66,7 +61,6 @@ scpimm_interface_t dm_interface = {
 		.get_numeric_param_values = dm_get_numeric_param_values,
 		.get_numeric_param = dm_get_numeric_param,
 		.set_numeric_param = dm_set_numeric_param,
-		.remote = dm_remote,
 		.beep = dm_beep,
 		.get_input_terminal = dm_get_input_terminal,
 		.display_text = dm_display_text
@@ -101,6 +95,20 @@ static sem_t measure_sem;
 /***************************************************************
  * Private functions
  **************************************************************/
+
+static int16_t sleep_milliseconds(const uint32_t ms) {
+	struct timespec delay;
+
+	if (ms > 999) {
+		delay.tv_sec = ms / 1000;
+		delay.tv_nsec = ms % 1000 * 1000000;
+	} else {
+		delay.tv_sec = 0;
+		delay.tv_nsec = ms * 1000000;
+	}
+	nanosleep(&delay, NULL);
+	return SCPI_ERROR_OK;
+}
 
 static dm_mode_state_t* get_mode_state(const scpimm_mode_t mode) {
 	switch (mode) {
@@ -140,7 +148,7 @@ static void* measure_thread_routine(void* args) {
 	while (TRUE) {
 		sem_wait(&measure_sem);
 
-		dm_sleep_milliseconds(dm_multimeter_config.measurement_duration);	//	emulate real measurement delay
+		sleep_milliseconds(dm_multimeter_config.measurement_duration);	//	emulate real measurement delay
 		do_measurement();
 	}
 
@@ -151,7 +159,7 @@ static void* trigger_thread_routine(void* args) {
 	(void) args;	//	suppress warning
 
 	while (TRUE) {
-		dm_sleep_milliseconds(100);
+		sleep_milliseconds(100);
 		SCPIMM_external_trigger();
 	}
 
@@ -178,13 +186,7 @@ void dm_reset_counters() {
 }
 
 void dm_reset_args() {
-#define RESET_ARG(v) memset(&v, 0xfe, sizeof(v))
-
-	RESET_ARG(dm_set_mode_last_args);
-	RESET_ARG(dm_get_allowed_resolutions_last_args);
-	RESET_ARG(dm_remote_args);
-	RESET_ARG(dm_display_text_args);
-	RESET_ARG(dm_display);
+	memset(&dm_args, 0xfe, sizeof(dm_args));
 }
 
 double dm_measurement_func_const(uint32_t time) {
@@ -250,6 +252,8 @@ static int16_t dm_reset() {
 	dm_multimeter_state.input_impedance_auto_state = FALSE;
 	dm_multimeter_state.zero_auto = TRUE;
 	dm_multimeter_state.zero_auto_once = FALSE;
+	dm_multimeter_state.remote = TRUE;
+	dm_multimeter_state.lock = FALSE;
 
 	reset_mode_state(&dm_multimeter_state.mode_states.dcv);
 	reset_mode_state(&dm_multimeter_state.mode_states.dcv_ratio);
@@ -298,12 +302,12 @@ static int16_t dm_set_mode(const scpimm_mode_t mode, const scpimm_mode_params_t*
 	dm_counters.set_mode++;
 
 	/* store function arguments for later analysis */
-	dm_set_mode_last_args.mode = mode;
+	dm_args.set_mode.mode = mode;
 	if (params) {
-		dm_set_mode_last_args.params = *params;
-		dm_set_mode_last_args.params_is_null = FALSE;
+		dm_args.set_mode.params = *params;
+		dm_args.set_mode.params_is_null = FALSE;
 	} else {
-		dm_set_mode_last_args.params_is_null = TRUE;
+		dm_args.set_mode.params_is_null = TRUE;
 	}
 	/* */
 
@@ -432,20 +436,6 @@ static int16_t dm_get_milliseconds(uint32_t* const tm) {
 	return SCPI_ERROR_OK;
 }
 
-static int16_t dm_sleep_milliseconds(const uint32_t ms) {
-	struct timespec delay;
-
-	if (ms > 999) {
-		delay.tv_sec = ms / 1000;
-		delay.tv_nsec = ms % 1000 * 1000000;
-	} else {
-		delay.tv_sec = 0;
-		delay.tv_nsec = ms * 1000000;
-	}
-	nanosleep(&delay, NULL);
-	return SCPI_ERROR_OK;
-}
-
 static int16_t dm_set_interrupt_status(const scpi_bool_t disabled) {
 	dm_counters.set_interrupt_status++;
 
@@ -462,8 +452,10 @@ static int16_t dm_get_global_bool_param(const scpimm_bool_param_t param, scpi_bo
 	scpi_bool_t res = FALSE;
 
 	dm_counters.get_global_bool_param++;
-	dm_get_global_bool_param_args.param = param;
-	dm_get_global_bool_param_args.value_is_null = !value;
+
+	dm_prev_args = dm_args;
+	dm_args.get_global_bool_param.param = param;
+	dm_args.get_global_bool_param.value_is_null = !value;
 
 	switch (param) {
 	case SCPIMM_PARAM_INPUT_IMPEDANCE_AUTO:
@@ -476,6 +468,14 @@ static int16_t dm_get_global_bool_param(const scpimm_bool_param_t param, scpi_bo
 
 	case SCPIMM_PARAM_ZERO_AUTO_ONCE:
 		res = dm_multimeter_state.zero_auto_once;
+		break;
+
+	case SCPIMM_PARAM_REMOTE:
+		res = dm_multimeter_state.remote;
+		break;
+
+	case SCPIMM_PARAM_LOCK:
+		res = dm_multimeter_state.lock;
 		break;
 
 	case SCPIMM_PARAM_RANGE_AUTO:
@@ -491,8 +491,10 @@ static int16_t dm_get_global_bool_param(const scpimm_bool_param_t param, scpi_bo
 
 static int16_t dm_set_global_bool_param(const scpimm_bool_param_t param, const scpi_bool_t value) {
 	dm_counters.set_global_bool_param++;
-	dm_set_global_bool_param_args.param = param;
-	dm_set_global_bool_param_args.value = value;
+
+	dm_prev_args = dm_args;
+	dm_args.set_global_bool_param.param = param;
+	dm_args.set_global_bool_param.value = value;
 
 	if (SCPI_ERROR_OK != dm_returns.set_global_bool_param) {
 		return dm_returns.set_global_bool_param;
@@ -509,6 +511,14 @@ static int16_t dm_set_global_bool_param(const scpimm_bool_param_t param, const s
 
 	case SCPIMM_PARAM_ZERO_AUTO_ONCE:
 		dm_multimeter_state.zero_auto_once = value;
+		break;
+
+	case SCPIMM_PARAM_REMOTE:
+		dm_multimeter_state.remote = value;
+		break;
+
+	case SCPIMM_PARAM_LOCK:
+		dm_multimeter_state.lock = value;
 		break;
 
 	case SCPIMM_PARAM_RANGE_AUTO:
@@ -540,6 +550,8 @@ static int16_t dm_get_bool_param(const scpimm_mode_t mode, const scpimm_bool_par
 	case SCPIMM_PARAM_ZERO_AUTO:
 	case SCPIMM_PARAM_ZERO_AUTO_ONCE:
 	case SCPIMM_PARAM_INPUT_IMPEDANCE_AUTO:
+	case SCPIMM_PARAM_REMOTE:
+	case SCPIMM_PARAM_LOCK:
 		return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
 	}
 
@@ -571,6 +583,8 @@ static int16_t dm_set_bool_param(const scpimm_mode_t mode, const scpimm_bool_par
 	case SCPIMM_PARAM_ZERO_AUTO:
 	case SCPIMM_PARAM_ZERO_AUTO_ONCE:
 	case SCPIMM_PARAM_INPUT_IMPEDANCE_AUTO:
+	case SCPIMM_PARAM_REMOTE:
+	case SCPIMM_PARAM_LOCK:
 		return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
 	}
 
@@ -688,14 +702,6 @@ static int16_t dm_set_numeric_param(scpimm_mode_t mode, scpimm_numeric_param_t p
 	}
 
 	return dm_returns.set_numeric_param;
-}
-
-static int16_t dm_remote(scpi_bool_t remote, scpi_bool_t lock) {
-	dm_counters.remote++;
-	dm_remote_args.remote = remote;
-	dm_remote_args.lock = lock;
-
-	return SCPI_ERROR_OK;
 }
 
 static int16_t dm_beep() {

@@ -41,11 +41,12 @@ scpi_result_t SCPIMM_system_rwlock(scpi_t* context) {
     return SCPI_RES_OK;
 }
 
-int16_t SCPIMM_set_remote(scpi_t* context, scpi_bool_t remote, scpi_bool_t lock) {
-	if (SCPIMM_INTERFACE(context)->remote) {
-		return SCPIMM_INTERFACE(context)->remote(remote, lock);
-	} else {
-		return SCPI_ERROR_OK;
-	}
-}
+int16_t SCPIMM_set_remote(scpi_t* const context, const scpi_bool_t remote, const scpi_bool_t lock) {
+	int16_t err;
+	scpimm_interface_t* const intf = SCPIMM_INTERFACE(context);
 
+	CHECK_SCPI_ERROR(intf->set_global_bool_param(SCPIMM_PARAM_REMOTE, remote));
+	CHECK_SCPI_ERROR(intf->set_global_bool_param(SCPIMM_PARAM_LOCK, lock));
+
+	return SCPI_ERROR_OK;
+}

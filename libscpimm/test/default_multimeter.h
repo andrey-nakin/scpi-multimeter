@@ -28,6 +28,7 @@ typedef struct {
 	scpimm_terminal_state_t terminal_state;
 	scpi_bool_t input_impedance_auto_state;
 	scpi_bool_t zero_auto, zero_auto_once;
+	scpi_bool_t remote, lock;
 
 	struct {
 		dm_mode_state_t dcv, dcv_ratio, acv, dcc, acc, resistance, fresistance;
@@ -36,10 +37,24 @@ typedef struct {
 } dm_multimeter_state_t;
 
 typedef struct {
-	scpimm_mode_t mode;
-	scpimm_mode_params_t params;
-	scpi_bool_t params_is_null;
-} dm_set_mode_args_t;
+
+	struct {
+		scpimm_mode_t mode;
+		scpimm_mode_params_t params;
+		scpi_bool_t params_is_null;
+	} set_mode;
+
+	struct {
+		scpimm_bool_param_t param;
+		scpi_bool_t value_is_null;
+	} get_global_bool_param;
+
+	struct {
+		scpimm_bool_param_t param;
+		scpi_bool_t value;
+	} set_global_bool_param;
+
+} dm_args_t;
 
 typedef struct {
 	scpimm_mode_t mode;
@@ -47,16 +62,6 @@ typedef struct {
 	const double* resolutions;
 	scpi_bool_t resolutions_is_null;
 } dm_get_allowed_resolutions_args_t;
-
-typedef struct {
-	scpimm_bool_param_t param;
-	scpi_bool_t value_is_null;
-} dm_get_global_bool_param_args_t;
-
-typedef struct {
-	scpimm_bool_param_t param;
-	scpi_bool_t value;
-} dm_set_global_bool_param_args_t;
 
 typedef struct {
 	scpimm_mode_t mode;
@@ -89,17 +94,12 @@ typedef struct {
 } dm_set_numeric_param_args_t;
 
 typedef struct {
-	scpi_bool_t remote;
-	scpi_bool_t lock;
-} dm_remote_args_t;
-
-typedef struct {
 	const char* txt;
 } dm_display_text_args_t;
 
 typedef struct {
 	unsigned set_mode, get_mode, get_allowed_resolutions,
-		start_measure, set_interrupt_status, remote, beep, display_text, setup, reset,
+		start_measure, set_interrupt_status, beep, display_text, setup, reset,
 		get_global_bool_param, set_global_bool_param, get_bool_param, set_bool_param,
 		get_numeric_param_values, get_numeric_param, set_numeric_param;
 } dm_counters_t;
@@ -122,16 +122,13 @@ typedef struct {
 extern dm_multimeter_state_t dm_multimeter_state;
 extern char dm_display[SCPIMM_DISPLAY_LEN + 1];
 
-extern dm_set_mode_args_t dm_set_mode_last_args;
+extern dm_args_t dm_args, dm_prev_args;
 extern dm_get_allowed_resolutions_args_t dm_get_allowed_resolutions_last_args;
-extern dm_get_global_bool_param_args_t dm_get_global_bool_param_args;
-extern dm_set_global_bool_param_args_t dm_set_global_bool_param_args;
 extern dm_get_bool_param_args_t dm_get_bool_param_args;
 extern dm_set_bool_param_args_t dm_set_bool_param_args;
 extern dm_get_numeric_param_values_args_t dm_get_numeric_param_values_args;
 extern dm_get_numeric_param_args_t dm_get_numeric_param_args;
 extern dm_set_numeric_param_args_t dm_set_numeric_param_args;
-extern dm_remote_args_t dm_remote_args;
 extern dm_display_text_args_t dm_display_text_args;
 
 extern scpimm_interface_t dm_interface;

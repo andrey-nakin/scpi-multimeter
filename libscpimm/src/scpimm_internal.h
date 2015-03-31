@@ -43,7 +43,6 @@ typedef struct {
 	uint32_t measurement_timeout;
 
 	scpi_number_t last_measured_value;
-	uint32_t measure_start_time;
 	int16_t measurement_error;
 	scpi_bool_t is_first_measured_value;
 

@@ -20,9 +20,11 @@ static void remote_impl(const char* cmd, scpi_bool_t expected_remote, scpi_bool_
 	ASSERT_NO_SCPI_ERRORS();
 	ASSERT_NO_RESPONSE();
 
-    CU_ASSERT_EQUAL(dm_counters.remote, 1);
-    CU_ASSERT_EQUAL(dm_remote_args.remote, expected_remote);
-    CU_ASSERT_EQUAL(dm_remote_args.lock, expected_lock);
+    CU_ASSERT_EQUAL(dm_counters.set_global_bool_param, 2);
+    CU_ASSERT_EQUAL(dm_prev_args.set_global_bool_param.param, SCPIMM_PARAM_REMOTE);
+    CU_ASSERT_EQUAL(dm_prev_args.set_global_bool_param.value, expected_remote);
+    CU_ASSERT_EQUAL(dm_args.set_global_bool_param.param, SCPIMM_PARAM_LOCK);
+    CU_ASSERT_EQUAL(dm_args.set_global_bool_param.value, expected_lock);
 }
 
 static void error_impl(const char* cmd) {

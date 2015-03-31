@@ -10,8 +10,8 @@ static void test_impedance_auto() {
 	ASSERT_NO_SCPI_ERRORS();
 	ASSERT_NO_RESPONSE();
 	CU_ASSERT_EQUAL(dm_counters.set_global_bool_param, CALLED_ONCE);
-	CU_ASSERT_EQUAL(dm_set_global_bool_param_args.param, SCPIMM_PARAM_INPUT_IMPEDANCE_AUTO);
-	CU_ASSERT_EQUAL(dm_set_global_bool_param_args.value, TRUE);
+	CU_ASSERT_EQUAL(dm_args.set_global_bool_param.param, SCPIMM_PARAM_INPUT_IMPEDANCE_AUTO);
+	CU_ASSERT_EQUAL(dm_args.set_global_bool_param.value, TRUE);
 	CU_ASSERT_EQUAL(dm_multimeter_state.input_impedance_auto_state, TRUE);
 	
 	dm_reset_counters();
@@ -20,8 +20,8 @@ static void test_impedance_auto() {
 	ASSERT_NO_SCPI_ERRORS();
 	ASSERT_NO_RESPONSE();
 	CU_ASSERT_EQUAL(dm_counters.set_global_bool_param, CALLED_ONCE);
-	CU_ASSERT_EQUAL(dm_set_global_bool_param_args.param, SCPIMM_PARAM_INPUT_IMPEDANCE_AUTO);
-	CU_ASSERT_EQUAL(dm_set_global_bool_param_args.value, FALSE);
+	CU_ASSERT_EQUAL(dm_args.set_global_bool_param.param, SCPIMM_PARAM_INPUT_IMPEDANCE_AUTO);
+	CU_ASSERT_EQUAL(dm_args.set_global_bool_param.value, FALSE);
 	CU_ASSERT_EQUAL(dm_multimeter_state.input_impedance_auto_state, FALSE);
 
 	dm_reset_counters();
@@ -39,8 +39,8 @@ static void test_impedance_auto() {
 	ASSERT_SCPI_ERROR(SCPI_ERROR_UNKNOWN);
 	ASSERT_NO_RESPONSE();
 	CU_ASSERT_EQUAL(dm_counters.set_global_bool_param, CALLED_ONCE);
-	CU_ASSERT_EQUAL(dm_set_global_bool_param_args.param, SCPIMM_PARAM_INPUT_IMPEDANCE_AUTO);
-	CU_ASSERT_EQUAL(dm_set_global_bool_param_args.value, TRUE);
+	CU_ASSERT_EQUAL(dm_args.set_global_bool_param.param, SCPIMM_PARAM_INPUT_IMPEDANCE_AUTO);
+	CU_ASSERT_EQUAL(dm_args.set_global_bool_param.value, TRUE);
 	CU_ASSERT_EQUAL(dm_multimeter_state.input_impedance_auto_state, FALSE);
 
 	// reset error
@@ -48,8 +48,6 @@ static void test_impedance_auto() {
 }
 
 static void test_impedance_autoQ() {
-	scpimm_context_t* const ctx = SCPIMM_context();
-
 	dm_multimeter_state.input_impedance_auto_state = TRUE;
 	receive("INPUT:IMPEDANCE:AUTO?");
 	ASSERT_NO_SCPI_ERRORS();

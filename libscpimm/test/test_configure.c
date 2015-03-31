@@ -24,18 +24,18 @@ static void check_general(const scpimm_mode_t mode) {
 
 	// check correctness of intf->set_mode call
     CU_ASSERT_EQUAL(dm_counters.set_mode, CALLED_ONCE);
-    CU_ASSERT_EQUAL(dm_set_mode_last_args.mode, mode);
+    CU_ASSERT_EQUAL(dm_args.set_mode.mode, mode);
     if (no_params) {
-    	CU_ASSERT_TRUE(dm_set_mode_last_args.params_is_null);
+    	CU_ASSERT_TRUE(dm_args.set_mode.params_is_null);
     } else {
-    	CU_ASSERT_FALSE(dm_set_mode_last_args.params_is_null);
+    	CU_ASSERT_FALSE(dm_args.set_mode.params_is_null);
     }
 
     // check correctness of current multimeter's mode & params
     CHECK_NO_SCPI_ERROR(scpimm_interface()->get_mode(&cur_mode, &cur_params));
     CU_ASSERT_EQUAL(cur_mode, mode);
     if (!no_params) {
-    	ASSERT_EQUAL_BOOL(cur_params.auto_range, dm_set_mode_last_args.params.auto_range);
+    	ASSERT_EQUAL_BOOL(cur_params.auto_range, dm_args.set_mode.params.auto_range);
     }
 
     // check preset conditions
@@ -63,9 +63,9 @@ static void configure_with_range_and_res(const char* function, const double rang
 }
 
 static void check_mode_params(const size_t range_index, const scpi_bool_t auto_range, const size_t resolution_index) {
-	ASSERT_EQUAL_BOOL(auto_range, dm_set_mode_last_args.params.auto_range);
-	CU_ASSERT_EQUAL(range_index, dm_set_mode_last_args.params.range_index);
-	CU_ASSERT_EQUAL(resolution_index, dm_set_mode_last_args.params.resolution_index);
+	ASSERT_EQUAL_BOOL(auto_range, dm_args.set_mode.params.auto_range);
+	CU_ASSERT_EQUAL(range_index, dm_args.set_mode.params.range_index);
+	CU_ASSERT_EQUAL(resolution_index, dm_args.set_mode.params.resolution_index);
 }
 
 /* configure function without range/resolution specification */

@@ -22,7 +22,7 @@ typedef enum {SCPIMM_MODE_DCV, SCPIMM_MODE_DCV_RATIO, SCPIMM_MODE_ACV, SCPIMM_MO
 
 typedef enum {SCPIMM_PARAM_RANGE, SCPIMM_PARAM_RANGE_OVERRUN, SCPIMM_PARAM_RESOLUTION, SCPIMM_PARAM_NPLC} scpimm_numeric_param_t;
 
-typedef enum {SCPIMM_PARAM_RANGE_AUTO, SCPIMM_PARAM_ZERO_AUTO, SCPIMM_PARAM_ZERO_AUTO_ONCE, SCPIMM_PARAM_INPUT_IMPEDANCE_AUTO} scpimm_bool_param_t;
+typedef enum {SCPIMM_PARAM_RANGE_AUTO, SCPIMM_PARAM_ZERO_AUTO, SCPIMM_PARAM_ZERO_AUTO_ONCE, SCPIMM_PARAM_INPUT_IMPEDANCE_AUTO, SCPIMM_PARAM_REMOTE, SCPIMM_PARAM_LOCK} scpimm_bool_param_t;
 
 typedef struct _scpimm_mode_params_t {
 	size_t range_index;
@@ -76,12 +76,6 @@ typedef struct {
 
 	/*
 		Mandatory
-		Sleeps for a given period in ms
-	*/
-	int16_t (*sleep_milliseconds)(uint32_t ms);
-
-	/*
-		Mandatory
 		Disables or enables interrupts
 	*/
 	int16_t (*set_interrupt_status)(scpi_bool_t disabled);
@@ -128,12 +122,6 @@ typedef struct {
 		Resets multimeter. Call when multimeter is started or *RST command is invoked
 	*/
 	int16_t (*reset)();
-
-	/*
-		Optional
-		Turn "remote control" mode to on/off
-	*/
-	int16_t (*remote)(scpi_bool_t remote, scpi_bool_t lock);
 
 	/* 
 		Optional

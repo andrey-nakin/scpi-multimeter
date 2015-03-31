@@ -28,7 +28,6 @@ static int16_t start_measurement(volatile scpimm_context_t* const ctx) {
 
 	ctx->last_measured_value.type = SCPI_NUM_INF;
 	CHECK_SCPI_ERROR(ctx->interface->get_milliseconds(&cur_time));
-	ctx->measure_start_time = cur_time;
 
 	CHECK_SCPI_ERROR(switch_to_timed_state(ctx, SCPIMM_STATE_MEASURING));
 	CHECK_SCPI_ERROR(ctx->interface->start_measure());
@@ -101,7 +100,6 @@ static int16_t wait_for_idle(volatile scpimm_context_t* const ctx) {
 }
 
 scpi_result_t SCPIMM_measure_preset(scpi_t* context) {
-	int16_t err;
 	scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
 
 	ATOMIC_WRITE_INT(ctx->state, SCPIMM_STATE_IDLE);
@@ -113,8 +111,6 @@ scpi_result_t SCPIMM_measure_preset(scpi_t* context) {
 	ctx->trigger_src = SCPIMM_TRIG_IMM;
 	ctx->buf_count = 0;
 	ctx->measurement_timeout = MEASUREMENT_TIMEOUT;
-
-	CHECK_AND_PUSH_ERROR(ctx->interface->reset());
 
 	return SCPIMM_do_set_input_impedance_auto(context, FALSE);
 }
