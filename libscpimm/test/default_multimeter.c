@@ -10,7 +10,7 @@
 static int16_t dm_setup();
 static int16_t dm_reset();
 static int16_t dm_set_mode(scpimm_mode_t mode, const scpimm_mode_params_t* const params);
-static int16_t dm_get_mode(scpimm_mode_t* mode, scpimm_mode_params_t* const params);
+static int16_t dm_get_mode(scpimm_mode_t* mode);
 static int16_t dm_get_allowed_resolutions(scpimm_mode_t mode, size_t range_index, const double** resolutions);
 static int16_t dm_start_measure();
 static size_t dm_send(const uint8_t* buf, size_t len);
@@ -340,7 +340,7 @@ static int16_t dm_set_mode(const scpimm_mode_t mode, const scpimm_mode_params_t*
 	return SCPI_ERROR_OK;
 }
 
-static int16_t dm_get_mode(scpimm_mode_t* mode, scpimm_mode_params_t* const params) {
+static int16_t dm_get_mode(scpimm_mode_t* mode) {
 	dm_counters.get_mode++;
 
 	if (!dm_multimeter_state.mode_initialized) {
@@ -349,17 +349,6 @@ static int16_t dm_get_mode(scpimm_mode_t* mode, scpimm_mode_params_t* const para
 
 	if (mode) {
 		*mode = dm_multimeter_state.mode;
-	}
-
-	if (params) {
-		const dm_mode_state_t* const mode_state = get_mode_state(dm_multimeter_state.mode);
-		if (!mode_state) {
-			return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
-		}
-
-		params->range_index = mode_state->range_index;
-		params->auto_range = mode_state->auto_range;
-		params->resolution_index = mode_state->resolution_index;
 	}
 
 	return SCPI_ERROR_OK;

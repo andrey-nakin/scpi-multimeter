@@ -17,7 +17,6 @@ static const double resistance_mults[] = {1, 1e3, 1e3, 1e6, 1e6, 0.0};
 /* general checking after CONFIGURE command */
 static void check_general(const scpimm_mode_t mode) {
 	scpimm_mode_t cur_mode;
-	scpimm_mode_params_t cur_params;
 	const scpi_bool_t no_params = FALSE;	//	SCPIMM_MODE_CONTINUITY == mode || SCPIMM_MODE_DIODE == mode;
 	scpimm_context_t* const ctx = SCPIMM_context();
 	int16_t err;
@@ -32,10 +31,13 @@ static void check_general(const scpimm_mode_t mode) {
     }
 
     // check correctness of current multimeter's mode & params
-    CHECK_NO_SCPI_ERROR(scpimm_interface()->get_mode(&cur_mode, &cur_params));
+    CHECK_NO_SCPI_ERROR(scpimm_interface()->get_mode(&cur_mode));
     CU_ASSERT_EQUAL(cur_mode, mode);
     if (!no_params) {
-    	ASSERT_EQUAL_BOOL(cur_params.auto_range, dm_args.set_mode.params.auto_range);
+    	scpi_bool_t auto_range;
+
+        CHECK_NO_SCPI_ERROR(scpimm_interface()->get_bool_param(cur_mode, SCPIMM_PARAM_RANGE_AUTO, &auto_range));
+    	ASSERT_EQUAL_BOOL(auto_range, dm_args.set_mode.params.auto_range);
     }
 
     // check preset conditions

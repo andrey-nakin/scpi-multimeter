@@ -50,9 +50,8 @@ typedef struct {
 		Mandatory
 	 * Query current mode and its parameters
 	 * mode - variable to put mode into. If NULL, mode is not required by calling side.
-	 * dest - variable to put mode parameters into. If NULL, parameters are not required by calling side.
 	 */
-	int16_t (*get_mode)(scpimm_mode_t* mode, scpimm_mode_params_t* dest);
+	int16_t (*get_mode)(scpimm_mode_t* mode);
 
 	int16_t (*get_allowed_resolutions)(scpimm_mode_t mode, size_t range_index, const double** resolutions);
 
