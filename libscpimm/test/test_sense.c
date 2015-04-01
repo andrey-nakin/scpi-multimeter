@@ -126,19 +126,57 @@ static void test_range() {
 	repeat_for_all_modes(test_range_impl, NO_USER_DATA);
 }
 
+static void test_rangeQ_min_max(const char* const prefix, const char* const func, const char* const suffix, const scpimm_mode_t mode, const char* const value, const double expected_value) {
+	dm_reset_counters();
+	dm_reset_args();
+	receivef("%s%s:%s? %s", prefix, func, suffix, value);
+	ASSERT_NO_SCPI_ERRORS();
+	ASSERT_DOUBLE_RESPONSE(expected_value);
+	CU_ASSERT_EQUAL(dm_counters.get_numeric_param_values, CALLED_ONCE);
+	CU_ASSERT_EQUAL(dm_args.get_numeric_param_values.mode, mode);
+	CU_ASSERT_EQUAL(dm_args.get_numeric_param_values.param, SCPIMM_PARAM_RANGE);
+	CU_ASSERT_EQUAL(dm_args.get_numeric_param_values.values_is_null, FALSE);
+
+}
+
+static void test_rangeQ_value(const char* const prefix, const char* const func, const char* const suffix, const scpimm_mode_t mode, const double value, const double expected_value) {
+	receivef("%s%s:%s %f", prefix, func, suffix, value);
+	ASSERT_NO_SCPI_ERRORS();
+	ASSERT_NO_RESPONSE();
+
+	dm_reset_counters();
+	dm_reset_args();
+	receivef("%s%s:%s?", prefix, func, suffix);
+	ASSERT_NO_SCPI_ERRORS();
+	ASSERT_DOUBLE_RESPONSE(expected_value);
+	CU_ASSERT_EQUAL(dm_counters.get_numeric_param, CALLED_ONCE);
+	CU_ASSERT_EQUAL(dm_args.get_numeric_param.mode, mode);
+	CU_ASSERT_EQUAL(dm_args.get_numeric_param.param, SCPIMM_PARAM_RANGE);
+	CU_ASSERT_EQUAL(dm_args.get_numeric_param.value_is_null, FALSE);
+}
+
 static void test_rangeQ_impl2(const char* const prefix, const char* const func, const scpimm_mode_t mode) {
 	int16_t err;
 	const scpimm_interface_t* const intf = scpimm_interface();
 	const double *ranges, *overruns;
-	char value[32];
 	size_t i;
 
 	CHECK_NO_SCPI_ERROR(intf->get_numeric_param_values(mode, SCPIMM_PARAM_RANGE, &ranges));
 	CHECK_NO_SCPI_ERROR(intf->get_numeric_param_values(mode, SCPIMM_PARAM_RANGE_OVERRUN, &overruns));
 
+	test_rangeQ_min_max(prefix, func, "RANGE", mode, "MINimum", ranges[min_value_index(ranges)]);
+	test_rangeQ_min_max(prefix, func, "RANGE", mode, "MIN", ranges[min_value_index(ranges)]);
+	test_rangeQ_min_max(prefix, func, "RANGE", mode, "MAXimum", ranges[max_value_index(ranges)]);
+	test_rangeQ_min_max(prefix, func, "RANGE", mode, "MAX", ranges[max_value_index(ranges)]);
+
+	test_rangeQ_min_max(prefix, func, "RANG", mode, "MINimum", ranges[min_value_index(ranges)]);
+	test_rangeQ_min_max(prefix, func, "RANG", mode, "MIN", ranges[min_value_index(ranges)]);
+	test_rangeQ_min_max(prefix, func, "RANG", mode, "MAXimum", ranges[max_value_index(ranges)]);
+	test_rangeQ_min_max(prefix, func, "RANG", mode, "MAX", ranges[max_value_index(ranges)]);
+
 	for (i = 0; ranges[i] >= 0.0; i++) {
-		sprintf(value, "%f", ranges[i]);
-		//test_rangeQ_value(prefix, func, mode, value, ranges[i]);
+		test_rangeQ_value(prefix, func, "RANGE", mode, ranges[i], ranges[i]);
+		test_rangeQ_value(prefix, func, "RANG", mode, ranges[i], ranges[i]);
 	}
 }
 

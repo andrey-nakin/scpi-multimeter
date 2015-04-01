@@ -39,8 +39,6 @@ dm_args_t dm_args, dm_prev_args;
 dm_get_allowed_resolutions_args_t dm_get_allowed_resolutions_last_args;
 dm_get_bool_param_args_t dm_get_bool_param_args;
 dm_set_bool_param_args_t dm_set_bool_param_args;
-dm_get_numeric_param_values_args_t dm_get_numeric_param_values_args;
-dm_get_numeric_param_args_t dm_get_numeric_param_args;
 dm_display_text_args_t dm_display_text_args;
 
 scpimm_interface_t dm_interface = {
@@ -585,9 +583,9 @@ static int16_t dm_get_numeric_param_values(const scpimm_mode_t mode, const scpim
 
 	dm_counters.get_numeric_param_values++;
 
-	dm_get_numeric_param_values_args.mode = mode;
-	dm_get_numeric_param_values_args.param = param;
-	dm_get_numeric_param_values_args.values_is_null = !values;
+	dm_args.get_numeric_param_values.mode = mode;
+	dm_args.get_numeric_param_values.param = param;
+	dm_args.get_numeric_param_values.values_is_null = !values;
 
 	if (SCPI_ERROR_OK != (err = dm_validate_mode(mode))) {
 		return err;
@@ -627,9 +625,9 @@ static int16_t dm_get_numeric_param(scpimm_mode_t mode, scpimm_numeric_param_t p
 
 	dm_counters.get_numeric_param++;
 
-	dm_get_numeric_param_args.mode = mode;
-	dm_get_numeric_param_args.param = param;
-	dm_get_numeric_param_args.value_is_null = !value_index;
+	dm_args.get_numeric_param.mode = mode;
+	dm_args.get_numeric_param.param = param;
+	dm_args.get_numeric_param.value_is_null = !value_index;
 
 	if (!mode_state) {
 		return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;

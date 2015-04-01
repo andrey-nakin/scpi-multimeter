@@ -92,7 +92,7 @@ static scpi_result_t set_numeric_param(scpi_t* const context, const scpimm_mode_
 		}
 
 	case SCPI_NUM_NUMBER:
-		value_index = greater_or_equal_index(values, value.value);
+		value_index = greater_or_equal_index(values, value.value * (1.0 - FLOAT_DELTA));
 		break;
 
 	default:
@@ -123,6 +123,9 @@ static scpi_result_t query_numeric_param(scpi_t* const context, const scpimm_mod
 
 			case SCPI_NUM_MAX:
 				value_index = max_value_index(values);
+				break;
+
+			case SCPI_NUM_DEF:
 				break;
 
 			default:

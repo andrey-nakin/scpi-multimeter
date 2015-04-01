@@ -57,6 +57,18 @@ typedef struct {
 	struct {
 		scpimm_mode_t mode;
 		scpimm_numeric_param_t param;
+		scpi_bool_t values_is_null;
+	} get_numeric_param_values;
+
+	struct {
+		scpimm_mode_t mode;
+		scpimm_numeric_param_t param;
+		scpi_bool_t value_is_null;
+	} get_numeric_param;
+
+	struct {
+		scpimm_mode_t mode;
+		scpimm_numeric_param_t param;
 		size_t value_index;
 	} set_numeric_param;
 
@@ -80,18 +92,6 @@ typedef struct {
 	scpimm_bool_param_t param;
 	scpi_bool_t value;
 } dm_set_bool_param_args_t;
-
-typedef struct {
-	scpimm_mode_t mode;
-	scpimm_numeric_param_t param;
-	scpi_bool_t values_is_null;
-} dm_get_numeric_param_values_args_t;
-
-typedef struct {
-	scpimm_mode_t mode;
-	scpimm_numeric_param_t param;
-	scpi_bool_t value_is_null;
-} dm_get_numeric_param_args_t;
 
 typedef struct {
 	const char* txt;
@@ -126,8 +126,6 @@ extern dm_args_t dm_args, dm_prev_args;
 extern dm_get_allowed_resolutions_args_t dm_get_allowed_resolutions_last_args;
 extern dm_get_bool_param_args_t dm_get_bool_param_args;
 extern dm_set_bool_param_args_t dm_set_bool_param_args;
-extern dm_get_numeric_param_values_args_t dm_get_numeric_param_values_args;
-extern dm_get_numeric_param_args_t dm_get_numeric_param_args;
 extern dm_display_text_args_t dm_display_text_args;
 
 extern scpimm_interface_t dm_interface;
