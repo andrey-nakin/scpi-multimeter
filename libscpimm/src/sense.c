@@ -260,7 +260,7 @@ static scpi_result_t set_resolution(scpi_t* const context, const scpimm_mode_t m
 	case SCPI_NUM_NUMBER:
 		resolution_index = less_or_equal_index(values, value.value * (1.0 + FLOAT_DELTA));
 		if (SIZE_MAX == resolution_index) {
-			return SCPI_ERROR_CANNOT_ACHIEVE_REQUESTED_RESOLUTION;
+			CHECK_AND_PUSH_ERROR(SCPI_ERROR_CANNOT_ACHIEVE_REQUESTED_RESOLUTION);
 		}
 		break;
 
