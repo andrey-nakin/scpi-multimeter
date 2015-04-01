@@ -8,6 +8,8 @@
 #ifndef SIZE_MAX
 #define SIZE_MAX ((size_t)-1)
 #endif
+
+#define FLOAT_DELTA	1.0e-6
 /* 
 	Helpful macros to access SCPIMM global context from SCPI command handlers 
 	<context> is a scpi_t* value
@@ -43,6 +45,7 @@ size_t strToDouble(const char * str, double * val);
 size_t double_to_str(char* dest, double v);
 size_t min_value_index(const double* const values);
 size_t max_value_index(const double* const values);
+size_t less_or_equal_index(const double* values, const double v);
 size_t greater_or_equal_index(const double* values, const double v);
 
 #endif	//	__UTILS_H_SCPIMM_

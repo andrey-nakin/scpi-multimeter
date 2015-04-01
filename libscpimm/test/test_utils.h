@@ -4,12 +4,14 @@
 #include <scpi/scpi.h>
 #include <scpimm/scpimm.h>
 #include "../src/scpimm_internal.h"
+#include "../src/utils.h"
 #include "default_multimeter.h"
 
 #define FLOAT_DELTA 1.0e-6
 
 #define	CALLED_ONCE	1
 #define	NOT_CALLED 0
+#define	NO_USER_DATA	NULL
 
 // test configuration
 #define ADD_SUITE(name)	\
@@ -64,6 +66,8 @@ void receivef(const char* fmt, ...);
 void clearscpi_errors();
 
 const scpimm_interface_t* scpimm_interface();
+void shorten_command_name(char* buf);
+void repeat_for_all_modes(void (*test)(const char* func, scpimm_mode_t mode, void* user_data), void* user_data);
 
 #endif	//	_TEST_UTILS_SCPIMM_
 

@@ -134,6 +134,23 @@ size_t max_value_index(const double* const values) {
 	return result;
 }
 
+size_t less_or_equal_index(const double* values, const double value) {
+	size_t result = SIZE_MAX;
+	double max_value = 0.0;
+	const double* v = values;
+
+	for (; *v >= 0.0; v++) {
+		if (*v <= value) {
+			if (SIZE_MAX == result || max_value < *v) {
+				max_value = *v;
+				result = v - values;;
+			}
+		}
+	}
+
+	return result;
+}
+
 size_t greater_or_equal_index(const double* values, const double v) {
 	size_t result;
 

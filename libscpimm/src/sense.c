@@ -70,7 +70,7 @@ static scpi_result_t set_numeric_param(scpi_t* const context, const scpimm_mode_
 	int16_t err;
     scpi_number_t value;
 	const double* values;
-    size_t value_index = SIZE_MAX;
+    size_t value_index = 0;
 
     CHECK_AND_PUSH_ERROR(SCPIMM_INTERFACE(context)->get_numeric_param_values(mode, param, &values));
 
@@ -180,9 +180,136 @@ static scpi_result_t query_global_bool_param(scpi_t* const context, const scpimm
     return SCPI_RES_OK;
 }
 
+static size_t range_index(const double* const ranges, const double* const overruns, const double v) {
+	size_t result;
+
+	for (result = 0; ranges[result] >= 0; result++) {
+		if (ranges[result] * overruns[result] >= v) {
+			return result;
+		}
+	}
+
+	return SIZE_MAX;
+}
+
+static scpi_result_t set_range(scpi_t* const context, const scpimm_mode_t mode) {
+	int16_t err;
+    scpi_number_t value;
+	const double *ranges, *overruns;
+    size_t value_index = 0;
+
+    CHECK_AND_PUSH_ERROR(SCPIMM_INTERFACE(context)->get_numeric_param_values(mode, SCPIMM_PARAM_RANGE, &ranges));
+    CHECK_AND_PUSH_ERROR(SCPIMM_INTERFACE(context)->get_numeric_param_values(mode, SCPIMM_PARAM_RANGE_OVERRUN, &overruns));
+
+	if (!SCPI_ParamNumber(context, &value, TRUE)) {
+		return SCPI_RES_ERR;
+	}
+
+	switch (value.type) {
+	case SCPI_NUM_MIN:
+		value_index = min_value_index(ranges);
+		break;
+
+	case SCPI_NUM_MAX:
+		value_index = max_value_index(ranges);
+		break;
+
+	case SCPI_NUM_NUMBER:
+		value_index = range_index(ranges, overruns, value.value);
+		if (SIZE_MAX == value_index) {
+			CHECK_AND_PUSH_ERROR(SCPI_ERROR_DATA_OUT_OF_RANGE);
+		}
+		break;
+
+	default:
+		CHECK_AND_PUSH_ERROR(SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
+	}
+
+    EXPECT_NO_PARAMS(context);
+	CHECK_AND_PUSH_ERROR(SCPIMM_INTERFACE(context)->set_numeric_param(mode, SCPIMM_PARAM_RANGE, value_index));
+
+	return SCPI_RES_OK;
+}
+
+static scpi_result_t set_resolution(scpi_t* const context, const scpimm_mode_t mode) {
+	int16_t err;
+    scpi_number_t value;
+	const double* values;
+    size_t range_index, resolution_index = 0;
+    scpimm_interface_t* const intf = SCPIMM_INTERFACE(context);
+
+    CHECK_AND_PUSH_ERROR(intf->get_numeric_param(mode, SCPIMM_PARAM_RANGE, &range_index));
+    CHECK_AND_PUSH_ERROR(intf->get_allowed_resolutions(mode, range_index, &values));
+
+	if (!SCPI_ParamNumber(context, &value, TRUE)) {
+		return SCPI_RES_ERR;
+	}
+
+	switch (value.type) {
+	case SCPI_NUM_MIN:
+		resolution_index = min_value_index(values);
+		break;
+
+	case SCPI_NUM_MAX:
+		resolution_index = max_value_index(values);
+		break;
+
+	case SCPI_NUM_NUMBER:
+		resolution_index = less_or_equal_index(values, value.value * (1.0 + FLOAT_DELTA));
+		if (SIZE_MAX == resolution_index) {
+			return SCPI_ERROR_CANNOT_ACHIEVE_REQUESTED_RESOLUTION;
+		}
+		break;
+
+	default:
+		CHECK_AND_PUSH_ERROR(SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
+	}
+
+    EXPECT_NO_PARAMS(context);
+	CHECK_AND_PUSH_ERROR(intf->set_numeric_param(mode, SCPIMM_PARAM_RESOLUTION, resolution_index));
+
+	return SCPI_RES_OK;
+}
+
+static scpi_result_t query_resolution(scpi_t* const context, const scpimm_mode_t mode) {
+	int16_t err;
+	const double* values;
+    size_t range_index, resolution_index = SIZE_MAX;
+    scpimm_interface_t* const intf = SCPIMM_INTERFACE(context);
+	scpi_number_t what;
+
+    CHECK_AND_PUSH_ERROR(intf->get_numeric_param(mode, SCPIMM_PARAM_RANGE, &range_index));
+    CHECK_AND_PUSH_ERROR(intf->get_allowed_resolutions(mode, range_index, &values));
+
+	if (SCPI_ParamNumber(context, &what, FALSE)) {
+		switch (what.type) {
+		case SCPI_NUM_MIN:
+			resolution_index = min_value_index(values);
+			break;
+
+		case SCPI_NUM_MAX:
+			resolution_index = max_value_index(values);
+			break;
+
+		default:
+			CHECK_AND_PUSH_ERROR(SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
+		}
+	}
+
+    EXPECT_NO_PARAMS(context);
+
+    if (SIZE_MAX == resolution_index) {
+    	CHECK_AND_PUSH_ERROR(intf->get_numeric_param(mode, SCPIMM_PARAM_RESOLUTION, &resolution_index));
+    }
+
+    SCPIMM_ResultDouble(context, values[resolution_index]);
+
+    return SCPI_RES_OK;
+}
+
 #define DECL_SENSE_HANDLERS(mode, func) \
 	scpi_result_t SCPIMM_sense_ ## func ## _range(scpi_t* const context) {	\
-		return set_numeric_param(context, SCPIMM_MODE_ ## mode, SCPIMM_PARAM_RANGE, TRUE);	\
+		return set_range(context, SCPIMM_MODE_ ## mode);	\
 	}	\
 	\
 	scpi_result_t SCPIMM_sense_ ## func ## _rangeQ(scpi_t* const context) {	\
@@ -195,6 +322,14 @@ static scpi_result_t query_global_bool_param(scpi_t* const context, const scpimm
 	\
 	scpi_result_t SCPIMM_sense_ ## func ## _range_autoQ(scpi_t* const context) {	\
 		return query_bool_param(context, SCPIMM_MODE_ ## mode, SCPIMM_PARAM_RANGE_AUTO);	\
+	}	\
+	\
+	scpi_result_t SCPIMM_sense_ ## func ## _resolution(scpi_t* context) {	\
+		return set_resolution(context, SCPIMM_MODE_ ## mode);	\
+	}	\
+	\
+	scpi_result_t SCPIMM_sense_ ## func ## _resolutionQ(scpi_t* context) {	\
+		return query_resolution(context, SCPIMM_MODE_ ## mode);	\
 	}
 
 #define DECL_SENSE_DC_HANDLERS(mode, func) \
@@ -214,66 +349,6 @@ DECL_SENSE_DC_HANDLERS(DCC, current_dc)
 DECL_SENSE_HANDLERS(ACC, current_ac)
 DECL_SENSE_DC_HANDLERS(RESISTANCE_2W, resistance)
 DECL_SENSE_DC_HANDLERS(RESISTANCE_4W, fresistance)
-
-scpi_result_t SCPIMM_sense_voltage_dc_resolution(scpi_t* context) {
-	(void) context;
-	return SCPI_RES_OK;
-}
-
-scpi_result_t SCPIMM_sense_voltage_dc_resolutionQ(scpi_t* context) {
-	(void) context;
-	return SCPI_RES_OK;
-}
-
-scpi_result_t SCPIMM_sense_voltage_ac_resolution(scpi_t* context) {
-	(void) context;
-	return SCPI_RES_OK;
-}
-
-scpi_result_t SCPIMM_sense_voltage_ac_resolutionQ(scpi_t* context) {
-	(void) context;
-	return SCPI_RES_OK;
-}
-
-scpi_result_t SCPIMM_sense_current_dc_resolution(scpi_t* context) {
-	(void) context;
-	return SCPI_RES_OK;
-}
-
-scpi_result_t SCPIMM_sense_current_dc_resolutionQ(scpi_t* context) {
-	(void) context;
-	return SCPI_RES_OK;
-}
-
-scpi_result_t SCPIMM_sense_current_ac_resolution(scpi_t* context) {
-	(void) context;
-	return SCPI_RES_OK;
-}
-
-scpi_result_t SCPIMM_sense_current_ac_resolutionQ(scpi_t* context) {
-	(void) context;
-	return SCPI_RES_OK;
-}
-
-scpi_result_t SCPIMM_sense_resistance_resolution(scpi_t* context) {
-	(void) context;
-	return SCPI_RES_OK;
-}
-
-scpi_result_t SCPIMM_sense_resistance_resolutionQ(scpi_t* context) {
-	(void) context;
-	return SCPI_RES_OK;
-}
-
-scpi_result_t SCPIMM_sense_fresistance_resolution(scpi_t* context) {
-	(void) context;
-	return SCPI_RES_OK;
-}
-
-scpi_result_t SCPIMM_sense_fresistance_resolutionQ(scpi_t* context) {
-	(void) context;
-	return SCPI_RES_OK;
-}
 
 scpi_result_t SCPIMM_sense_zero_auto(scpi_t* const context) {
 	int16_t err;
