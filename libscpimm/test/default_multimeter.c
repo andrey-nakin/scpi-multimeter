@@ -37,8 +37,6 @@ char dm_display[SCPIMM_DISPLAY_LEN + 1];
 dm_args_t dm_args, dm_prev_args;
 
 dm_get_allowed_resolutions_args_t dm_get_allowed_resolutions_last_args;
-dm_get_bool_param_args_t dm_get_bool_param_args;
-dm_set_bool_param_args_t dm_set_bool_param_args;
 dm_display_text_args_t dm_display_text_args;
 
 scpimm_interface_t dm_interface = {
@@ -520,9 +518,9 @@ static int16_t dm_get_bool_param(const scpimm_mode_t mode, const scpimm_bool_par
 
 	dm_counters.get_bool_param++;
 
-	dm_get_bool_param_args.mode = mode;
-	dm_get_bool_param_args.param = param;
-	dm_get_bool_param_args.value_is_null = !value;
+	dm_args.get_bool_param.mode = mode;
+	dm_args.get_bool_param.param = param;
+	dm_args.get_bool_param.value_is_null = !value;
 
 	if (!mode_state) {
 		return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
@@ -553,9 +551,9 @@ static int16_t dm_set_bool_param(const scpimm_mode_t mode, const scpimm_bool_par
 
 	dm_counters.set_bool_param++;
 
-	dm_set_bool_param_args.mode = mode;
-	dm_set_bool_param_args.param = param;
-	dm_set_bool_param_args.value = value;
+	dm_args.set_bool_param.mode = mode;
+	dm_args.set_bool_param.param = param;
+	dm_args.set_bool_param.value = value;
 
 	if (!mode_state) {
 		return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;

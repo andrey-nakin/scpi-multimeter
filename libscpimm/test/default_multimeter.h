@@ -72,6 +72,18 @@ typedef struct {
 		size_t value_index;
 	} set_numeric_param;
 
+	struct {
+		scpimm_mode_t mode;
+		scpimm_bool_param_t param;
+		scpi_bool_t value_is_null;
+	} get_bool_param;
+
+	struct {
+		scpimm_mode_t mode;
+		scpimm_bool_param_t param;
+		scpi_bool_t value;
+	} set_bool_param;
+
 } dm_args_t;
 
 typedef struct {
@@ -80,18 +92,6 @@ typedef struct {
 	const double* resolutions;
 	scpi_bool_t resolutions_is_null;
 } dm_get_allowed_resolutions_args_t;
-
-typedef struct {
-	scpimm_mode_t mode;
-	scpimm_bool_param_t param;
-	scpi_bool_t value_is_null;
-} dm_get_bool_param_args_t;
-
-typedef struct {
-	scpimm_mode_t mode;
-	scpimm_bool_param_t param;
-	scpi_bool_t value;
-} dm_set_bool_param_args_t;
 
 typedef struct {
 	const char* txt;
@@ -124,8 +124,6 @@ extern char dm_display[SCPIMM_DISPLAY_LEN + 1];
 
 extern dm_args_t dm_args, dm_prev_args;
 extern dm_get_allowed_resolutions_args_t dm_get_allowed_resolutions_last_args;
-extern dm_get_bool_param_args_t dm_get_bool_param_args;
-extern dm_set_bool_param_args_t dm_set_bool_param_args;
 extern dm_display_text_args_t dm_display_text_args;
 
 extern scpimm_interface_t dm_interface;
