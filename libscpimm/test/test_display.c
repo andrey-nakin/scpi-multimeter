@@ -54,7 +54,7 @@ void test_display_text() {
 	ASSERT_NO_SCPI_ERRORS();
 	ASSERT_NO_RESPONSE();
     CU_ASSERT_EQUAL(dm_counters.display_text, CALLED_ONCE);
-    CU_ASSERT_STRING_EQUAL(dm_display_text_args.txt, "");
+    CU_ASSERT_STRING_EQUAL(dm_args.display_text.txt, "");
     CU_ASSERT_STRING_EQUAL(dm_display, "");
 
 	dm_reset_counters();
@@ -63,14 +63,14 @@ void test_display_text() {
 	ASSERT_NO_SCPI_ERRORS();
 	ASSERT_NO_RESPONSE();
     CU_ASSERT_EQUAL(dm_counters.display_text, CALLED_ONCE);
-    CU_ASSERT_STRING_EQUAL(dm_display_text_args.txt, "1234567890AB");
+    CU_ASSERT_STRING_EQUAL(dm_args.display_text.txt, "1234567890AB");
     CU_ASSERT_STRING_EQUAL(dm_display, "1234567890AB");
 
 	receive("DISPLAY:TEXT '1234567890ABC'");
 	ASSERT_SCPI_ERROR(SCPI_ERROR_TOO_MUCH_DATA);
 	ASSERT_NO_RESPONSE();
     CU_ASSERT_EQUAL(dm_counters.display_text, CALLED_ONCE);
-    CU_ASSERT_STRING_EQUAL(dm_display_text_args.txt, "1234567890AB");
+    CU_ASSERT_STRING_EQUAL(dm_args.display_text.txt, "1234567890AB");
     CU_ASSERT_STRING_EQUAL(dm_display, "1234567890AB");
 }
 
@@ -97,14 +97,14 @@ void test_display_text_clear() {
 	ASSERT_NO_SCPI_ERRORS();
 	ASSERT_NO_RESPONSE();
     CU_ASSERT_EQUAL(dm_counters.display_text, CALLED_ONCE);
-    CU_ASSERT_STRING_EQUAL(dm_display_text_args.txt, "1234567890AB");
+    CU_ASSERT_STRING_EQUAL(dm_args.display_text.txt, "1234567890AB");
     CU_ASSERT_STRING_EQUAL(dm_display, "1234567890AB");
 
 	receive("DISPLAY:TEXT:CLEAR");
 	ASSERT_NO_SCPI_ERRORS();
 	ASSERT_NO_RESPONSE();
     CU_ASSERT_EQUAL(dm_counters.display_text, 2);
-    CU_ASSERT_STRING_EQUAL(dm_display_text_args.txt, "");
+    CU_ASSERT_STRING_EQUAL(dm_args.display_text.txt, "");
     CU_ASSERT_STRING_EQUAL(dm_display, "");
 }
 

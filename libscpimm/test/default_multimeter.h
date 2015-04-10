@@ -84,18 +84,18 @@ typedef struct {
 		scpi_bool_t value;
 	} set_bool_param;
 
+	struct {
+		scpimm_mode_t mode;
+		size_t range_index;
+		const double* resolutions;
+		scpi_bool_t resolutions_is_null;
+	} get_allowed_resolutions;
+
+	struct {
+		const char* txt;
+	} display_text;
+
 } dm_args_t;
-
-typedef struct {
-	scpimm_mode_t mode;
-	size_t range_index;
-	const double* resolutions;
-	scpi_bool_t resolutions_is_null;
-} dm_get_allowed_resolutions_args_t;
-
-typedef struct {
-	const char* txt;
-} dm_display_text_args_t;
 
 typedef struct {
 	unsigned set_mode, get_mode, get_allowed_resolutions,
@@ -125,8 +125,6 @@ extern dm_multimeter_state_t dm_multimeter_state;
 extern char dm_display[SCPIMM_DISPLAY_LEN + 1];
 
 extern dm_args_t dm_args, dm_prev_args;
-extern dm_get_allowed_resolutions_args_t dm_get_allowed_resolutions_last_args;
-extern dm_display_text_args_t dm_display_text_args;
 
 extern scpimm_interface_t dm_interface;
 extern dm_counters_t dm_counters;

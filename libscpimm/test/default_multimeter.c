@@ -37,9 +37,6 @@ char dm_display[SCPIMM_DISPLAY_LEN + 1];
 
 dm_args_t dm_args, dm_prev_args;
 
-dm_get_allowed_resolutions_args_t dm_get_allowed_resolutions_last_args;
-dm_display_text_args_t dm_display_text_args;
-
 scpimm_interface_t dm_interface = {
 		.setup = dm_setup,
 		.reset = dm_reset,
@@ -357,13 +354,13 @@ static int16_t dm_get_allowed_resolutions(scpimm_mode_t mode, size_t range_index
 	dm_counters.get_allowed_resolutions++;
 
 	/* store function arguments for later analysis */
-	dm_get_allowed_resolutions_last_args.mode = mode;
-	dm_get_allowed_resolutions_last_args.range_index = range_index;
+	dm_args.get_allowed_resolutions.mode = mode;
+	dm_args.get_allowed_resolutions.range_index = range_index;
 	if (resolutions) {
-		dm_get_allowed_resolutions_last_args.resolutions = *resolutions;
-		dm_get_allowed_resolutions_last_args.resolutions_is_null = FALSE;
+		dm_args.get_allowed_resolutions.resolutions = *resolutions;
+		dm_args.get_allowed_resolutions.resolutions_is_null = FALSE;
 	} else {
-		dm_get_allowed_resolutions_last_args.resolutions_is_null = TRUE;
+		dm_args.get_allowed_resolutions.resolutions_is_null = TRUE;
 	}
 	/* */
 
@@ -704,7 +701,7 @@ static int16_t dm_get_input_terminal(scpimm_terminal_state_t* term) {
 
 static int16_t dm_display_text(const char* txt) {
 	dm_counters.display_text++;
-	dm_display_text_args.txt = txt;
+	dm_args.display_text.txt = txt;
 
 	strncpy(dm_display, txt, sizeof(dm_display) - 1);
 	dm_display[sizeof(dm_display) - 1] = '\0';
