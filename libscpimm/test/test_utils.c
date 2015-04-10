@@ -130,6 +130,7 @@ int test_configure();
 int test_display();
 int test_dmm();
 int test_generic();
+int test_ieee488();
 int test_input();
 int test_route();
 int test_sample();
@@ -146,6 +147,7 @@ int main() {
     		|| test_display()
     		|| test_dmm()
     		|| test_generic()
+    		|| test_ieee488()
     		|| test_input()
     		|| test_route()
     		|| test_sample()

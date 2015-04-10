@@ -146,6 +146,12 @@ typedef struct {
 	*/
 	const char* (*get_idn)();
 
+	/*
+		Optional
+		Performs a multimeter's internal test
+	*/
+	int16_t (*test)();
+
 } scpimm_interface_t;
 
 /******************************************************************************

@@ -26,6 +26,7 @@ static int16_t dm_set_numeric_param(scpimm_mode_t mode, scpimm_numeric_param_t p
 static int16_t dm_beep();
 static int16_t dm_get_input_terminal(scpimm_terminal_state_t* term);
 static int16_t dm_display_text(const char* txt);
+static int16_t dm_test();
 
 /***************************************************************
  * Global variables
@@ -58,7 +59,8 @@ scpimm_interface_t dm_interface = {
 		.set_numeric_param = dm_set_numeric_param,
 		.beep = dm_beep,
 		.get_input_terminal = dm_get_input_terminal,
-		.display_text = dm_display_text
+		.display_text = dm_display_text,
+		.test = dm_test
 };
 dm_counters_t dm_counters;
 dm_returns_t dm_returns;
@@ -708,4 +710,9 @@ static int16_t dm_display_text(const char* txt) {
 	dm_display[sizeof(dm_display) - 1] = '\0';
 
 	return SCPI_ERROR_OK;
+}
+
+static int16_t dm_test() {
+	dm_counters.test++;
+	return dm_returns.test;
 }

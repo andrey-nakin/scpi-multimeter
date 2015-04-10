@@ -26,6 +26,7 @@
 ******************************************************************************/
 static size_t write(scpi_t * context, const char* data, size_t len);
 static scpi_result_t reset(scpi_t * context);
+static scpi_result_t test(scpi_t * context);
 static scpi_result_t system_versionQ(scpi_t* context);
 
 /******************************************************************************
@@ -177,7 +178,7 @@ static scpi_interface_t scpi_interface = {
 	NULL,
 	NULL,
 	reset,
-	NULL
+	test
 };
 
 /*static scpi_reg_val_t scpi_regs[SCPI_REG_COUNT];*/
@@ -268,6 +269,21 @@ static scpi_result_t reset(scpi_t* context) {
 	// TODO
 
     return SCPI_RES_OK;
+}
+
+static scpi_result_t test(scpi_t* context) {
+	scpimm_interface_t* const intf = SCPIMM_INTERFACE(context);
+
+	if (intf->test) {
+		int16_t err;
+
+		if (SCPI_ERROR_OK != (err = intf->test())) {
+			SCPI_ErrorPush(context, err);
+			return 1;
+		}
+	}
+
+	return 0;
 }
 
 static scpi_result_t system_versionQ(scpi_t* context) {

@@ -101,14 +101,16 @@ typedef struct {
 	unsigned set_mode, get_mode, get_allowed_resolutions,
 		start_measure, set_interrupt_status, beep, display_text, setup, reset,
 		get_global_bool_param, set_global_bool_param, get_bool_param, set_bool_param,
-		get_numeric_param_values, get_numeric_param, set_numeric_param;
+		get_numeric_param_values, get_numeric_param, set_numeric_param,
+		test;
 } dm_counters_t;
 
 typedef struct {
 	int16_t get_input_terminal,
 	get_global_bool_param, set_global_bool_param,
 	get_bool_param, set_bool_param,
-	get_numeric_param_values, get_numeric_param, set_numeric_param;
+	get_numeric_param_values, get_numeric_param, set_numeric_param,
+	test;
 } dm_returns_t;
 
 typedef double (*dm_measurement_func_t)(uint32_t time);
