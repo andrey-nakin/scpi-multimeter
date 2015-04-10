@@ -567,14 +567,19 @@ int test_sense() {
     return 0;
 }
 
+#ifdef	NO_GLOBAL_TEST
+
 int main() {
     /* Initialize the CUnit test registry */
     if (CUE_SUCCESS != CU_initialize_registry())
         return CU_get_error();
 
-    test_sense();
+    if (test_sense()) {
+    	return CU_get_error();
+    }
 
     /* Run all tests using the CUnit Basic interface */
     return RUN_ALL_TESTS();
 }
 
+#endif

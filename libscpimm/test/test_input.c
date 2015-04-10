@@ -59,12 +59,8 @@ static void test_impedance_autoQ() {
 	ASSERT_BOOL_RESPONSE(FALSE);
 }
 
-int main() {
+int test_input() {
     CU_pSuite pSuite = NULL;
-
-    /* Initialize the CUnit test registry */
-    if (CUE_SUCCESS != CU_initialize_registry())
-        return CU_get_error();
 
     /* Add a suite to the registry */
     ADD_SUITE("INPUT");
@@ -73,7 +69,22 @@ int main() {
     ADD_TEST(test_impedance_auto);
     ADD_TEST(test_impedance_autoQ);
 
+    return 0;
+}
+
+#ifdef	NO_GLOBAL_TEST
+
+int main() {
+    /* Initialize the CUnit test registry */
+    if (CUE_SUCCESS != CU_initialize_registry())
+        return CU_get_error();
+
+    if (test_input()) {
+    	return CU_get_error();
+    }
+
     /* Run all tests using the CUnit Basic interface */
     return RUN_ALL_TESTS();
 }
 
+#endif

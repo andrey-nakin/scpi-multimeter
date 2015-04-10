@@ -113,12 +113,8 @@ static void test_version() {
 	ASSERT_RESPONSE("1992.0\r\n");
 }
 
-int main() {
+int test_system() {
     CU_pSuite pSuite = NULL;
-
-    /* Initialize the CUnit test registry */
-    if (CUE_SUCCESS != CU_initialize_registry())
-        return CU_get_error();
 
     /* Add a suite to the registry */
     ADD_SUITE("SYSTEM");
@@ -135,6 +131,22 @@ int main() {
     ADD_TEST(test_rwlock);
     ADD_TEST(test_version);
 
+    return 0;
+}
+
+#ifdef	NO_GLOBAL_TEST
+
+int main() {
+    /* Initialize the CUnit test registry */
+    if (CUE_SUCCESS != CU_initialize_registry())
+        return CU_get_error();
+
+    if (test_system()) {
+    	return CU_get_error();
+    }
+
     /* Run all tests using the CUnit Basic interface */
     return RUN_ALL_TESTS();
 }
+
+#endif

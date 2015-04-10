@@ -3,7 +3,7 @@
 #include "CUnit/Basic.h"
 #include "test_utils.h"
 
-void test_terminalsQ() {
+static void test_terminalsQ() {
 	scpimm_interface_t* const intf = SCPIMM_context()->interface;
 
 	receive("*RST");
@@ -32,12 +32,8 @@ void test_terminalsQ() {
 	ASSERT_RESPONSE("FRON\r\n");
 }
 
-int main() {
+int test_route() {
     CU_pSuite pSuite = NULL;
-
-    /* Initialize the CUnit test registry */
-    if (CUE_SUCCESS != CU_initialize_registry())
-        return CU_get_error();
 
     /* Add a suite to the registry */
     ADD_SUITE("ROUTE");
@@ -45,6 +41,23 @@ int main() {
     /* Add the tests to the suite */
     ADD_TEST(test_terminalsQ);
 
+    return 0;
+}
+
+#ifdef	NO_GLOBAL_TEST
+
+int main() {
+    /* Initialize the CUnit test registry */
+    if (CUE_SUCCESS != CU_initialize_registry())
+        return CU_get_error();
+
+
+    if (test_route()) {
+    	return CU_get_error();
+    }
+
     /* Run all tests using the CUnit Basic interface */
     return RUN_ALL_TESTS();
 }
+
+#endif

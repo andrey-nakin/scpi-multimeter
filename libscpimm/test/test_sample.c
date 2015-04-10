@@ -66,12 +66,8 @@ static void test_countQ() {
 	}
 }
 
-int main() {
+int test_sample() {
     CU_pSuite pSuite = NULL;
-
-    /* Initialize the CUnit test registry */
-    if (CUE_SUCCESS != CU_initialize_registry())
-        return CU_get_error();
 
     /* Add a suite to the registry */
     ADD_SUITE("SAMPLE");
@@ -80,7 +76,22 @@ int main() {
     ADD_TEST(test_count);
     ADD_TEST(test_countQ);
 
+    return 0;
+}
+
+#ifdef	NO_GLOBAL_TEST
+
+int main() {
+    /* Initialize the CUnit test registry */
+    if (CUE_SUCCESS != CU_initialize_registry())
+        return CU_get_error();
+
+    if (test_sample()) {
+    	return CU_get_error();
+    }
+
     /* Run all tests using the CUnit Basic interface */
     return RUN_ALL_TESTS();
 }
 
+#endif

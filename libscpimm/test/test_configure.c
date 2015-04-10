@@ -379,14 +379,9 @@ static void test_configureQ() {
 	test_configureQ_impl("FRESISTANCE", SCPIMM_MODE_RESISTANCE_4W, "FRES");
 }
 
-int main() {
+int test_configure() {
     CU_pSuite pSuite = NULL;
 
-    /* Initialize the CUnit test registry */
-    if (CUE_SUCCESS != CU_initialize_registry())
-        return CU_get_error();
-
-    /* Add a suite to the registry */
     ADD_SUITE("CONFIGURE");
 
     /* Add the tests to the suite */
@@ -399,7 +394,22 @@ int main() {
     ADD_TEST(test_configure_fresistance);
     ADD_TEST(test_configureQ);
 
+    return 0;
+}
+
+#ifdef	NO_GLOBAL_TEST
+
+int main() {
+    /* Initialize the CUnit test registry */
+    if (CUE_SUCCESS != CU_initialize_registry())
+        return CU_get_error();
+
+    if (test_configure()) {
+    	return CU_get_error();
+    }
+
     /* Run all tests using the CUnit Basic interface */
     return RUN_ALL_TESTS();
 }
 
+#endif

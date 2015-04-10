@@ -108,46 +108,30 @@ void test_display_text_clear() {
     CU_ASSERT_STRING_EQUAL(dm_display, "");
 }
 
-int main() {
+int test_dispay() {
     CU_pSuite pSuite = NULL;
 
+    ADD_SUITE("DISPLAY");
+
+    /* Add the tests to the suite */
+    ADD_TEST(test_display);
+    ADD_TEST(test_displayQ);
+    ADD_TEST(test_display_text);
+    ADD_TEST(test_display_textQ);
+    ADD_TEST(test_display_text_clear);
+
+    return 0;
+}
+
+int main() {
     /* Initialize the CUnit test registry */
     if (CUE_SUCCESS != CU_initialize_registry())
         return CU_get_error();
 
-    /* Add a suite to the registry */
-    pSuite = CU_add_suite("DISPLAY", init_suite, clean_suite);
-    if (NULL == pSuite) {
-        CU_cleanup_registry();
-        return CU_get_error();
+    if (test_dispay()) {
+    	return CU_get_error();
     }
 
-    /* Add the tests to the suite */
-    if ((NULL == CU_add_test(pSuite, "test display", test_display))) {
-        CU_cleanup_registry();
-        return CU_get_error();
-    }
-    if ((NULL == CU_add_test(pSuite, "test display?", test_displayQ))) {
-        CU_cleanup_registry();
-        return CU_get_error();
-    }
-    if ((NULL == CU_add_test(pSuite, "test display:text", test_display_text))) {
-        CU_cleanup_registry();
-        return CU_get_error();
-    }
-    if ((NULL == CU_add_test(pSuite, "test display:text?", test_display_textQ))) {
-        CU_cleanup_registry();
-        return CU_get_error();
-    }
-    if ((NULL == CU_add_test(pSuite, "test display:text:clear", test_display_text_clear))) {
-        CU_cleanup_registry();
-        return CU_get_error();
-    }
-
-    /* Run all tests using the CUnit Basic interface */
-    CU_basic_set_mode(CU_BRM_VERBOSE);
-    CU_basic_run_tests();
-    CU_cleanup_registry();
-    return CU_get_error();
+    return RUN_ALL_TESTS();
 }
 

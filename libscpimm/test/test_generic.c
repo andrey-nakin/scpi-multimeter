@@ -42,30 +42,31 @@ static void test_double_to_str() {
 
 }
 
-int main() {
+int test_generic() {
     CU_pSuite pSuite = NULL;
+
+    ADD_SUITE("GENERIC");
+
+    /* Add the tests to the suite */
+    ADD_TEST(test_double_to_str);
+
+    return 0;
+}
+
+#ifdef	NO_GLOBAL_TEST
+
+int main() {
 
     /* Initialize the CUnit test registry */
     if (CUE_SUCCESS != CU_initialize_registry())
         return CU_get_error();
 
-    /* Add a suite to the registry */
-    pSuite = CU_add_suite("GENERIC", init_suite, clean_suite);
-    if (NULL == pSuite) {
-        CU_cleanup_registry();
-        return CU_get_error();
-    }
-
-    /* Add the tests to the suite */
-    if ((NULL == CU_add_test(pSuite, "double_to_str", test_double_to_str))) {
-        CU_cleanup_registry();
-        return CU_get_error();
+    if (test_generic()) {
+    	return CU_get_error();
     }
 
     /* Run all tests using the CUnit Basic interface */
-    CU_basic_set_mode(CU_BRM_VERBOSE);
-    CU_basic_run_tests();
-    CU_cleanup_registry();
-    return CU_get_error();
+    return RUN_ALL_TESTS();
 }
 
+#endif

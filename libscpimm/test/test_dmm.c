@@ -348,12 +348,8 @@ static void test_fetch() {
 	test_unexpected_fetch();
 }
 
-int main() {
+int test_dmm() {
     CU_pSuite pSuite = NULL;
-
-    /* Initialize the CUnit test registry */
-    if (CUE_SUCCESS != CU_initialize_registry())
-        return CU_get_error();
 
     /* Add a suite to the registry */
     ADD_SUITE("DMM");
@@ -363,7 +359,22 @@ int main() {
     ADD_TEST(test_initiate);
     ADD_TEST(test_fetch);
 
+    return 0;
+}
+
+#ifdef	NO_GLOBAL_TEST
+
+int main() {
+    /* Initialize the CUnit test registry */
+    if (CUE_SUCCESS != CU_initialize_registry())
+        return CU_get_error();
+
+    if (test_dmm()) {
+    	return CU_get_error();
+    }
+
     /* Run all tests using the CUnit Basic interface */
     return RUN_ALL_TESTS();
 }
 
+#endif

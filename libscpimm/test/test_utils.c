@@ -123,3 +123,40 @@ void repeat_for_all_dc_modes(void (*test)(const char*, scpimm_mode_t mode, void*
 	call_test("CURRent:DC", SCPIMM_MODE_DCC, test, user_data);
 	call_test("RESistance", SCPIMM_MODE_RESISTANCE_2W, test, user_data);
 }
+
+#ifndef	NO_GLOBAL_TEST
+
+int test_configure();
+int test_display();
+int test_dmm();
+int test_generic();
+int test_input();
+int test_route();
+int test_sample();
+int test_sense();
+int test_trigger();
+
+int main() {
+    /* Initialize the CUnit test registry */
+    if (CUE_SUCCESS != CU_initialize_registry())
+        return CU_get_error();
+
+    if (
+    		test_configure()
+    		|| test_display()
+    		|| test_dmm()
+    		|| test_generic()
+    		|| test_input()
+    		|| test_route()
+    		|| test_sample()
+    		|| test_sense()
+    		|| test_trigger()
+    	) {
+    	return CU_get_error();
+    }
+
+    /* Run all tests using the CUnit Basic interface */
+    return RUN_ALL_TESTS();
+}
+
+#endif
