@@ -279,11 +279,11 @@ static scpi_result_t test(scpi_t* context) {
 
 		if (SCPI_ERROR_OK != (err = intf->test())) {
 			SCPI_ErrorPush(context, err);
-			return 1;
+			return (scpi_result_t) 1;
 		}
 	}
 
-	return 0;
+	return (scpi_result_t) 0;
 }
 
 static scpi_result_t system_versionQ(scpi_t* context) {
