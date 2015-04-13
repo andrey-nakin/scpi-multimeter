@@ -97,6 +97,10 @@ static const scpi_command_t scpi_commands[] = {
     DECL_GENERIC_AC_FUNCTION("VOLTage:AC", voltage_ac)
 #endif
 
+#ifndef SCPIMM_NO_VOLTAGE_AC_RATIO
+    DECL_NO_PARAM_FUNCTION("VOLTage:AC:RATio", voltage_ac_ratio)
+#endif
+
 #ifndef SCPIMM_NO_CURRENT_DC
     DECL_GENERIC_DC_FUNCTION("CURRent", current_dc)
     DECL_GENERIC_DC_FUNCTION("CURRent:DC", current_dc)

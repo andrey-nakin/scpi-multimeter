@@ -9,6 +9,7 @@ static scpi_unit_t detect_units(scpimm_mode_t mode) {
 		case SCPIMM_MODE_DCV:
 		case SCPIMM_MODE_DCV_RATIO:
 		case SCPIMM_MODE_ACV:
+		case SCPIMM_MODE_ACV_RATIO:
 			return SCPI_UNIT_VOLT;
 
 		case SCPIMM_MODE_DCC:
@@ -182,6 +183,10 @@ scpi_result_t SCPIMM_configure_voltage_dc_ratio(scpi_t* context) {
 
 scpi_result_t SCPIMM_configure_voltage_ac(scpi_t* context) {
 	return configure_2arg_impl(context, SCPIMM_MODE_ACV);
+}
+
+scpi_result_t SCPIMM_configure_voltage_ac_ratio(scpi_t* context) {
+	return configure_2arg_impl(context, SCPIMM_MODE_ACV_RATIO);
 }
 
 scpi_result_t SCPIMM_configure_current_dc(scpi_t* context) {

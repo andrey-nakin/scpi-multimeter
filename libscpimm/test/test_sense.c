@@ -66,7 +66,7 @@ static void test_set_bool_param_impl(const char* const func, const scpimm_mode_t
 	const bool_param_context_t* const context = (const bool_param_context_t*) user_data;
 	const char* const* prefix;
 
-	if (SCPIMM_MODE_DCV_RATIO == mode) {
+	if (SCPIMM_MODE_DCV_RATIO == mode || SCPIMM_MODE_ACV_RATIO == mode) {
 		return;
 	}
 
@@ -113,7 +113,7 @@ static void test_get_bool_param_impl(const char* const func, const scpimm_mode_t
 	const bool_param_context_t* const context = (const bool_param_context_t*) user_data;
 	const char* const* prefix;
 
-	if (SCPIMM_MODE_DCV_RATIO == mode) {
+	if (SCPIMM_MODE_DCV_RATIO == mode || SCPIMM_MODE_ACV_RATIO == mode) {
 		return;
 	}
 
@@ -384,7 +384,7 @@ static void test_range_impl2(const char* const prefix, const char* const func, c
 }
 
 static void test_range_impl(const char* const func, const scpimm_mode_t mode, void* user_data) {
-	if (SCPIMM_MODE_DCV_RATIO == mode) {
+	if (SCPIMM_MODE_DCV_RATIO == mode || SCPIMM_MODE_ACV_RATIO == mode) {
 		return;
 	}
 
@@ -457,7 +457,7 @@ static void test_rangeQ_impl2(const char* const prefix, const char* const func, 
 }
 
 static void test_rangeQ_impl(const char* const func, const scpimm_mode_t mode, void* user_data) {
-	if (SCPIMM_MODE_DCV_RATIO == mode) {
+	if (SCPIMM_MODE_DCV_RATIO == mode || SCPIMM_MODE_ACV_RATIO == mode) {
 		return;
 	}
 

@@ -31,7 +31,7 @@ typedef struct {
 	scpi_bool_t remote, lock;
 
 	struct {
-		dm_mode_state_t dcv, dcv_ratio, acv, dcc, acc, resistance, fresistance;
+		dm_mode_state_t dcv, dcv_ratio, acv, acv_ratio, dcc, acc, resistance, fresistance;
 	} mode_states;
 
 } dm_multimeter_state_t;

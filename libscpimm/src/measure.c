@@ -23,6 +23,10 @@ scpi_result_t SCPIMM_measure_voltage_acQ(scpi_t* context) {
 	return do_measure(context, SCPIMM_configure_voltage_ac);
 }
 
+scpi_result_t SCPIMM_measure_voltage_ac_ratioQ(scpi_t* context) {
+	return do_measure(context, SCPIMM_configure_voltage_ac_ratio);
+}
+
 scpi_result_t SCPIMM_measure_current_dcQ(scpi_t* context) {
 	return do_measure(context, SCPIMM_configure_current_dc);
 }

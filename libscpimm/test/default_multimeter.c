@@ -112,6 +112,8 @@ static dm_mode_state_t* get_mode_state(const scpimm_mode_t mode) {
 		return &dm_multimeter_state.mode_states.dcv_ratio;
 	case SCPIMM_MODE_ACV:
 		return &dm_multimeter_state.mode_states.acv;
+	case SCPIMM_MODE_ACV_RATIO:
+		return &dm_multimeter_state.mode_states.acv_ratio;
 	case SCPIMM_MODE_DCC:
 		return &dm_multimeter_state.mode_states.dcc;
 	case SCPIMM_MODE_ACC:
@@ -252,6 +254,7 @@ static int16_t dm_reset() {
 	reset_mode_state(&dm_multimeter_state.mode_states.dcv);
 	reset_mode_state(&dm_multimeter_state.mode_states.dcv_ratio);
 	reset_mode_state(&dm_multimeter_state.mode_states.acv);
+	reset_mode_state(&dm_multimeter_state.mode_states.acv_ratio);
 	reset_mode_state(&dm_multimeter_state.mode_states.dcc);
 	reset_mode_state(&dm_multimeter_state.mode_states.acc);
 	reset_mode_state(&dm_multimeter_state.mode_states.resistance);
@@ -271,15 +274,15 @@ static int16_t dm_validate_mode(const scpimm_mode_t mode) {
 	case SCPIMM_MODE_DCV:
 	case SCPIMM_MODE_DCV_RATIO:
 	case SCPIMM_MODE_ACV:
+	case SCPIMM_MODE_ACV_RATIO:
 	case SCPIMM_MODE_DCC:
 	case SCPIMM_MODE_ACC:
 	case SCPIMM_MODE_RESISTANCE_2W:
 	case SCPIMM_MODE_RESISTANCE_4W:
 		return SCPI_ERROR_OK;
-
-	default:
-		return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
 	}
+
+	return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
 }
 
 static size_t max_resolution_index(size_t range_index) {

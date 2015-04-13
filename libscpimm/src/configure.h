@@ -10,6 +10,7 @@ scpi_result_t SCPIMM_configureQ(scpi_t* context);
 scpi_result_t SCPIMM_configure_voltage_dc(scpi_t* context);
 scpi_result_t SCPIMM_configure_voltage_dc_ratio(scpi_t* context);
 scpi_result_t SCPIMM_configure_voltage_ac(scpi_t* context);
+scpi_result_t SCPIMM_configure_voltage_ac_ratio(scpi_t* context);
 scpi_result_t SCPIMM_configure_current_dc(scpi_t* context);
 scpi_result_t SCPIMM_configure_current_ac(scpi_t* context);
 scpi_result_t SCPIMM_configure_resistance(scpi_t* context);

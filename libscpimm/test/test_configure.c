@@ -350,6 +350,10 @@ static void test_configure_voltage_ac() {
 	test_impl("VOLTAGE:AC", SCPIMM_MODE_ACV, voltage_prefixes, voltage_mults);
 }
 
+static void test_configure_voltage_ac_ratio() {
+	test_impl("VOLTAGE:AC:RATIO", SCPIMM_MODE_ACV_RATIO, voltage_prefixes, voltage_mults);
+}
+
 static void test_configure_current_dc() {
 	test_impl("CURRENT", SCPIMM_MODE_DCC, current_prefixes, current_mults);
 	test_impl("CURRENT:DC", SCPIMM_MODE_DCC, current_prefixes, current_mults);
@@ -372,6 +376,7 @@ static void test_configureQ() {
 	test_configureQ_impl("VOLTAGE:DC", SCPIMM_MODE_DCV, "VOLT");
 	test_configureQ_impl("VOLTAGE:DC:RATIO", SCPIMM_MODE_DCV_RATIO, "VOLT:DC:RAT");
 	test_configureQ_impl("VOLTAGE:AC", SCPIMM_MODE_ACV, "VOLT:AC");
+	test_configureQ_impl("VOLTAGE:AC:RATIO", SCPIMM_MODE_ACV_RATIO, "VOLT:AC:RAT");
 	test_configureQ_impl("CURRENT", SCPIMM_MODE_DCC, "CURR");
 	test_configureQ_impl("CURRENT:DC", SCPIMM_MODE_DCC, "CURR");
 	test_configureQ_impl("CURRENT:AC", SCPIMM_MODE_ACC, "CURR:AC");
@@ -388,6 +393,7 @@ int test_configure() {
     ADD_TEST(test_configure_voltage_dc);
     ADD_TEST(test_configure_voltage_dc_ratio);
     ADD_TEST(test_configure_voltage_ac);
+    ADD_TEST(test_configure_voltage_ac_ratio);
     ADD_TEST(test_configure_current_dc);
     ADD_TEST(test_configure_current_ac);
     ADD_TEST(test_configure_resistance);

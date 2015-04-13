@@ -6,6 +6,7 @@
 scpi_result_t SCPIMM_measure_voltage_dcQ(scpi_t* context);
 scpi_result_t SCPIMM_measure_voltage_dc_ratioQ(scpi_t* context);
 scpi_result_t SCPIMM_measure_voltage_acQ(scpi_t* context);
+scpi_result_t SCPIMM_measure_voltage_ac_ratioQ(scpi_t* context);
 scpi_result_t SCPIMM_measure_current_dcQ(scpi_t* context);
 scpi_result_t SCPIMM_measure_current_acQ(scpi_t* context);
 scpi_result_t SCPIMM_measure_resistanceQ(scpi_t* context);
