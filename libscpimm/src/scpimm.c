@@ -46,7 +46,6 @@
 ******************************************************************************/
 static size_t write(scpi_t * context, const char* data, size_t len);
 static scpi_result_t reset(scpi_t * context);
-static scpi_result_t test(scpi_t * context);
 static scpi_result_t system_versionQ(scpi_t* context);
 
 /******************************************************************************
@@ -92,7 +91,7 @@ static const scpi_command_t scpi_commands[] = {
 	{"*SRE?", SCPI_CoreSreQ},
 	{"*STB?", SCPI_CoreStbQ},
 	{"*TRG", SCPIMM_trg},
-	{"*TST?", SCPI_CoreTstQ},
+	{"*TST?", SCPIMM_tstQ},
 	{"*WAI", SCPI_CoreWai},
 
     {"FETCh?", SCPIMM_fetchQ},
@@ -202,7 +201,7 @@ static scpi_interface_t scpi_interface = {
 	NULL,
 	NULL,
 	reset,
-	test
+	NULL
 };
 
 /*static scpi_reg_val_t scpi_regs[SCPI_REG_COUNT];*/
@@ -293,21 +292,6 @@ static scpi_result_t reset(scpi_t* context) {
 	// TODO
 
     return SCPI_RES_OK;
-}
-
-static scpi_result_t test(scpi_t* context) {
-	scpimm_interface_t* const intf = SCPIMM_INTERFACE(context);
-
-	if (intf->test) {
-		int16_t err;
-
-		if (SCPI_ERROR_OK != (err = intf->test())) {
-			SCPI_ErrorPush(context, err);
-			return (scpi_result_t) 1;
-		}
-	}
-
-	return (scpi_result_t) 0;
 }
 
 static scpi_result_t system_versionQ(scpi_t* context) {

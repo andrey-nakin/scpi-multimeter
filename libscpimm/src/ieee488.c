@@ -30,3 +30,17 @@ scpi_result_t SCPIMM_IdnQ(scpi_t* const context) {
     return SCPI_RES_OK;
 }
 
+scpi_result_t SCPIMM_tstQ(scpi_t* const context) {
+	scpimm_interface_t* const intf = SCPIMM_INTERFACE(context);
+	int16_t err = SCPI_ERROR_OK;
+
+	if (intf->test) {
+		if (SCPI_ERROR_OK != (err = intf->test())) {
+			SCPI_ErrorPush(context, err);
+		}
+	}
+
+    SCPI_ResultInt(context, SCPI_ERROR_OK == err ? 0 : 1);
+
+    return SCPI_ERROR_OK == err ? SCPI_RES_OK : SCPI_RES_ERR;
+}

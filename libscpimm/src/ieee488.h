@@ -24,6 +24,7 @@
 #include <scpi/scpi.h>
 
 scpi_result_t SCPIMM_IdnQ(scpi_t* context);
+scpi_result_t SCPIMM_tstQ(scpi_t* context);
 
 #endif	//	__IEEE488_H_SCPIMM_
 
