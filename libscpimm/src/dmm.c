@@ -476,7 +476,7 @@ const char* SCPIMM_mode_name(const scpimm_mode_t mode) {
 			break;
 
 		case SCPIMM_MODE_DCV_RATIO:
-			res = "VOLT:DC:RAT";	/* TODO */
+			res = "VOLT:RAT";
 			break;
 
 		case SCPIMM_MODE_ACV:
@@ -484,7 +484,7 @@ const char* SCPIMM_mode_name(const scpimm_mode_t mode) {
 			break;
 
 		case SCPIMM_MODE_ACV_RATIO:
-			res = "VOLT:AC:RAT";	/* TODO */
+			res = "VOLT:AC:RAT";
 			break;
 
 		case SCPIMM_MODE_DCC:

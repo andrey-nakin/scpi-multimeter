@@ -394,7 +394,7 @@ static void test_configure_fresistance() {
 static void test_configureQ() {
 	test_configureQ_impl("VOLTAGE", SCPIMM_MODE_DCV, "VOLT");
 	test_configureQ_impl("VOLTAGE:DC", SCPIMM_MODE_DCV, "VOLT");
-	test_configureQ_impl("VOLTAGE:DC:RATIO", SCPIMM_MODE_DCV_RATIO, "VOLT:DC:RAT");
+	test_configureQ_impl("VOLTAGE:DC:RATIO", SCPIMM_MODE_DCV_RATIO, "VOLT:RAT");
 	test_configureQ_impl("VOLTAGE:AC", SCPIMM_MODE_ACV, "VOLT:AC");
 	test_configureQ_impl("VOLTAGE:AC:RATIO", SCPIMM_MODE_ACV_RATIO, "VOLT:AC:RAT");
 	test_configureQ_impl("CURRENT", SCPIMM_MODE_DCC, "CURR");

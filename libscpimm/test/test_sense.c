@@ -325,11 +325,15 @@ static void test_functionQ_impl2(const char* const prefix, const char* const fun
 
 	strcpy(fn, func);
 	shorten_command_name(fn);
+
 	if (strcmp(fn, "VOLT:DC") == 0) {
 		strcpy(fn, "VOLT");
 	} else if (strcmp(fn, "CURR:DC") == 0) {
 		strcpy(fn, "CURR");
+	} else if (strcmp(fn, "VOLT:DC:RAT") == 0) {
+		strcpy(fn, "VOLT:RAT");
 	}
+
 	sprintf(buf, "\"%s\"\r\n", fn);
 	receivef("%sFUNCTION?", prefix);
 	ASSERT_NO_SCPI_ERRORS();
