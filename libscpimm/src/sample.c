@@ -1,4 +1,7 @@
 /*
+    Copyright (c) 2015 Andrey Nakin
+    All Rights Reserved
+
 	This file is part of scpi-multimeter library.
 
 	v7-28-arduino is free software: you can redistribute it and/or modify
