@@ -126,6 +126,7 @@ void repeat_for_all_modes(void (*test)(const char*, scpimm_mode_t mode, void* us
 	call_test("FRESistance", SCPIMM_MODE_RESISTANCE_4W, test, user_data);
 	call_test("VOLTage", SCPIMM_MODE_DCV, test, user_data);
 	call_test("VOLTage:DC", SCPIMM_MODE_DCV, test, user_data);
+	call_test("VOLTage:RATio", SCPIMM_MODE_DCV_RATIO, test, user_data);
 	call_test("VOLTage:DC:RATio", SCPIMM_MODE_DCV_RATIO, test, user_data);
 	call_test("VOLTage:AC", SCPIMM_MODE_ACV, test, user_data);
 	call_test("VOLTage:AC:RATio", SCPIMM_MODE_ACV_RATIO, test, user_data);
@@ -139,6 +140,7 @@ void repeat_for_all_dc_modes(void (*test)(const char*, scpimm_mode_t mode, void*
 	call_test("FRESistance", SCPIMM_MODE_RESISTANCE_4W, test, user_data);
 	call_test("VOLTage", SCPIMM_MODE_DCV, test, user_data);
 	call_test("VOLTage:DC", SCPIMM_MODE_DCV, test, user_data);
+	call_test("VOLTage:RATio", SCPIMM_MODE_DCV_RATIO, test, user_data);
 	call_test("VOLTage:DC:RATio", SCPIMM_MODE_DCV_RATIO, test, user_data);
 	call_test("CURRent", SCPIMM_MODE_DCC, test, user_data);
 	call_test("CURRent:DC", SCPIMM_MODE_DCC, test, user_data);

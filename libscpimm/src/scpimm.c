@@ -109,6 +109,7 @@ static const scpi_command_t scpi_commands[] = {
 #endif
 
 #ifndef SCPIMM_NO_VOLTAGE_DC_RATIO
+    DECL_NO_PARAM_FUNCTION("VOLTage:RATio", voltage_dc_ratio)
     DECL_NO_PARAM_FUNCTION("VOLTage:DC:RATio", voltage_dc_ratio)
 #endif
 
@@ -272,10 +273,9 @@ static size_t write(scpi_t* const context, const char* data, size_t len) {
 	return SCPIMM_INTERFACE(context)->send((const uint8_t*) data, len);
 }
 
-static scpi_result_t reset(scpi_t* context) {
+static scpi_result_t reset(scpi_t* const context) {
 	volatile scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
 
-//	memset((void*) ctx, 0, sizeof(*ctx));
 	SCPIMM_set_remote(context, TRUE, FALSE);
 	ctx->display = TRUE;
 	ctx->display_text[0] = '\0';
@@ -283,13 +283,6 @@ static scpi_result_t reset(scpi_t* context) {
 	if (ctx->interface->reset) {
 		ctx->interface->reset();
 	}
-
-	{
-		scpi_number_t def = {0.0, SCPI_UNIT_NONE, SCPI_NUM_DEF};
-		SCPIMM_do_configure(context, SCPIMM_MODE_DCV, &def, &def);
-	}
-
-	// TODO
 
     return SCPI_RES_OK;
 }

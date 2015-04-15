@@ -39,6 +39,8 @@ scpi_result_t SCPIMM_sense_function(scpi_t* context) {
 		mode = SCPIMM_MODE_DCV;
     } else if (matchCommand("VOLTage:DC", param, param_len)) {
 		mode = SCPIMM_MODE_DCV;
+    } else if (matchCommand("VOLTage:RATio", param, param_len)) {
+		mode = SCPIMM_MODE_DCV_RATIO;
     } else if (matchCommand("VOLTage:DC:RATio", param, param_len)) {
 		mode = SCPIMM_MODE_DCV_RATIO;
     } else if (matchCommand("VOLTage:AC", param, param_len)) {
