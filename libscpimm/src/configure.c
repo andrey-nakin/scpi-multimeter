@@ -50,7 +50,7 @@ static scpi_bool_t validate_range(scpi_t* context, scpimm_mode_t mode, const scp
 			&& num->type != SCPI_NUM_AUTO
 			&& num->type != SCPI_NUM_NUMBER ) {
 		/* invalid value */
-		/* TODO: correct error number */
+		/* TODO: correct error number: -224 */
 		SCPI_ErrorPush(context, SCPI_ERROR_UNDEFINED_HEADER);
 		return FALSE;
 	}
@@ -60,7 +60,7 @@ static scpi_bool_t validate_range(scpi_t* context, scpimm_mode_t mode, const scp
 			&& num->unit != detect_units(mode)) {
 
 		/* invalid units */
-		/* TODO: correct error number */
+		/* TODO: correct error number: -131 */
 		SCPI_ErrorPush(context, SCPI_ERROR_UNDEFINED_HEADER);
 		return FALSE;
 	}
@@ -74,7 +74,7 @@ static scpi_bool_t validate_resolution(scpi_t* context, scpimm_mode_t mode, cons
 			&& num->type != SCPI_NUM_DEF
 			&& num->type != SCPI_NUM_NUMBER ) {
 		/* invalid value */
-		/* TODO: correct error number */
+		/* TODO: correct error number: -224 */
 		SCPI_ErrorPush(context, SCPI_ERROR_UNDEFINED_HEADER);
 		return FALSE;
 	}
@@ -84,7 +84,7 @@ static scpi_bool_t validate_resolution(scpi_t* context, scpimm_mode_t mode, cons
 			&& num->unit != detect_units(mode)) {
 
 		/* invalid units */
-		/* TODO: correct error number */
+		/* TODO: correct error number: -131 */
 		SCPI_ErrorPush(context, SCPI_ERROR_UNDEFINED_HEADER);
 		return FALSE;
 	}

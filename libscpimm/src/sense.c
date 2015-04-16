@@ -31,7 +31,7 @@ scpi_result_t SCPIMM_sense_function(scpi_t* context) {
     size_t param_len;
     scpimm_mode_t mode;
 
-    if (!SCPI_ParamString(context, &param, &param_len, TRUE)) {
+    if (!SCPI_ParamText(context, &param, &param_len, TRUE)) {
         return SCPI_RES_ERR;
     }
 
@@ -58,8 +58,7 @@ scpi_result_t SCPIMM_sense_function(scpi_t* context) {
     } else if (matchCommand("FRESistance", param, param_len)) {
 		mode = SCPIMM_MODE_RESISTANCE_4W;
 	} else {
-		/* TODO: valid error code */
-		SCPI_ErrorPush(context, SCPI_ERROR_SUFFIX_NOT_ALLOWED);
+		SCPI_ErrorPush(context, SCPI_ERROR_DATA_OUT_OF_RANGE);
 		return SCPI_RES_ERR;
 	}
 
@@ -388,7 +387,7 @@ scpi_result_t SCPIMM_sense_zero_auto(scpi_t* const context) {
         return SCPI_RES_ERR;
     }
 
-    if (matchCommand("ON", param, param_len) || matchCommand("1", param, param_len)) {
+    if (matchCommand("ON", param, param_len) || matchCommand("1", param, param_len)) {  //  TODO add support of float numbers
 		auto_zero = TRUE;
     } else if (matchCommand("OFF", param, param_len) || matchCommand("0", param, param_len)) {
 		auto_zero = FALSE;
@@ -396,7 +395,7 @@ scpi_result_t SCPIMM_sense_zero_auto(scpi_t* const context) {
 		auto_zero = TRUE;
 		auto_zero_once = TRUE;
 	} else {
-		/* TODO: valid error code */
+		/* TODO: valid error code: -224 */
 		SCPI_ErrorPush(context, SCPI_ERROR_SUFFIX_NOT_ALLOWED);
 		return SCPI_RES_ERR;
 	}

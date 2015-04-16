@@ -291,7 +291,7 @@ static void test_function_impl2(const char* const prefix, const char* const func
 	dm_reset_counters();
 	dm_reset_args();
 
-	receivef("%sFUNCTION %s", prefix, func);
+	receivef("%sFUNCTION \"%s\"", prefix, func);
 	ASSERT_NO_SCPI_ERRORS();
 	ASSERT_NO_RESPONSE();
 	CU_ASSERT_EQUAL(dm_counters.set_mode, CALLED_ONCE);
