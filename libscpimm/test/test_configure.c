@@ -358,6 +358,7 @@ static void test_configureQ_impl(const char* function, scpimm_mode_t mode, const
 }
 
 static void test_configure_voltage_dc() {
+	test_impl("DC", SCPIMM_MODE_DCV, voltage_prefixes, voltage_mults);
 	test_impl("VOLTAGE", SCPIMM_MODE_DCV, voltage_prefixes, voltage_mults);
 	test_impl("VOLTAGE:DC", SCPIMM_MODE_DCV, voltage_prefixes, voltage_mults);
 }
@@ -368,6 +369,7 @@ static void test_configure_voltage_dc_ratio() {
 }
 
 static void test_configure_voltage_ac() {
+	test_impl("AC", SCPIMM_MODE_ACV, voltage_prefixes, voltage_mults);
 	test_impl("VOLTAGE:AC", SCPIMM_MODE_ACV, voltage_prefixes, voltage_mults);
 }
 

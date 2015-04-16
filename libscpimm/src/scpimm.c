@@ -106,6 +106,8 @@ static const scpi_command_t scpi_commands[] = {
 #ifndef SCPIMM_NO_VOLTAGE_DC
     DECL_GENERIC_DC_FUNCTION("VOLTage", voltage_dc)
     DECL_GENERIC_DC_FUNCTION("VOLTage:DC", voltage_dc)
+	{"CONFigure:DC", SCPIMM_configure_voltage_dc},
+	{"MEASure:DC", SCPIMM_measure_voltage_dcQ},
 #endif
 
 #ifndef SCPIMM_NO_VOLTAGE_DC_RATIO
@@ -115,6 +117,8 @@ static const scpi_command_t scpi_commands[] = {
 
 #ifndef SCPIMM_NO_VOLTAGE_AC
     DECL_GENERIC_AC_FUNCTION("VOLTage:AC", voltage_ac)
+	{"CONFigure:AC", SCPIMM_configure_voltage_ac},
+	{"MEASure:AC", SCPIMM_measure_voltage_acQ},
 #endif
 
 #ifndef SCPIMM_NO_VOLTAGE_AC_RATIO

@@ -395,8 +395,7 @@ scpi_result_t SCPIMM_sense_zero_auto(scpi_t* const context) {
 		auto_zero = TRUE;
 		auto_zero_once = TRUE;
 	} else {
-		/* TODO: valid error code: -224 */
-		SCPI_ErrorPush(context, SCPI_ERROR_SUFFIX_NOT_ALLOWED);
+		SCPI_ErrorPush(context, SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
 		return SCPI_RES_ERR;
 	}
 
