@@ -69,12 +69,6 @@
 #define ASSERT_INT_RESPONSE(expected) {double v_; CU_ASSERT_EQUAL(sscanf(dm_read_entire_output_buffer(), "%lg", &v_), 1); CU_ASSERT_EQUAL((int) v_, expected); }
 #define ASSERT_DOUBLE_RESPONSE(expected) {double v_; CU_ASSERT_EQUAL(sscanf(dm_read_entire_output_buffer(), "%lg", &v_), 1); CU_ASSERT_DOUBLE_EQUAL(v_, expected, FLOAT_DELTA); }
 
-//void assert_in_data(const char* s);
-//void assert_in_bool(bool_t v);
-//void assert_in_int(int v);
-//void assert_in_double(double v);
-//void assert_number_equals(const scpi_number_t* v, const scpi_number_t* expected);
-
 // required by CU_UNIT
 int init_suite(void);
 int clean_suite(void);

@@ -23,6 +23,28 @@
 #include "CUnit/Basic.h"
 #include "test_utils.h"
 
+static void test_opcQ() {
+	const scpimm_context_t* const ctx = SCPIMM_context();
+
+	receive("*RST;*OPC?");
+	ASSERT_NO_SCPI_ERRORS();
+	ASSERT_BOOL_RESPONSE(TRUE);
+
+	receive("CONF:VOLT;:INIT");
+	ASSERT_NO_SCPI_ERRORS();
+	ASSERT_NO_RESPONSE();
+	CU_ASSERT(SCPIMM_STATE_IDLE != ctx->state);
+
+	receive("*OPC?");
+	CU_ASSERT(SCPIMM_STATE_IDLE == ctx->state);
+	ASSERT_NO_SCPI_ERRORS();
+	ASSERT_BOOL_RESPONSE(TRUE);
+
+	receive("*RST");
+	ASSERT_NO_SCPI_ERRORS();
+	ASSERT_NO_RESPONSE();
+}
+
 static void test_test() {
 	dm_reset_counters();
 	dm_reset_args();
@@ -48,6 +70,7 @@ int test_ieee488() {
     ADD_SUITE("IEEE-488");
 
     /* Add the tests to the suite */
+    ADD_TEST(test_opcQ);
     ADD_TEST(test_test);
 
     return 0;

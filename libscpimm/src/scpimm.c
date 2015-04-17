@@ -85,7 +85,7 @@ static const scpi_command_t scpi_commands[] = {
 	{"*ESR?", SCPI_CoreEsrQ},
 	{"*IDN?", SCPIMM_IdnQ},
 	{"*OPC", SCPI_CoreOpc},
-	{"*OPC?", SCPI_CoreOpcQ},
+	{"*OPC?", SCPIMM_opcQ},
 	{"*RST", SCPI_CoreRst},
 	{"*SRE", SCPI_CoreSre},
 	{"*SRE?", SCPI_CoreSreQ},
@@ -288,7 +288,7 @@ static scpi_result_t reset(scpi_t* const context) {
 		ctx->interface->reset();
 	}
 
-    return SCPI_RES_OK;
+    return SCPIMM_measure_preset(context);
 }
 
 static scpi_result_t system_versionQ(scpi_t* context) {

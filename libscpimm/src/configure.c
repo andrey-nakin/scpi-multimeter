@@ -132,7 +132,9 @@ scpi_result_t SCPIMM_do_configure(scpi_t* context, scpimm_mode_t mode, const scp
 	// TODO is all the stuff below actual?
 	SCPIMM_stop_mesurement();
 	SCPIMM_clear_return_buffer();
-	SCPIMM_measure_preset(context);	/* TODO returning error code is not checked */
+	if (SCPI_RES_OK != SCPIMM_measure_preset(context)) {
+		return SCPI_RES_ERR;
+	}
 
 	err = SCPIMM_set_mode(context, mode, range, TRUE, NULL, resolution);
 	if (SCPI_ERROR_OK != err) {

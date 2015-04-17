@@ -106,7 +106,7 @@ static int16_t initiate(volatile scpimm_context_t* const ctx, const scpimm_dst_t
 	return err;
 }
 
-static int16_t wait_for_idle(volatile scpimm_context_t* const ctx) {
+int16_t SCPIMM_wait_for_idle(volatile scpimm_context_t* const ctx) {
 	int16_t err;
 
 	while (SCPIMM_STATE_IDLE != ATOMIC_READ_INT(ctx->state)) {
@@ -301,7 +301,7 @@ scpi_result_t SCPIMM_readQ(scpi_t* context) {
 	int16_t err;
 
 	CHECK_AND_PUSH_ERROR(initiate(ctx, SCPIMM_DST_OUT));
-	CHECK_AND_PUSH_ERROR(wait_for_idle(ctx));
+	CHECK_AND_PUSH_ERROR(SCPIMM_wait_for_idle(ctx));
 
 	return SCPI_RES_OK;
 }
@@ -312,7 +312,7 @@ scpi_result_t SCPIMM_fetchQ(scpi_t* context) {
 	scpi_result_t result = SCPI_RES_OK;
 	size_t i;
 
-	CHECK_AND_PUSH_ERROR(wait_for_idle(ctx));
+	CHECK_AND_PUSH_ERROR(SCPIMM_wait_for_idle(ctx));
 
 	if (!ctx->buf_count) {
 		/* no data to transfer */

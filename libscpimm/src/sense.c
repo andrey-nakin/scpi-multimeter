@@ -35,29 +35,56 @@ scpi_result_t SCPIMM_sense_function(scpi_t* context) {
         return SCPI_RES_ERR;
     }
 
+#ifndef SCPIMM_NO_VOLTAGE_DC
     if (matchCommand("VOLTage", param, param_len)) {
 		mode = SCPIMM_MODE_DCV;
-    } else if (matchCommand("VOLTage:DC", param, param_len)) {
+    } else
+    if (matchCommand("VOLTage:DC", param, param_len)) {
 		mode = SCPIMM_MODE_DCV;
-    } else if (matchCommand("VOLTage:RATio", param, param_len)) {
+    } else
+#endif
+#ifndef SCPIMM_NO_VOLTAGE_DC_RATIO
+    if (matchCommand("VOLTage:RATio", param, param_len)) {
 		mode = SCPIMM_MODE_DCV_RATIO;
-    } else if (matchCommand("VOLTage:DC:RATio", param, param_len)) {
+    } else
+    if (matchCommand("VOLTage:DC:RATio", param, param_len)) {
 		mode = SCPIMM_MODE_DCV_RATIO;
-    } else if (matchCommand("VOLTage:AC", param, param_len)) {
+    } else
+#endif
+#ifndef SCPIMM_NO_VOLTAGE_AC
+    if (matchCommand("VOLTage:AC", param, param_len)) {
 		mode = SCPIMM_MODE_ACV;
-    } else if (matchCommand("VOLTage:AC:RATio", param, param_len)) {
+    } else
+#endif
+#ifndef SCPIMM_NO_VOLTAGE_AC_RATIO
+    if (matchCommand("VOLTage:AC:RATio", param, param_len)) {
 		mode = SCPIMM_MODE_ACV_RATIO;
-    } else if (matchCommand("CURRent", param, param_len)) {
+    } else
+#endif
+#ifndef SCPIMM_NO_CURRENT_DC
+    if (matchCommand("CURRent", param, param_len)) {
 		mode = SCPIMM_MODE_DCC;
-    } else if (matchCommand("CURRent:DC", param, param_len)) {
+    } else
+    if (matchCommand("CURRent:DC", param, param_len)) {
 		mode = SCPIMM_MODE_DCC;
-    } else if (matchCommand("CURRent:AC", param, param_len)) {
+    } else
+#endif
+#ifndef SCPIMM_NO_CURRENT_AC
+    if (matchCommand("CURRent:AC", param, param_len)) {
 		mode = SCPIMM_MODE_ACC;
-    } else if (matchCommand("RESistance", param, param_len)) {
+    } else
+#endif
+#ifndef SCPIMM_NO_RESISTANCE
+    if (matchCommand("RESistance", param, param_len)) {
 		mode = SCPIMM_MODE_RESISTANCE_2W;
-    } else if (matchCommand("FRESistance", param, param_len)) {
+    } else
+#endif
+#ifndef SCPIMM_NO_FRESISTANCE
+    if (matchCommand("FRESistance", param, param_len)) {
 		mode = SCPIMM_MODE_RESISTANCE_4W;
-	} else {
+	} else
+#endif
+	{
 		SCPI_ErrorPush(context, SCPI_ERROR_DATA_OUT_OF_RANGE);
 		return SCPI_RES_ERR;
 	}

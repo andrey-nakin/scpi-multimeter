@@ -182,6 +182,62 @@ static void* trigger_thread_routine(void* args) {
 	return NULL;
 }
 
+static int16_t validate_mode(const scpimm_mode_t mode) {
+	switch (mode) {
+	case SCPIMM_MODE_DCV:
+	case SCPIMM_MODE_DCV_RATIO:
+	case SCPIMM_MODE_ACV:
+	case SCPIMM_MODE_ACV_RATIO:
+	case SCPIMM_MODE_DCC:
+	case SCPIMM_MODE_ACC:
+	case SCPIMM_MODE_RESISTANCE_2W:
+	case SCPIMM_MODE_RESISTANCE_4W:
+		return SCPI_ERROR_OK;
+	}
+
+	return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
+}
+
+static size_t max_resolution_index(size_t range_index) {
+	const double* resolutions = RESOLUTIONS[range_index];
+	size_t resolution_index = 0;
+
+	for (; resolutions[resolution_index] >= 0.0; resolution_index++) {};
+	return --resolution_index;
+}
+
+static int16_t set_mode_impl(const scpimm_mode_t mode, const scpimm_mode_params_t* const params) {
+	int16_t err;
+
+	if (SCPI_ERROR_OK != (err = validate_mode(mode))) {
+		return err;
+	}
+
+	if (params) {
+		dm_mode_state_t* const mode_state = get_mode_state(mode);
+
+		if (!mode_state) {
+			return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
+		}
+
+		if (sizeof(RANGES) / sizeof(RANGES[0]) - 1 <= params->range_index) {
+			return SCPI_ERROR_DATA_OUT_OF_RANGE;
+		}
+		if (max_resolution_index(params->range_index) < params->resolution_index) {
+			return SCPI_ERROR_DATA_OUT_OF_RANGE;
+		}
+
+		mode_state->range_index = params->range_index;
+		mode_state->auto_range = params->auto_range;
+		mode_state->resolution_index = params->resolution_index;
+	}
+
+	dm_multimeter_state.mode = mode;
+	dm_multimeter_state.mode_initialized = TRUE;
+
+	return SCPI_ERROR_OK;
+}
+
 /***************************************************************
  * Interface functions
  **************************************************************/
@@ -286,36 +342,12 @@ static int16_t dm_reset() {
 
 	out_buffer_counter = 0;
 
+	set_mode_impl(SCPIMM_MODE_DCV, NULL);
+
 	return SCPI_ERROR_OK;
 }
 
-static int16_t dm_validate_mode(const scpimm_mode_t mode) {
-	switch (mode) {
-	case SCPIMM_MODE_DCV:
-	case SCPIMM_MODE_DCV_RATIO:
-	case SCPIMM_MODE_ACV:
-	case SCPIMM_MODE_ACV_RATIO:
-	case SCPIMM_MODE_DCC:
-	case SCPIMM_MODE_ACC:
-	case SCPIMM_MODE_RESISTANCE_2W:
-	case SCPIMM_MODE_RESISTANCE_4W:
-		return SCPI_ERROR_OK;
-	}
-
-	return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
-}
-
-static size_t max_resolution_index(size_t range_index) {
-	const double* resolutions = RESOLUTIONS[range_index];
-	size_t resolution_index = 0;
-
-	for (; resolutions[resolution_index] >= 0.0; resolution_index++) {};
-	return --resolution_index;
-}
-
 static int16_t dm_set_mode(const scpimm_mode_t mode, const scpimm_mode_params_t* const params) {
-	int16_t err;
-
 	dm_counters.set_mode++;
 
 	/* store function arguments for later analysis */
@@ -328,33 +360,7 @@ static int16_t dm_set_mode(const scpimm_mode_t mode, const scpimm_mode_params_t*
 	}
 	/* */
 
-	if (SCPI_ERROR_OK != (err = dm_validate_mode(mode))) {
-		return err;
-	}
-
-	if (params) {
-		dm_mode_state_t* const mode_state = get_mode_state(mode);
-
-		if (!mode_state) {
-			return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
-		}
-
-		if (sizeof(RANGES) / sizeof(RANGES[0]) - 1 <= params->range_index) {
-			return SCPI_ERROR_DATA_OUT_OF_RANGE;
-		}
-		if (max_resolution_index(params->range_index) < params->resolution_index) {
-			return SCPI_ERROR_DATA_OUT_OF_RANGE;
-		}
-
-		mode_state->range_index = params->range_index;
-		mode_state->auto_range = params->auto_range;
-		mode_state->resolution_index = params->resolution_index;
-	}
-
-	dm_multimeter_state.mode = mode;
-	dm_multimeter_state.mode_initialized = TRUE;
-
-	return SCPI_ERROR_OK;
+	return set_mode_impl(mode, params);
 }
 
 static int16_t dm_get_mode(scpimm_mode_t* mode) {
@@ -387,7 +393,7 @@ static int16_t dm_get_allowed_resolutions(scpimm_mode_t mode, size_t range_index
 	}
 	/* */
 
-	if (SCPI_ERROR_OK != (err = dm_validate_mode(mode))) {
+	if (SCPI_ERROR_OK != (err = validate_mode(mode))) {
 		return err;
 	}
 
@@ -607,7 +613,7 @@ static int16_t dm_get_numeric_param_values(const scpimm_mode_t mode, const scpim
 	dm_args.get_numeric_param_values.param = param;
 	dm_args.get_numeric_param_values.values_is_null = !values;
 
-	if (SCPI_ERROR_OK != (err = dm_validate_mode(mode))) {
+	if (SCPI_ERROR_OK != (err = validate_mode(mode))) {
 		return err;
 	}
 

@@ -20,6 +20,7 @@
 
 #include "ieee488.h"
 #include "scpimm_internal.h"
+#include "dmm.h"
 #include "utils.h"
 
 scpi_result_t SCPIMM_IdnQ(scpi_t* const context) {
@@ -27,6 +28,13 @@ scpi_result_t SCPIMM_IdnQ(scpi_t* const context) {
 	const scpimm_interface_t* const intf = ctx->interface;
 
     SCPI_ResultString(context, intf->get_idn ? intf->get_idn() : "HEWLETT-PACKARD,34401A,0,11-5-2");
+    return SCPI_RES_OK;
+}
+
+scpi_result_t SCPIMM_opcQ(scpi_t* const context) {
+	int16_t err;
+	CHECK_AND_PUSH_ERROR(SCPIMM_wait_for_idle(SCPIMM_CONTEXT(context)));
+    SCPI_ResultInt(context, 1);
     return SCPI_RES_OK;
 }
 
