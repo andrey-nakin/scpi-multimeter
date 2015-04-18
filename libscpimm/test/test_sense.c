@@ -371,7 +371,7 @@ static void test_range_value_error(const char* const prefix, const char* const f
 	dm_reset_counters();
 	dm_reset_args();
 	receivef("%s%s:RANGE %s", prefix, func, value);
-	ASSERT_SCPI_ERROR(SCPI_ERROR_DATA_OUT_OF_RANGE);
+	ASSERT_SCPI_ERROR(SCPIMM_ERROR_DATA_OUT_OF_RANGE);
 	ASSERT_NO_RESPONSE();
 	CU_ASSERT_EQUAL(dm_counters.set_numeric_param, NOT_CALLED);
 }

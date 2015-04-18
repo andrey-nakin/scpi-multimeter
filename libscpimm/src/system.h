@@ -29,6 +29,7 @@ scpi_result_t SCPIMM_system_beeper_stateQ(scpi_t* context);
 scpi_result_t SCPIMM_system_local(scpi_t* context);
 scpi_result_t SCPIMM_system_remote(scpi_t* context);
 scpi_result_t SCPIMM_system_rwlock(scpi_t* context);
+scpi_result_t SCPIMM_SystemErrorNextQ(scpi_t * context);
 
 int16_t SCPIMM_set_remote(scpi_t* context, scpi_bool_t remote, scpi_bool_t lock);
 

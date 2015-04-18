@@ -226,7 +226,7 @@ static void test_configure_out_of_range(const char* function, scpimm_mode_t mode
 	range = ranges[max_index(ranges)] * overruns[max_index(ranges)] * 1.01;
 	dm_reset_counters();
 	configure_with_range(function, range, "");
-	ASSERT_SCPI_ERROR(SCPI_ERROR_DATA_OUT_OF_RANGE);
+	ASSERT_SCPI_ERROR(SCPIMM_ERROR_DATA_OUT_OF_RANGE);
 	ASSERT_NO_RESPONSE();
 	check_general_failure();
 	clearscpi_errors();
@@ -239,7 +239,7 @@ static void test_configure_out_of_range(const char* function, scpimm_mode_t mode
 		resolution = resolutions[0] * 0.99;
 		dm_reset_counters();
 		configure_with_range_and_res(function, range, "", resolution, "");
-		ASSERT_SCPI_ERROR(SCPI_ERROR_CANNOT_ACHIEVE_REQUESTED_RESOLUTION);
+		ASSERT_SCPI_ERROR(SCPIMM_ERROR_CANNOT_ACHIEVE_REQUESTED_RESOLUTION);
 		ASSERT_NO_RESPONSE();
 		check_general_failure();
 		clearscpi_errors();

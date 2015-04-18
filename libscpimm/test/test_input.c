@@ -46,17 +46,17 @@ static void test_impedance_auto() {
 
 	dm_reset_counters();
 	receive("INPUT:IMPEDANCE:AUTO");
-	ASSERT_SCPI_ERROR(SCPI_ERROR_MISSING_PARAMETER);
+	ASSERT_SCPI_ERROR(SCPIMM_ERROR_MISSING_PARAMETER);
 	ASSERT_NO_RESPONSE();
 	CU_ASSERT_EQUAL(dm_counters.set_global_bool_param, NOT_CALLED);
 	CU_ASSERT_EQUAL(dm_multimeter_state.input_impedance_auto_state, FALSE);
 
 	// emulate error
-	dm_returns.set_global_bool_param = SCPI_ERROR_UNKNOWN;
+	dm_returns.set_global_bool_param = SCPIMM_ERROR_INTERNAL;
 	dm_reset_counters();
 	dm_reset_args();
 	receive("INPUT:IMPEDANCE:AUTO ON");
-	ASSERT_SCPI_ERROR(SCPI_ERROR_UNKNOWN);
+	ASSERT_SCPI_ERROR(SCPIMM_ERROR_INTERNAL);
 	ASSERT_NO_RESPONSE();
 	CU_ASSERT_EQUAL(dm_counters.set_global_bool_param, CALLED_ONCE);
 	CU_ASSERT_EQUAL(dm_args.set_global_bool_param.param, SCPIMM_PARAM_INPUT_IMPEDANCE_AUTO);
@@ -64,7 +64,7 @@ static void test_impedance_auto() {
 	CU_ASSERT_EQUAL(dm_multimeter_state.input_impedance_auto_state, FALSE);
 
 	// reset error
-	dm_returns.set_global_bool_param = SCPI_ERROR_OK;
+	dm_returns.set_global_bool_param = SCPIMM_ERROR_OK;
 }
 
 static void test_impedance_autoQ() {

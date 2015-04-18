@@ -51,7 +51,7 @@ scpi_result_t SCPIMM_display_text(scpi_t* context) {
 
 	text_len -= 2;
 	if (text_len > SCPIMM_DISPLAY_LEN) {
-	    SCPI_ErrorPush(context, SCPI_ERROR_TOO_MUCH_DATA);
+	    SCPI_ErrorPush(context, SCPIMM_ERROR_TOO_MUCH_DATA);
     	return SCPI_RES_ERR;
 	}
 

@@ -53,15 +53,15 @@ static void test_test() {
 	ASSERT_BOOL_RESPONSE(FALSE);
 	CU_ASSERT_EQUAL(dm_counters.test, CALLED_ONCE);
 
-	dm_returns.test = SCPI_ERROR_UNKNOWN;
+	dm_returns.test = SCPIMM_ERROR_INTERNAL;
 	dm_reset_counters();
 	dm_reset_args();
 	receive("*TST?");
 	ASSERT_BOOL_RESPONSE(TRUE);
-	ASSERT_SCPI_ERROR(SCPI_ERROR_UNKNOWN);
+	ASSERT_SCPI_ERROR(SCPIMM_ERROR_INTERNAL);
 	CU_ASSERT_EQUAL(dm_counters.test, CALLED_ONCE);
 
-	dm_returns.test = SCPI_ERROR_OK;
+	dm_returns.test = SCPIMM_ERROR_OK;
 }
 
 int test_ieee488() {

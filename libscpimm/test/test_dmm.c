@@ -117,7 +117,7 @@ static void test_readQ_generic_impl(const dm_measurement_type_t mt, const char* 
 	ASSERT_NO_SCPI_ERRORS();
 	dm_reset_counters();
 	receivef("READ?");
-	ASSERT_SCPI_ERROR(SCPI_ERROR_TRIGGER_DEADLOCK);
+	ASSERT_SCPI_ERROR(SCPIMM_ERROR_TRIGGER_DEADLOCK);
 
 	// read SAMPLE_COUNT values
 	receivef("TRIGGER:SOURCE %s", trigger_src);
@@ -151,7 +151,7 @@ static void test_readQ_generic_impl(const dm_measurement_type_t mt, const char* 
 	dm_multimeter_state.measurement_failure_counter = sample_count * trigger_count / 2;
 	CU_ASSERT_TRUE(dm_multimeter_state.measurement_failure_counter > 0);
 	receivef("READ?");
-	ASSERT_SCPI_ERROR(SCPI_ERROR_IO_PROCESSOR_DOES_NOT_RESPOND);
+	ASSERT_SCPI_ERROR(SCPIMM_ERROR_IO_PROCESSOR_DOES_NOT_RESPOND);
 	check_after_read_state();
 	dm_read_entire_output_buffer();	//	clear out buffer
 
@@ -260,7 +260,7 @@ static void test_initiate_generic_impl(const dm_measurement_type_t mt, const cha
 	receivef("INITIATE");
 	check_after_init_state();
 	receivef("FETCH?");
-	ASSERT_SCPI_ERROR(SCPI_ERROR_IO_PROCESSOR_DOES_NOT_RESPOND);
+	ASSERT_SCPI_ERROR(SCPIMM_ERROR_IO_PROCESSOR_DOES_NOT_RESPOND);
 
 	// read values again after failure
 	dm_reset_counters();
@@ -279,7 +279,7 @@ static void test_initiate_generic_impl(const dm_measurement_type_t mt, const cha
 	receivef("SAMPLE:COUNT %u", (unsigned) (SCPIMM_BUF_CAPACITY + 1));
 	ASSERT_NO_SCPI_ERRORS();
 	receivef("INITIATE");
-	ASSERT_SCPI_ERROR(SCPI_ERROR_INSUFFICIENT_MEMORY);
+	ASSERT_SCPI_ERROR(SCPIMM_ERROR_INSUFFICIENT_MEMORY);
 }
 
 static void test_initiate_bus_trigger(const dm_measurement_type_t mt) {
@@ -314,7 +314,7 @@ static void test_initiate_bus_trigger(const dm_measurement_type_t mt) {
 
 	// unexpected *TRG command
 	receivef("*TRG");
-	ASSERT_SCPI_ERROR(SCPI_ERROR_TRIGGER_IGNORED);
+	ASSERT_SCPI_ERROR(SCPIMM_ERROR_TRIGGER_IGNORED);
 	ASSERT_NO_RESPONSE();
 
 	// read single value from IMM trigger with unexpected *TRG command
@@ -323,7 +323,7 @@ static void test_initiate_bus_trigger(const dm_measurement_type_t mt) {
 	receivef("INITIATE");
 	check_after_init_state();
 	receivef("*TRG");
-	ASSERT_SCPI_ERROR(SCPI_ERROR_TRIGGER_IGNORED);
+	ASSERT_SCPI_ERROR(SCPIMM_ERROR_TRIGGER_IGNORED);
 	ASSERT_NO_RESPONSE();
 	receivef("FETCH?");
 	check_after_fetch_state();
@@ -360,7 +360,7 @@ static void test_unexpected_fetch() {
 	read_equal_numbers(1, values, actual_range * 0.5);
 
 	receivef("FETCH?");
-	ASSERT_SCPI_ERROR(SCPI_ERROR_DATA_STALE);
+	ASSERT_SCPI_ERROR(SCPIMM_ERROR_DATA_STALE);
 	ASSERT_NO_RESPONSE();
 }
 

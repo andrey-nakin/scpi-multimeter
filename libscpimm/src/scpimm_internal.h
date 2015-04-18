@@ -24,7 +24,7 @@
 #include <stdlib.h>
 #include <scpimm/scpimm.h>
 
-#define SCPIMM_BUF_LEN 11
+#define SCPIMM_BUF_LEN 512
 #define SCPIMM_BUF_CAPACITY SCPIMM_BUF_LEN
 
 #define SCPIMM_DISPLAY_LEN 12

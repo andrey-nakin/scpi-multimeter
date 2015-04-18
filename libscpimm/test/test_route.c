@@ -40,10 +40,10 @@ static void test_terminalsQ() {
 	ASSERT_RESPONSE("REAR\r\n");
 
 	// emulate error
-	dm_returns.get_input_terminal = SCPI_ERROR_UNKNOWN;
+	dm_returns.get_input_terminal = SCPIMM_ERROR_INTERNAL;
 	receive("ROUTE:TERMINALS?");
-	ASSERT_SCPI_ERROR(SCPI_ERROR_UNKNOWN);
-	dm_returns.get_input_terminal = SCPI_ERROR_OK;
+	ASSERT_SCPI_ERROR(SCPIMM_ERROR_INTERNAL);
+	dm_returns.get_input_terminal = SCPIMM_ERROR_OK;
 
 	// emulate "handler not specified" case
 	intf->get_input_terminal = NULL;

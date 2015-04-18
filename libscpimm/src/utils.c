@@ -55,7 +55,7 @@ scpi_bool_t expectNoParams(scpi_t* context) {
     size_t param_len;
 
 	if (SCPI_ParamString(context, &param, &param_len, FALSE)) {
-	    SCPI_ErrorPush(context, SCPI_ERROR_PARAMETER_NOT_ALLOWED);
+	    SCPI_ErrorPush(context, SCPIMM_ERROR_PARAMETER_NOT_ALLOWED);
 		return FALSE;
 	}
 

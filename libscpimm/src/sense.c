@@ -90,7 +90,7 @@ scpi_result_t SCPIMM_sense_function(scpi_t* context) {
 	} else
 #endif
 	{
-		SCPI_ErrorPush(context, SCPI_ERROR_DATA_OUT_OF_RANGE);
+		SCPI_ErrorPush(context, SCPIMM_ERROR_DATA_OUT_OF_RANGE);
 		return SCPI_RES_ERR;
 	}
 
@@ -105,14 +105,14 @@ scpi_result_t SCPIMM_sense_functionQ(scpi_t* context) {
 	scpimm_mode_t mode;
 	const int16_t err = ctx->interface->get_mode(&mode);
 
-	if (SCPI_ERROR_OK != err) {
+	if (SCPIMM_ERROR_OK != err) {
 	    SCPI_ErrorPush(context, err);
     	return SCPI_RES_ERR;
 	}
 	
 	res = SCPIMM_mode_name(mode);
 	if (NULL == res) {
-		SCPI_ErrorPush(context, SCPI_ERROR_UNDEFINED_HEADER);
+		SCPI_ErrorPush(context, SCPIMM_ERROR_UNDEFINED_HEADER);
 		return SCPI_RES_ERR;
     }
 
@@ -150,7 +150,7 @@ static scpi_result_t set_numeric_param(scpi_t* const context, const scpimm_mode_
 		break;
 
 	default:
-		CHECK_AND_PUSH_ERROR(SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
+		CHECK_AND_PUSH_ERROR(SCPIMM_ERROR_ILLEGAL_PARAMETER_VALUE);
 	}
 
     EXPECT_NO_PARAMS(context);
@@ -183,7 +183,7 @@ static scpi_result_t query_numeric_param(scpi_t* const context, const scpimm_mod
 				break;
 
 			default:
-				CHECK_AND_PUSH_ERROR(SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
+				CHECK_AND_PUSH_ERROR(SCPIMM_ERROR_ILLEGAL_PARAMETER_VALUE);
 			}
 		}
     }
@@ -274,12 +274,12 @@ static scpi_result_t set_range(scpi_t* const context, const scpimm_mode_t mode) 
 	case SCPI_NUM_NUMBER:
 		value_index = range_index(ranges, overruns, value.value);
 		if (SIZE_MAX == value_index) {
-			CHECK_AND_PUSH_ERROR(SCPI_ERROR_DATA_OUT_OF_RANGE);
+			CHECK_AND_PUSH_ERROR(SCPIMM_ERROR_DATA_OUT_OF_RANGE);
 		}
 		break;
 
 	default:
-		CHECK_AND_PUSH_ERROR(SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
+		CHECK_AND_PUSH_ERROR(SCPIMM_ERROR_ILLEGAL_PARAMETER_VALUE);
 	}
 
     EXPECT_NO_PARAMS(context);
@@ -314,12 +314,12 @@ static scpi_result_t set_resolution(scpi_t* const context, const scpimm_mode_t m
 	case SCPI_NUM_NUMBER:
 		resolution_index = less_or_equal_index(values, value.value * (1.0 + FLOAT_DELTA));
 		if (SIZE_MAX == resolution_index) {
-			CHECK_AND_PUSH_ERROR(SCPI_ERROR_CANNOT_ACHIEVE_REQUESTED_RESOLUTION);
+			CHECK_AND_PUSH_ERROR(SCPIMM_ERROR_CANNOT_ACHIEVE_REQUESTED_RESOLUTION);
 		}
 		break;
 
 	default:
-		CHECK_AND_PUSH_ERROR(SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
+		CHECK_AND_PUSH_ERROR(SCPIMM_ERROR_ILLEGAL_PARAMETER_VALUE);
 	}
 
     EXPECT_NO_PARAMS(context);
@@ -349,7 +349,7 @@ static scpi_result_t query_resolution(scpi_t* const context, const scpimm_mode_t
 			break;
 
 		default:
-			CHECK_AND_PUSH_ERROR(SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
+			CHECK_AND_PUSH_ERROR(SCPIMM_ERROR_ILLEGAL_PARAMETER_VALUE);
 		}
 	}
 
@@ -435,7 +435,7 @@ scpi_result_t SCPIMM_sense_zero_auto(scpi_t* const context) {
 			auto_zero = v > 0.0;
 			auto_zero_once = FALSE;
 		} else {
-			SCPI_ErrorPush(context, SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
+			SCPI_ErrorPush(context, SCPIMM_ERROR_ILLEGAL_PARAMETER_VALUE);
 			return SCPI_RES_ERR;
 		}
 	}

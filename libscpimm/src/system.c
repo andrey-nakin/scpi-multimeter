@@ -22,6 +22,16 @@
 #include "scpimm_internal.h"
 #include "utils.h"
 
+static const char* error_translate(int16_t err) {
+    switch (err) {
+        case 0: return "No error";
+        #define X(def, val, str) case def: return str;
+        SCPIMM_LIST_OF_ERRORS
+        #undef X
+        default: return "Unknown error";
+    }
+}
+
 scpi_result_t SCPIMM_system_beeper(scpi_t* context) {
 	int16_t err;
 	if (SCPIMM_INTERFACE(context)->beep) {
@@ -61,12 +71,21 @@ scpi_result_t SCPIMM_system_rwlock(scpi_t* context) {
     return SCPI_RES_OK;
 }
 
+scpi_result_t SCPIMM_SystemErrorNextQ(scpi_t * context) {
+    int16_t err = SCPI_ErrorPop(context);
+
+    SCPI_ResultInt(context, err);
+    SCPI_ResultText(context, error_translate(err));
+
+    return SCPI_RES_OK;
+}
+
 int16_t SCPIMM_set_remote(scpi_t* const context, const scpi_bool_t remote, const scpi_bool_t lock) {
 	int16_t err;
 	scpimm_interface_t* const intf = SCPIMM_INTERFACE(context);
 
-	CHECK_SCPI_ERROR(intf->set_global_bool_param(SCPIMM_PARAM_REMOTE, remote));
-	CHECK_SCPI_ERROR(intf->set_global_bool_param(SCPIMM_PARAM_LOCK, lock));
+	CHECK_SCPIMM_ERROR(intf->set_global_bool_param(SCPIMM_PARAM_REMOTE, remote));
+	CHECK_SCPIMM_ERROR(intf->set_global_bool_param(SCPIMM_PARAM_LOCK, lock));
 
-	return SCPI_ERROR_OK;
+	return SCPIMM_ERROR_OK;
 }

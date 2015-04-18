@@ -121,7 +121,7 @@ static int16_t sleep_milliseconds(const uint32_t ms) {
 		delay.tv_nsec = ms * 1000000;
 	}
 	nanosleep(&delay, NULL);
-	return SCPI_ERROR_OK;
+	return SCPIMM_ERROR_OK;
 }
 
 static dm_mode_state_t* get_mode_state(const scpimm_mode_t mode) {
@@ -192,10 +192,10 @@ static int16_t validate_mode(const scpimm_mode_t mode) {
 	case SCPIMM_MODE_ACC:
 	case SCPIMM_MODE_RESISTANCE_2W:
 	case SCPIMM_MODE_RESISTANCE_4W:
-		return SCPI_ERROR_OK;
+		return SCPIMM_ERROR_OK;
 	}
 
-	return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
+	return SCPIMM_ERROR_ILLEGAL_PARAMETER_VALUE;
 }
 
 static size_t max_resolution_index(size_t range_index) {
@@ -209,7 +209,7 @@ static size_t max_resolution_index(size_t range_index) {
 static int16_t set_mode_impl(const scpimm_mode_t mode, const scpimm_mode_params_t* const params) {
 	int16_t err;
 
-	if (SCPI_ERROR_OK != (err = validate_mode(mode))) {
+	if (SCPIMM_ERROR_OK != (err = validate_mode(mode))) {
 		return err;
 	}
 
@@ -217,14 +217,14 @@ static int16_t set_mode_impl(const scpimm_mode_t mode, const scpimm_mode_params_
 		dm_mode_state_t* const mode_state = get_mode_state(mode);
 
 		if (!mode_state) {
-			return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
+			return SCPIMM_ERROR_ILLEGAL_PARAMETER_VALUE;
 		}
 
 		if (sizeof(RANGES) / sizeof(RANGES[0]) - 1 <= params->range_index) {
-			return SCPI_ERROR_DATA_OUT_OF_RANGE;
+			return SCPIMM_ERROR_DATA_OUT_OF_RANGE;
 		}
 		if (max_resolution_index(params->range_index) < params->resolution_index) {
-			return SCPI_ERROR_DATA_OUT_OF_RANGE;
+			return SCPIMM_ERROR_DATA_OUT_OF_RANGE;
 		}
 
 		mode_state->range_index = params->range_index;
@@ -235,7 +235,7 @@ static int16_t set_mode_impl(const scpimm_mode_t mode, const scpimm_mode_params_
 	dm_multimeter_state.mode = mode;
 	dm_multimeter_state.mode_initialized = TRUE;
 
-	return SCPI_ERROR_OK;
+	return SCPIMM_ERROR_OK;
 }
 
 /***************************************************************
@@ -304,7 +304,7 @@ static int16_t dm_setup() {
 		trigger_thread_created = TRUE;
 	}
 
-	return SCPI_ERROR_OK;
+	return SCPIMM_ERROR_OK;
 }
 
 static void reset_mode_state(dm_mode_state_t* dest) {
@@ -344,7 +344,7 @@ static int16_t dm_reset() {
 
 	set_mode_impl(SCPIMM_MODE_DCV, NULL);
 
-	return SCPI_ERROR_OK;
+	return SCPIMM_ERROR_OK;
 }
 
 static int16_t dm_set_mode(const scpimm_mode_t mode, const scpimm_mode_params_t* const params) {
@@ -367,14 +367,14 @@ static int16_t dm_get_mode(scpimm_mode_t* mode) {
 	dm_counters.get_mode++;
 
 	if (!dm_multimeter_state.mode_initialized) {
-		return SCPI_ERROR_INTERNAL_START;
+		return SCPIMM_ERROR_INTERNAL;
 	}
 
 	if (mode) {
 		*mode = dm_multimeter_state.mode;
 	}
 
-	return SCPI_ERROR_OK;
+	return SCPIMM_ERROR_OK;
 }
 
 static int16_t dm_get_allowed_resolutions(scpimm_mode_t mode, size_t range_index, const double** resolutions) {
@@ -393,19 +393,19 @@ static int16_t dm_get_allowed_resolutions(scpimm_mode_t mode, size_t range_index
 	}
 	/* */
 
-	if (SCPI_ERROR_OK != (err = validate_mode(mode))) {
+	if (SCPIMM_ERROR_OK != (err = validate_mode(mode))) {
 		return err;
 	}
 
 	if (range_index >= sizeof(RANGES) / sizeof(RANGES[0])) {
-		return SCPI_ERROR_DATA_OUT_OF_RANGE;
+		return SCPIMM_ERROR_DATA_OUT_OF_RANGE;
 	}
 
 	if (resolutions) {
 		*resolutions = RESOLUTIONS[range_index];
 	}
 
-	return SCPI_ERROR_OK;
+	return SCPIMM_ERROR_OK;
 }
 
 static int16_t dm_start_measure() {
@@ -414,7 +414,7 @@ static int16_t dm_start_measure() {
 	if (dm_multimeter_state.measurement_failure_counter) {
 		if (1 == dm_multimeter_state.measurement_failure_counter--) {
 			// emulate internal multimeter error when "measurement is ready" signal is lost
-			return SCPI_ERROR_OK;
+			return SCPIMM_ERROR_OK;
 		}
 	}
 
@@ -432,7 +432,7 @@ static int16_t dm_start_measure() {
 		do_measurement();
 		break;
 	}
-	return SCPI_ERROR_OK;
+	return SCPIMM_ERROR_OK;
 }
 
 static size_t dm_send(const uint8_t* data, const size_t len) {
@@ -445,7 +445,7 @@ static int16_t dm_get_milliseconds(uint32_t* const tm) {
 	if (tm) {
 		*tm = get_milliseconds();
 	}
-	return SCPI_ERROR_OK;
+	return SCPIMM_ERROR_OK;
 }
 
 static int16_t dm_set_interrupt_status(const scpi_bool_t disabled) {
@@ -457,7 +457,7 @@ static int16_t dm_set_interrupt_status(const scpi_bool_t disabled) {
 		dm_multimeter_state.interrrupt_disable_counter--;
 	}
 
-	return SCPI_ERROR_OK;
+	return SCPIMM_ERROR_OK;
 }
 
 static int16_t dm_get_global_bool_param(const scpimm_bool_param_t param, scpi_bool_t* const value) {
@@ -491,7 +491,7 @@ static int16_t dm_get_global_bool_param(const scpimm_bool_param_t param, scpi_bo
 		break;
 
 	case SCPIMM_PARAM_RANGE_AUTO:
-		return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
+		return SCPIMM_ERROR_ILLEGAL_PARAMETER_VALUE;
 	}
 
 	if (value) {
@@ -508,7 +508,7 @@ static int16_t dm_set_global_bool_param(const scpimm_bool_param_t param, const s
 	dm_args.set_global_bool_param.param = param;
 	dm_args.set_global_bool_param.value = value;
 
-	if (SCPI_ERROR_OK != dm_returns.set_global_bool_param) {
+	if (SCPIMM_ERROR_OK != dm_returns.set_global_bool_param) {
 		return dm_returns.set_global_bool_param;
 	}
 
@@ -534,10 +534,10 @@ static int16_t dm_set_global_bool_param(const scpimm_bool_param_t param, const s
 		break;
 
 	case SCPIMM_PARAM_RANGE_AUTO:
-		return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
+		return SCPIMM_ERROR_ILLEGAL_PARAMETER_VALUE;
 	}
 
-	return SCPI_ERROR_OK;
+	return SCPIMM_ERROR_OK;
 }
 
 static int16_t dm_get_bool_param(const scpimm_mode_t mode, const scpimm_bool_param_t param, scpi_bool_t* const value) {
@@ -551,7 +551,7 @@ static int16_t dm_get_bool_param(const scpimm_mode_t mode, const scpimm_bool_par
 	dm_args.get_bool_param.value_is_null = !value;
 
 	if (!mode_state) {
-		return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
+		return SCPIMM_ERROR_ILLEGAL_PARAMETER_VALUE;
 	}
 
 	switch (param) {
@@ -564,7 +564,7 @@ static int16_t dm_get_bool_param(const scpimm_mode_t mode, const scpimm_bool_par
 	case SCPIMM_PARAM_INPUT_IMPEDANCE_AUTO:
 	case SCPIMM_PARAM_REMOTE:
 	case SCPIMM_PARAM_LOCK:
-		return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
+		return SCPIMM_ERROR_ILLEGAL_PARAMETER_VALUE;
 	}
 
 	if (value) {
@@ -584,7 +584,7 @@ static int16_t dm_set_bool_param(const scpimm_mode_t mode, const scpimm_bool_par
 	dm_args.set_bool_param.value = value;
 
 	if (!mode_state) {
-		return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
+		return SCPIMM_ERROR_ILLEGAL_PARAMETER_VALUE;
 	}
 
 	switch (param) {
@@ -597,7 +597,7 @@ static int16_t dm_set_bool_param(const scpimm_mode_t mode, const scpimm_bool_par
 	case SCPIMM_PARAM_INPUT_IMPEDANCE_AUTO:
 	case SCPIMM_PARAM_REMOTE:
 	case SCPIMM_PARAM_LOCK:
-		return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
+		return SCPIMM_ERROR_ILLEGAL_PARAMETER_VALUE;
 	}
 
 	return dm_returns.set_bool_param;
@@ -613,7 +613,7 @@ static int16_t dm_get_numeric_param_values(const scpimm_mode_t mode, const scpim
 	dm_args.get_numeric_param_values.param = param;
 	dm_args.get_numeric_param_values.values_is_null = !values;
 
-	if (SCPI_ERROR_OK != (err = validate_mode(mode))) {
+	if (SCPIMM_ERROR_OK != (err = validate_mode(mode))) {
 		return err;
 	}
 
@@ -631,11 +631,11 @@ static int16_t dm_get_numeric_param_values(const scpimm_mode_t mode, const scpim
 		break;
 
 	case SCPIMM_PARAM_RESOLUTION:
-		return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
+		return SCPIMM_ERROR_ILLEGAL_PARAMETER_VALUE;
 	}
 
 	if (!v) {
-		return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
+		return SCPIMM_ERROR_ILLEGAL_PARAMETER_VALUE;
 	}
 
 	if (values) {
@@ -656,7 +656,7 @@ static int16_t dm_get_numeric_param(scpimm_mode_t mode, scpimm_numeric_param_t p
 	dm_args.get_numeric_param.value_is_null = !value_index;
 
 	if (!mode_state) {
-		return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
+		return SCPIMM_ERROR_ILLEGAL_PARAMETER_VALUE;
 	}
 
 	switch (param) {
@@ -673,7 +673,7 @@ static int16_t dm_get_numeric_param(scpimm_mode_t mode, scpimm_numeric_param_t p
 		break;
 
 	case SCPIMM_PARAM_RANGE_OVERRUN:
-		return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
+		return SCPIMM_ERROR_ILLEGAL_PARAMETER_VALUE;
 	}
 
 	if (value_index) {
@@ -693,7 +693,7 @@ static int16_t dm_set_numeric_param(scpimm_mode_t mode, scpimm_numeric_param_t p
 	dm_args.set_numeric_param.value_index = value_index;
 
 	if (!mode_state) {
-		return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
+		return SCPIMM_ERROR_ILLEGAL_PARAMETER_VALUE;
 	}
 
 	switch (param) {
@@ -710,7 +710,7 @@ static int16_t dm_set_numeric_param(scpimm_mode_t mode, scpimm_numeric_param_t p
 		break;
 
 	case SCPIMM_PARAM_RANGE_OVERRUN:
-		return SCPI_ERROR_ILLEGAL_PARAMETER_VALUE;
+		return SCPIMM_ERROR_ILLEGAL_PARAMETER_VALUE;
 	}
 
 	return dm_returns.set_numeric_param;
@@ -718,7 +718,7 @@ static int16_t dm_set_numeric_param(scpimm_mode_t mode, scpimm_numeric_param_t p
 
 static int16_t dm_beep() {
 	dm_counters.beep++;
-	return SCPI_ERROR_OK;
+	return SCPIMM_ERROR_OK;
 }
 
 static int16_t dm_get_input_terminal(scpimm_terminal_state_t* term) {
@@ -735,7 +735,7 @@ static int16_t dm_display_text(const char* txt) {
 	strncpy(dm_display, txt, sizeof(dm_display) - 1);
 	dm_display[sizeof(dm_display) - 1] = '\0';
 
-	return SCPI_ERROR_OK;
+	return SCPIMM_ERROR_OK;
 }
 
 static int16_t dm_test() {

@@ -50,7 +50,7 @@ static scpi_bool_t validate_range(scpi_t* context, scpimm_mode_t mode, const scp
 			&& num->type != SCPI_NUM_AUTO
 			&& num->type != SCPI_NUM_NUMBER ) {
 		/* invalid value */
-		SCPI_ErrorPush(context, SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
+		SCPI_ErrorPush(context, SCPIMM_ERROR_ILLEGAL_PARAMETER_VALUE);
 		return FALSE;
 	}
 		
@@ -59,7 +59,7 @@ static scpi_bool_t validate_range(scpi_t* context, scpimm_mode_t mode, const scp
 			&& num->unit != detect_units(mode)) {
 
 		/* invalid units */
-		SCPI_ErrorPush(context, SCPI_ERROR_INVALID_SUFFIX);
+		SCPI_ErrorPush(context, SCPIMM_ERROR_INVALID_SUFFIX);
 		return FALSE;
 	}
 
@@ -72,7 +72,7 @@ static scpi_bool_t validate_resolution(scpi_t* context, scpimm_mode_t mode, cons
 			&& num->type != SCPI_NUM_DEF
 			&& num->type != SCPI_NUM_NUMBER ) {
 		/* invalid value */
-		SCPI_ErrorPush(context, SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
+		SCPI_ErrorPush(context, SCPIMM_ERROR_ILLEGAL_PARAMETER_VALUE);
 		return FALSE;
 	}
 
@@ -81,7 +81,7 @@ static scpi_bool_t validate_resolution(scpi_t* context, scpimm_mode_t mode, cons
 			&& num->unit != detect_units(mode)) {
 
 		/* invalid units */
-		SCPI_ErrorPush(context, SCPI_ERROR_INVALID_SUFFIX);
+		SCPI_ErrorPush(context, SCPIMM_ERROR_INVALID_SUFFIX);
 		return FALSE;
 	}
 
@@ -136,7 +136,7 @@ scpi_result_t SCPIMM_do_configure(scpi_t* context, scpimm_mode_t mode, const scp
 	}
 
 	err = SCPIMM_set_mode(context, mode, range, TRUE, NULL, resolution);
-	if (SCPI_ERROR_OK != err) {
+	if (SCPIMM_ERROR_OK != err) {
 	    SCPI_ErrorPush(context, err);
     	return SCPI_RES_ERR;
 	}
@@ -153,17 +153,17 @@ static int16_t configureQuery(scpi_t* context) {
     const double *ranges, *resolutions;
     size_t current_range, current_resolution;
 
-	CHECK_SCPI_ERROR(SCPIMM_INTERFACE(context)->get_mode(&mode));
+	CHECK_SCPIMM_ERROR(SCPIMM_INTERFACE(context)->get_mode(&mode));
 	if (!no_params) {
-		CHECK_SCPI_ERROR(SCPIMM_INTERFACE(context)->get_numeric_param(mode, SCPIMM_PARAM_RANGE, &current_range));
-		CHECK_SCPI_ERROR(SCPIMM_INTERFACE(context)->get_numeric_param_values(mode, SCPIMM_PARAM_RANGE, &ranges));
-		CHECK_SCPI_ERROR(SCPIMM_INTERFACE(context)->get_numeric_param(mode, SCPIMM_PARAM_RESOLUTION, &current_resolution));
-		CHECK_SCPI_ERROR(SCPIMM_INTERFACE(context)->get_allowed_resolutions(mode, current_range, &resolutions));
+		CHECK_SCPIMM_ERROR(SCPIMM_INTERFACE(context)->get_numeric_param(mode, SCPIMM_PARAM_RANGE, &current_range));
+		CHECK_SCPIMM_ERROR(SCPIMM_INTERFACE(context)->get_numeric_param_values(mode, SCPIMM_PARAM_RANGE, &ranges));
+		CHECK_SCPIMM_ERROR(SCPIMM_INTERFACE(context)->get_numeric_param(mode, SCPIMM_PARAM_RESOLUTION, &current_resolution));
+		CHECK_SCPIMM_ERROR(SCPIMM_INTERFACE(context)->get_allowed_resolutions(mode, current_range, &resolutions));
 	}
 
 	mode_name = SCPIMM_mode_name(mode);
 	if (NULL == mode_name) {
-		return SCPI_ERROR_UNKNOWN;
+		return SCPIMM_ERROR_INVALID_SUFFIX;
 	}
 
 	strcpy(buf, mode_name);
@@ -177,12 +177,12 @@ static int16_t configureQuery(scpi_t* context) {
 	}
 	SCPI_ResultText(context, buf);
 
-	return SCPI_ERROR_OK;
+	return SCPIMM_ERROR_OK;
 }
 
 scpi_result_t SCPIMM_configureQ(scpi_t* context) {
 	int16_t err = configureQuery(context);
-	if (SCPI_ERROR_OK != err) {
+	if (SCPIMM_ERROR_OK != err) {
 	    SCPI_ErrorPush(context, err);
     	return SCPI_RES_ERR;
 	}

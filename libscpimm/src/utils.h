@@ -37,8 +37,8 @@
 #define SCPIMM_CONTEXT(context) ((scpimm_context_t*) (context)->user_context)
 #define SCPIMM_INTERFACE(context) (SCPIMM_CONTEXT(context)->interface)
 
-#define CHECK_SCPI_ERROR(expr) if (SCPI_ERROR_OK != (err = (expr))) return err
-#define CHECK_AND_PUSH_ERROR(expr) 	if (SCPI_ERROR_OK != (err = (expr))) {	\
+#define CHECK_SCPIMM_ERROR(expr) if (SCPIMM_ERROR_OK != (err = (expr))) return err
+#define CHECK_AND_PUSH_ERROR(expr) 	if (SCPIMM_ERROR_OK != (err = (expr))) {	\
 	    SCPI_ErrorPush(context, err);	\
 		return SCPI_RES_ERR;	\
 	}

@@ -51,12 +51,12 @@ scpi_result_t SCPIMM_sample_count(scpi_t* context) {
 			break;
 
 		default:
-			SCPI_ErrorPush(context, SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
+			SCPI_ErrorPush(context, SCPIMM_ERROR_ILLEGAL_PARAMETER_VALUE);
 			return SCPI_RES_ERR;
 	}
 
 	if (lnum < 1 || lnum > lmax) {
-	    SCPI_ErrorPush(context, SCPI_ERROR_DATA_OUT_OF_RANGE);
+	    SCPI_ErrorPush(context, SCPIMM_ERROR_DATA_OUT_OF_RANGE);
     	return SCPI_RES_ERR;
 	}
 
@@ -87,7 +87,7 @@ scpi_result_t SCPIMM_sample_countQ(scpi_t* context) {
 			break;
 
 		default:
-			SCPI_ErrorPush(context, SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
+			SCPI_ErrorPush(context, SCPIMM_ERROR_ILLEGAL_PARAMETER_VALUE);
 			return SCPI_RES_ERR;
 	}
 

@@ -56,7 +56,7 @@
 
 // assertion utilities
 
-#define CHECK_NO_SCPI_ERROR(expr) CU_ASSERT_EQUAL((err = (expr)), SCPI_ERROR_OK); if (err) return
+#define CHECK_NO_SCPI_ERROR(expr) CU_ASSERT_EQUAL((err = (expr)), SCPIMM_ERROR_OK); if (err) return
 
 #define ASSERT_EQUAL_BOOL(a, b) CU_ASSERT_TRUE(((a) && (b)) || (!(a) && !(b)))
 #define ASSERT_DOUBLE_EQUAL(a, b) CU_ASSERT_DOUBLE_EQUAL(a, b, FLOAT_DELTA)
