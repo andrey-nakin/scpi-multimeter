@@ -23,8 +23,8 @@ OBJS = $(addprefix $(OBJDIR)/, $(notdir $(SRCS:.c=.o)))
 
 HDRS = $(addprefix inc/scpimm/, scpimm.h) $(addprefix src/, configure.h display.h dmm.h ieee488.h input.h measure.h sample.h sense.h system.h route.h trigger.h utils.h)
 
-TESTS = $(addprefix test/, test_generic.c test_configure.c test_display.c test_dmm.c test_ieee488.c test_input.c test_sample.c test_sense.c test_system.c test_route.c test_trigger.c)
-#TESTS = $(addprefix test/, test_dmm.c)
+#TESTS = $(addprefix test/, test_generic.c test_configure.c test_display.c test_dmm.c test_ieee488.c test_input.c test_sample.c test_sense.c test_system.c test_route.c test_trigger.c)
+TESTS = $(addprefix test/, test_dmm.c)
 
 TESTS_OBJS = $(TESTS:.c=.o)
 TESTS_BINS = $(TESTS_OBJS:.o=.test)

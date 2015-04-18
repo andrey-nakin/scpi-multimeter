@@ -96,7 +96,6 @@ static int16_t initiate(volatile scpimm_context_t* const ctx, const scpimm_dst_t
 	ctx->sample_count = ctx->sample_count_num;
 	ctx->trigger_count = ctx->trigger_count_num;
 	ctx->measurement_error = SCPI_ERROR_OK;
-	ctx->is_first_measured_value = TRUE;
 
 	err = init_trigger(ctx);
 	if (SCPI_ERROR_OK != err) {
@@ -179,25 +178,9 @@ static int16_t store_value_in_buffer(volatile scpimm_context_t* const ctx, const
 }
 
 static int16_t send_value_to_out_buffer(volatile scpimm_context_t* const ctx, const double value) {
-	char buf[16];
-	size_t len;
-	scpi_t* const context = SCPI_context();
-
-	if (ctx->is_first_measured_value) {
-		ctx->is_first_measured_value = FALSE;
-	} else {
-		context->interface->write(context, ",", 1);
-	}
-
-	len = double_to_str(buf, value);
-	context->interface->write(context, buf, len);
-
+	(void) ctx;
+	SCPI_ResultDouble(SCPI_context(), value);
 	return SCPI_ERROR_OK;
-}
-
-static void flush_out_buffer() {
-	scpi_t* const context = SCPI_context();
-	context->interface->write(context, "\r\n", 2);
 }
 
 static int16_t check_measured_value(volatile scpimm_context_t* const ctx) {
@@ -218,9 +201,6 @@ static int16_t check_measured_value(volatile scpimm_context_t* const ctx) {
 
 	if (0 == --ctx->sample_count) {
 		if (!ctx->infinite_trigger_count && 0 == --ctx->trigger_count) {
-			if (SCPIMM_DST_OUT == ctx->dst) {
-				flush_out_buffer();
-			}
 			switch_to_state(ctx, SCPIMM_STATE_IDLE);
 		} else {
 			ctx->sample_count = ctx->sample_count_num;

@@ -64,7 +64,6 @@ typedef struct {
 
 	scpi_number_t last_measured_value;
 	int16_t measurement_error;
-	scpi_bool_t is_first_measured_value;
 
 } scpimm_context_t;
 
