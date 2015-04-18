@@ -36,51 +36,51 @@ scpi_result_t SCPIMM_sense_function(scpi_t* context) {
     }
 
 #ifndef SCPIMM_NO_VOLTAGE_DC
-    if (matchCommand("VOLTage", param, param_len)) {
+    if (SCPI_Match("VOLTage", param, param_len)) {
 		mode = SCPIMM_MODE_DCV;
     } else
-    if (matchCommand("VOLTage:DC", param, param_len)) {
+    if (SCPI_Match("VOLTage:DC", param, param_len)) {
 		mode = SCPIMM_MODE_DCV;
     } else
 #endif
 #ifndef SCPIMM_NO_VOLTAGE_DC_RATIO
-    if (matchCommand("VOLTage:RATio", param, param_len)) {
+    if (SCPI_Match("VOLTage:RATio", param, param_len)) {
 		mode = SCPIMM_MODE_DCV_RATIO;
     } else
-    if (matchCommand("VOLTage:DC:RATio", param, param_len)) {
+    if (SCPI_Match("VOLTage:DC:RATio", param, param_len)) {
 		mode = SCPIMM_MODE_DCV_RATIO;
     } else
 #endif
 #ifndef SCPIMM_NO_VOLTAGE_AC
-    if (matchCommand("VOLTage:AC", param, param_len)) {
+    if (SCPI_Match("VOLTage:AC", param, param_len)) {
 		mode = SCPIMM_MODE_ACV;
     } else
 #endif
 #ifndef SCPIMM_NO_VOLTAGE_AC_RATIO
-    if (matchCommand("VOLTage:AC:RATio", param, param_len)) {
+    if (SCPI_Match("VOLTage:AC:RATio", param, param_len)) {
 		mode = SCPIMM_MODE_ACV_RATIO;
     } else
 #endif
 #ifndef SCPIMM_NO_CURRENT_DC
-    if (matchCommand("CURRent", param, param_len)) {
+    if (SCPI_Match("CURRent", param, param_len)) {
 		mode = SCPIMM_MODE_DCC;
     } else
-    if (matchCommand("CURRent:DC", param, param_len)) {
+    if (SCPI_Match("CURRent:DC", param, param_len)) {
 		mode = SCPIMM_MODE_DCC;
     } else
 #endif
 #ifndef SCPIMM_NO_CURRENT_AC
-    if (matchCommand("CURRent:AC", param, param_len)) {
+    if (SCPI_Match("CURRent:AC", param, param_len)) {
 		mode = SCPIMM_MODE_ACC;
     } else
 #endif
 #ifndef SCPIMM_NO_RESISTANCE
-    if (matchCommand("RESistance", param, param_len)) {
+    if (SCPI_Match("RESistance", param, param_len)) {
 		mode = SCPIMM_MODE_RESISTANCE_2W;
     } else
 #endif
 #ifndef SCPIMM_NO_FRESISTANCE
-    if (matchCommand("FRESistance", param, param_len)) {
+    if (SCPI_Match("FRESistance", param, param_len)) {
 		mode = SCPIMM_MODE_RESISTANCE_4W;
 	} else
 #endif
@@ -414,11 +414,11 @@ scpi_result_t SCPIMM_sense_zero_auto(scpi_t* const context) {
         return SCPI_RES_ERR;
     }
 
-    if (matchCommand("ON", param, param_len) || matchCommand("1", param, param_len)) {  //  TODO add support of float numbers
+    if (SCPI_Match("ON", param, param_len) || SCPI_Match("1", param, param_len)) {  //  TODO add support of float numbers
 		auto_zero = TRUE;
-    } else if (matchCommand("OFF", param, param_len) || matchCommand("0", param, param_len)) {
+    } else if (SCPI_Match("OFF", param, param_len) || SCPI_Match("0", param, param_len)) {
 		auto_zero = FALSE;
-    } else if (matchCommand("ONCE", param, param_len)) {
+    } else if (SCPI_Match("ONCE", param, param_len)) {
 		auto_zero = TRUE;
 		auto_zero_once = TRUE;
 	} else {
