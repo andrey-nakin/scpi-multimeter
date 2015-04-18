@@ -536,9 +536,9 @@ static void test_nplcQ() {
 *****************************************************************************/
 
 static void test_zero_auto() {
-	static const char* const values[] = {"ONCE", "ON", "OFF", "1", "0", NULL};
-	static scpi_bool_t const zero_auto[] = {TRUE, TRUE, FALSE, TRUE, FALSE};
-	static scpi_bool_t const zero_once[] = {TRUE, FALSE, FALSE, FALSE, FALSE};
+	static const char* const values[] = {"ONCE", "ON", "OFF", "1", "0", "1.0", "0.0", NULL};
+	static scpi_bool_t const zero_auto[] = {TRUE, TRUE, FALSE, TRUE, FALSE, TRUE, FALSE};
+	static scpi_bool_t const zero_once[] = {TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE};
 	const char* const* prefix;
 
 	for (prefix = SENSE_PREFIXES; *prefix; prefix++) {

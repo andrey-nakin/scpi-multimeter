@@ -129,9 +129,8 @@ static scpi_result_t configure_2arg_impl(scpi_t* context, scpimm_mode_t mode) {
 scpi_result_t SCPIMM_do_configure(scpi_t* context, scpimm_mode_t mode, const scpi_number_t* range, const scpi_number_t* resolution) {
 	int16_t err;
 
-	// TODO is all the stuff below actual?
-	SCPIMM_stop_mesurement();
-	SCPIMM_clear_return_buffer();
+	SCPIMM_stop_mesurement(SCPIMM_CONTEXT(context));
+	SCPIMM_clear_return_buffer(context);
 	if (SCPI_RES_OK != SCPIMM_measure_preset(context)) {
 		return SCPI_RES_ERR;
 	}

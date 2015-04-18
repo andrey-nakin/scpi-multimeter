@@ -19,11 +19,16 @@
  */
 
 #include <stdint.h>
+#include <string.h>
 #include <scpi/scpi.h>
 #include <scpimm/scpimm.h>
 #include "sense.h"
 #include "utils.h"
 #include "dmm.h"
+
+#ifndef min
+#define min(a, b) (a) <= (b) ? (a) : (b)
+#endif
 
 scpi_result_t SCPIMM_sense_function(scpi_t* context) {
 	int16_t err;
@@ -107,8 +112,7 @@ scpi_result_t SCPIMM_sense_functionQ(scpi_t* context) {
 	
 	res = SCPIMM_mode_name(mode);
 	if (NULL == res) {
-		/* TODO: valid error code */
-		SCPI_ErrorPush(context, SCPI_ERROR_SUFFIX_NOT_ALLOWED);
+		SCPI_ErrorPush(context, SCPI_ERROR_UNDEFINED_HEADER);
 		return SCPI_RES_ERR;
     }
 
@@ -414,7 +418,7 @@ scpi_result_t SCPIMM_sense_zero_auto(scpi_t* const context) {
         return SCPI_RES_ERR;
     }
 
-    if (SCPI_Match("ON", param, param_len) || SCPI_Match("1", param, param_len)) {  //  TODO add support of float numbers
+    if (SCPI_Match("ON", param, param_len) || SCPI_Match("1", param, param_len)) {
 		auto_zero = TRUE;
     } else if (SCPI_Match("OFF", param, param_len) || SCPI_Match("0", param, param_len)) {
 		auto_zero = FALSE;
@@ -422,8 +426,18 @@ scpi_result_t SCPIMM_sense_zero_auto(scpi_t* const context) {
 		auto_zero = TRUE;
 		auto_zero_once = TRUE;
 	} else {
-		SCPI_ErrorPush(context, SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
-		return SCPI_RES_ERR;
+		char buf[16];
+		double v;
+
+		strncpy(buf, param, min(param_len, sizeof(buf) / sizeof(buf[0])));
+		buf[sizeof(buf) / sizeof(buf[0]) - 1] = '\0';
+		if (1 == sscanf(buf, "%lg", &v)) {
+			auto_zero = v > 0.0;
+			auto_zero_once = FALSE;
+		} else {
+			SCPI_ErrorPush(context, SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
+			return SCPI_RES_ERR;
+		}
 	}
 
     EXPECT_NO_PARAMS(context);

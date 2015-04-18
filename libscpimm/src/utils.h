@@ -50,8 +50,6 @@
 #define	ATOMIC_READ_INT(var) (var)
 #define	ATOMIC_WRITE_INT(var, value) (var) = (value)
 
-void SCPIMM_stop_mesurement(void);
-void SCPIMM_clear_return_buffer(void);
 size_t SCPIMM_ResultDouble(scpi_t * context, double val);
 
 scpi_bool_t expectNoParams(scpi_t* context);

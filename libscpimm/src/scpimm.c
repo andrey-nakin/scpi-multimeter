@@ -280,6 +280,7 @@ static size_t write(scpi_t* const context, const char* data, size_t len) {
 static scpi_result_t reset(scpi_t* const context) {
 	volatile scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
 
+	SCPIMM_stop_mesurement(ctx);
 	SCPIMM_set_remote(context, TRUE, FALSE);
 	ctx->display = TRUE;
 	ctx->display_text[0] = '\0';

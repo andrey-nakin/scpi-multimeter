@@ -84,6 +84,34 @@ static int16_t init_trigger(volatile scpimm_context_t* const ctx) {
 	return err;
 }
 
+static int16_t check_trigger_delay(volatile scpimm_context_t* const ctx) {
+	int16_t err;
+	uint32_t cur_time;
+
+	CHECK_SCPI_ERROR(ctx->interface->get_milliseconds(&cur_time));
+
+	if (cur_time - ctx->state_time >= (uint32_t) ctx->trigger_delay) {
+		// trigger delay exhausted
+		CHECK_SCPI_ERROR(start_measurement(ctx));
+	}
+
+	return SCPI_ERROR_OK;
+}
+
+static int16_t check_measuring_timeout(volatile scpimm_context_t* const ctx) {
+	int16_t err;
+	uint32_t cur_time;
+
+	CHECK_SCPI_ERROR(ctx->interface->get_milliseconds(&cur_time));
+
+	if (cur_time - ctx->state_time >= ctx->measurement_timeout) {
+		// measure timeout
+		return SCPI_ERROR_IO_PROCESSOR_DOES_NOT_RESPOND;
+	}
+
+	return SCPI_ERROR_OK;
+}
+
 static int16_t initiate(volatile scpimm_context_t* const ctx, const scpimm_dst_t dst) {
 	int16_t err;
 
@@ -134,38 +162,42 @@ scpi_result_t SCPIMM_measure_preset(scpi_t* context) {
 	return SCPIMM_do_set_input_impedance_auto(context, FALSE);
 }
 
+void SCPIMM_stop_mesurement(volatile scpimm_context_t* const ctx) {
+//	volatile scpimm_context_t* const ctx = SCPIMM_context();
+
+	while (TRUE) {
+		const scpimm_state_t state = ATOMIC_READ_INT(ctx->state);
+
+		switch (state) {
+		case SCPIMM_STATE_IDLE:
+			return;
+
+		case SCPIMM_STATE_WAIT_FOR_TRIGGER:
+		case SCPIMM_STATE_TRIGGER_DELAY:
+		case SCPIMM_STATE_MEASURED:
+			goto end;
+			break;
+
+		case SCPIMM_STATE_MEASURING:
+			if (SCPI_ERROR_OK != check_measuring_timeout(ctx)) {
+				goto end;
+			}
+			break;
+		}
+	}
+
+end:
+	switch_to_state(ctx, SCPIMM_STATE_IDLE);
+}
+
+void SCPIMM_clear_return_buffer(scpi_t* const context) {
+	(void) context;
+}
+
 scpimm_state_t SCPIMM_get_state(scpi_t* context) {
 	scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
 	const scpimm_state_t state = ATOMIC_READ_INT(ctx->state);
 	return state;
-}
-
-static int16_t check_trigger_delay(volatile scpimm_context_t* const ctx) {
-	int16_t err;
-	uint32_t cur_time;
-
-	CHECK_SCPI_ERROR(ctx->interface->get_milliseconds(&cur_time));
-
-	if (cur_time - ctx->state_time >= (uint32_t) ctx->trigger_delay) {
-		// trigger delay exhausted
-		CHECK_SCPI_ERROR(start_measurement(ctx));
-	}
-
-	return SCPI_ERROR_OK;
-}
-
-static int16_t check_measuring_timeout(volatile scpimm_context_t* const ctx) {
-	int16_t err;
-	uint32_t cur_time;
-
-	CHECK_SCPI_ERROR(ctx->interface->get_milliseconds(&cur_time));
-
-	if (cur_time - ctx->state_time >= ctx->measurement_timeout) {
-		// measure timeout
-		return SCPI_ERROR_IO_PROCESSOR_DOES_NOT_RESPOND;
-	}
-
-	return SCPI_ERROR_OK;
 }
 
 static int16_t store_value_in_buffer(volatile scpimm_context_t* const ctx, const double value) {

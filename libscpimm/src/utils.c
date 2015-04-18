@@ -27,11 +27,6 @@
 #include "scpimm_internal.h"
 #include "utils.h"
 
-size_t strToDouble(const char * str, double * val);
-size_t patternSeparatorShortPos(const char * pattern, size_t len);
-scpi_bool_t compareStr(const char * str1, size_t len1, const char * str2, size_t len2);
-scpi_bool_t matchPattern(const char * pattern, size_t pattern_len, const char * str, size_t str_len);
-
 static size_t writeData(scpi_t * context, const char * data, size_t len) {
     return context->interface->write(context, data, len);
 }
@@ -42,14 +37,6 @@ static size_t writeDelimiter(scpi_t * context) {
     } else {
         return 0;
     }
-}
-
-void SCPIMM_stop_mesurement(void) {
-	// TODO
-}
-
-void SCPIMM_clear_return_buffer(void) {
-	// TODO
 }
 
 size_t SCPIMM_ResultDouble(scpi_t * context, double val) {
