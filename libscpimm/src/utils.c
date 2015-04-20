@@ -27,29 +27,6 @@
 #include "scpimm_internal.h"
 #include "utils.h"
 
-static size_t writeData(scpi_t * context, const char * data, size_t len) {
-    return context->interface->write(context, data, len);
-}
-
-static size_t writeDelimiter(scpi_t * context) {
-    if (context->output_count > 0) {
-        return writeData(context, ", ", 2);
-    } else {
-        return 0;
-    }
-}
-
-size_t SCPIMM_ResultDouble(scpi_t * context, double val) {
-    char buffer[32];
-    size_t result = 0;
-    size_t len = double_to_str(buffer, val);
-    result += writeDelimiter(context);
-    result += writeData(context, buffer, len);
-    context->output_count++;
-    return result;
-
-}
-
 scpi_bool_t expectNoParams(scpi_t* context) {
     const char * param;
     size_t param_len;

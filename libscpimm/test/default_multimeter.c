@@ -27,26 +27,26 @@
 
 #define DEFAULT_MEAS_DURATION 500
 
-static int16_t dm_setup();
-static int16_t dm_reset();
-static int16_t dm_set_mode(scpimm_mode_t mode, const scpimm_mode_params_t* const params);
-static int16_t dm_get_mode(scpimm_mode_t* mode);
-static int16_t dm_get_allowed_resolutions(scpimm_mode_t mode, size_t range_index, const double** resolutions);
-static int16_t dm_start_measure();
+static scpimm_error_t dm_setup();
+static scpimm_error_t dm_reset();
+static scpimm_error_t dm_set_mode(scpimm_mode_t mode, const scpimm_mode_params_t* const params);
+static scpimm_error_t dm_get_mode(scpimm_mode_t* mode);
+static scpimm_error_t dm_get_allowed_resolutions(scpimm_mode_t mode, size_t range_index, const double** resolutions);
+static scpimm_error_t dm_start_measure();
 static size_t dm_send(const uint8_t* buf, size_t len);
-static int16_t dm_get_milliseconds(uint32_t* tm);
-static int16_t dm_set_interrupt_status(scpi_bool_t disabled);
-static int16_t dm_get_global_bool_param(scpimm_bool_param_t param, scpi_bool_t* value);
-static int16_t dm_set_global_bool_param(scpimm_bool_param_t param, scpi_bool_t value);
-static int16_t dm_get_bool_param(scpimm_mode_t mode, scpimm_bool_param_t param, scpi_bool_t* value);
-static int16_t dm_set_bool_param(scpimm_mode_t mode, scpimm_bool_param_t param, scpi_bool_t value);
-static int16_t dm_get_numeric_param_values(scpimm_mode_t mode, scpimm_numeric_param_t param, const double** values);
-static int16_t dm_get_numeric_param(scpimm_mode_t mode, scpimm_numeric_param_t param, size_t* value_index);
-static int16_t dm_set_numeric_param(scpimm_mode_t mode, scpimm_numeric_param_t param, size_t value_index);
-static int16_t dm_beep();
-static int16_t dm_get_input_terminal(scpimm_terminal_state_t* term);
-static int16_t dm_display_text(const char* txt);
-static int16_t dm_test();
+static scpimm_error_t dm_get_milliseconds(uint32_t* tm);
+static scpimm_error_t dm_set_interrupt_status(scpi_bool_t disabled);
+static scpimm_error_t dm_get_global_bool_param(scpimm_bool_param_t param, scpi_bool_t* value);
+static scpimm_error_t dm_set_global_bool_param(scpimm_bool_param_t param, scpi_bool_t value);
+static scpimm_error_t dm_get_bool_param(scpimm_mode_t mode, scpimm_bool_param_t param, scpi_bool_t* value);
+static scpimm_error_t dm_set_bool_param(scpimm_mode_t mode, scpimm_bool_param_t param, scpi_bool_t value);
+static scpimm_error_t dm_get_numeric_param_values(scpimm_mode_t mode, scpimm_numeric_param_t param, const double** values);
+static scpimm_error_t dm_get_numeric_param(scpimm_mode_t mode, scpimm_numeric_param_t param, size_t* value_index);
+static scpimm_error_t dm_set_numeric_param(scpimm_mode_t mode, scpimm_numeric_param_t param, size_t value_index);
+static scpimm_error_t dm_beep();
+static scpimm_error_t dm_get_input_terminal(scpimm_terminal_state_t* term);
+static scpimm_error_t dm_display_text(const char* txt);
+static scpimm_error_t dm_test();
 
 /***************************************************************
  * Global variables
@@ -110,7 +110,7 @@ static sem_t measure_sem;
  * Private functions
  **************************************************************/
 
-static int16_t sleep_milliseconds(const uint32_t ms) {
+static scpimm_error_t sleep_milliseconds(const uint32_t ms) {
 	struct timespec delay;
 
 	if (ms > 999) {
@@ -182,7 +182,7 @@ static void* trigger_thread_routine(void* args) {
 	return NULL;
 }
 
-static int16_t validate_mode(const scpimm_mode_t mode) {
+static scpimm_error_t validate_mode(const scpimm_mode_t mode) {
 	switch (mode) {
 	case SCPIMM_MODE_DCV:
 	case SCPIMM_MODE_DCV_RATIO:
@@ -206,8 +206,8 @@ static size_t max_resolution_index(size_t range_index) {
 	return --resolution_index;
 }
 
-static int16_t set_mode_impl(const scpimm_mode_t mode, const scpimm_mode_params_t* const params) {
-	int16_t err;
+static scpimm_error_t set_mode_impl(const scpimm_mode_t mode, const scpimm_mode_params_t* const params) {
+	scpimm_error_t err;
 
 	if (SCPIMM_ERROR_OK != (err = validate_mode(mode))) {
 		return err;
@@ -273,7 +273,7 @@ double dm_measurement_func_const(uint32_t time) {
  * Multimeter interface
  **************************************************************/
 
-static int16_t dm_setup() {
+static scpimm_error_t dm_setup() {
 	dm_counters.setup++;
 
 	if (!measure_thread_created) {
@@ -312,7 +312,7 @@ static void reset_mode_state(dm_mode_state_t* dest) {
 	dest->auto_range = TRUE;
 }
 
-static int16_t dm_reset() {
+static scpimm_error_t dm_reset() {
 	dm_counters.reset++;
 
 	dm_reset_args();
@@ -347,7 +347,7 @@ static int16_t dm_reset() {
 	return SCPIMM_ERROR_OK;
 }
 
-static int16_t dm_set_mode(const scpimm_mode_t mode, const scpimm_mode_params_t* const params) {
+static scpimm_error_t dm_set_mode(const scpimm_mode_t mode, const scpimm_mode_params_t* const params) {
 	dm_counters.set_mode++;
 
 	/* store function arguments for later analysis */
@@ -363,7 +363,7 @@ static int16_t dm_set_mode(const scpimm_mode_t mode, const scpimm_mode_params_t*
 	return set_mode_impl(mode, params);
 }
 
-static int16_t dm_get_mode(scpimm_mode_t* mode) {
+static scpimm_error_t dm_get_mode(scpimm_mode_t* mode) {
 	dm_counters.get_mode++;
 
 	if (!dm_multimeter_state.mode_initialized) {
@@ -377,8 +377,8 @@ static int16_t dm_get_mode(scpimm_mode_t* mode) {
 	return SCPIMM_ERROR_OK;
 }
 
-static int16_t dm_get_allowed_resolutions(scpimm_mode_t mode, size_t range_index, const double** resolutions) {
-	int16_t err;
+static scpimm_error_t dm_get_allowed_resolutions(scpimm_mode_t mode, size_t range_index, const double** resolutions) {
+	scpimm_error_t err;
 
 	dm_counters.get_allowed_resolutions++;
 
@@ -408,7 +408,7 @@ static int16_t dm_get_allowed_resolutions(scpimm_mode_t mode, size_t range_index
 	return SCPIMM_ERROR_OK;
 }
 
-static int16_t dm_start_measure() {
+static scpimm_error_t dm_start_measure() {
 	dm_counters.start_measure++;
 
 	if (dm_multimeter_state.measurement_failure_counter) {
@@ -441,14 +441,14 @@ static size_t dm_send(const uint8_t* data, const size_t len) {
 	return len;
 }
 
-static int16_t dm_get_milliseconds(uint32_t* const tm) {
+static scpimm_error_t dm_get_milliseconds(uint32_t* const tm) {
 	if (tm) {
 		*tm = get_milliseconds();
 	}
 	return SCPIMM_ERROR_OK;
 }
 
-static int16_t dm_set_interrupt_status(const scpi_bool_t disabled) {
+static scpimm_error_t dm_set_interrupt_status(const scpi_bool_t disabled) {
 	dm_counters.set_interrupt_status++;
 
 	if (disabled) {
@@ -460,7 +460,7 @@ static int16_t dm_set_interrupt_status(const scpi_bool_t disabled) {
 	return SCPIMM_ERROR_OK;
 }
 
-static int16_t dm_get_global_bool_param(const scpimm_bool_param_t param, scpi_bool_t* const value) {
+static scpimm_error_t dm_get_global_bool_param(const scpimm_bool_param_t param, scpi_bool_t* const value) {
 	scpi_bool_t res = FALSE;
 
 	dm_counters.get_global_bool_param++;
@@ -501,7 +501,7 @@ static int16_t dm_get_global_bool_param(const scpimm_bool_param_t param, scpi_bo
 	return dm_returns.get_global_bool_param;
 }
 
-static int16_t dm_set_global_bool_param(const scpimm_bool_param_t param, const scpi_bool_t value) {
+static scpimm_error_t dm_set_global_bool_param(const scpimm_bool_param_t param, const scpi_bool_t value) {
 	dm_counters.set_global_bool_param++;
 
 	dm_prev_args = dm_args;
@@ -540,7 +540,7 @@ static int16_t dm_set_global_bool_param(const scpimm_bool_param_t param, const s
 	return SCPIMM_ERROR_OK;
 }
 
-static int16_t dm_get_bool_param(const scpimm_mode_t mode, const scpimm_bool_param_t param, scpi_bool_t* const value) {
+static scpimm_error_t dm_get_bool_param(const scpimm_mode_t mode, const scpimm_bool_param_t param, scpi_bool_t* const value) {
 	const dm_mode_state_t* const mode_state = get_mode_state(mode);
 	scpi_bool_t v = FALSE;
 
@@ -574,7 +574,7 @@ static int16_t dm_get_bool_param(const scpimm_mode_t mode, const scpimm_bool_par
 	return dm_returns.get_bool_param;
 }
 
-static int16_t dm_set_bool_param(const scpimm_mode_t mode, const scpimm_bool_param_t param, const scpi_bool_t value) {
+static scpimm_error_t dm_set_bool_param(const scpimm_mode_t mode, const scpimm_bool_param_t param, const scpi_bool_t value) {
 	dm_mode_state_t* const mode_state = get_mode_state(mode);
 
 	dm_counters.set_bool_param++;
@@ -603,8 +603,8 @@ static int16_t dm_set_bool_param(const scpimm_mode_t mode, const scpimm_bool_par
 	return dm_returns.set_bool_param;
 }
 
-static int16_t dm_get_numeric_param_values(const scpimm_mode_t mode, const scpimm_numeric_param_t param, const double** values) {
-	int16_t err;
+static scpimm_error_t dm_get_numeric_param_values(const scpimm_mode_t mode, const scpimm_numeric_param_t param, const double** values) {
+	scpimm_error_t err;
 	const double* v = NULL;
 
 	dm_counters.get_numeric_param_values++;
@@ -645,7 +645,7 @@ static int16_t dm_get_numeric_param_values(const scpimm_mode_t mode, const scpim
 	return dm_returns.get_numeric_param_values;
 }
 
-static int16_t dm_get_numeric_param(scpimm_mode_t mode, scpimm_numeric_param_t param, size_t* value_index) {
+static scpimm_error_t dm_get_numeric_param(scpimm_mode_t mode, scpimm_numeric_param_t param, size_t* value_index) {
 	const dm_mode_state_t* const mode_state = get_mode_state(mode);
 	size_t v = SIZE_MAX;
 
@@ -683,7 +683,7 @@ static int16_t dm_get_numeric_param(scpimm_mode_t mode, scpimm_numeric_param_t p
 	return dm_returns.get_numeric_param;
 }
 
-static int16_t dm_set_numeric_param(scpimm_mode_t mode, scpimm_numeric_param_t param, size_t value_index) {
+static scpimm_error_t dm_set_numeric_param(scpimm_mode_t mode, scpimm_numeric_param_t param, size_t value_index) {
 	dm_mode_state_t* const mode_state = get_mode_state(mode);
 
 	dm_counters.set_numeric_param++;
@@ -716,19 +716,19 @@ static int16_t dm_set_numeric_param(scpimm_mode_t mode, scpimm_numeric_param_t p
 	return dm_returns.set_numeric_param;
 }
 
-static int16_t dm_beep() {
+static scpimm_error_t dm_beep() {
 	dm_counters.beep++;
 	return SCPIMM_ERROR_OK;
 }
 
-static int16_t dm_get_input_terminal(scpimm_terminal_state_t* term) {
+static scpimm_error_t dm_get_input_terminal(scpimm_terminal_state_t* term) {
 	if (term) {
 		*term = dm_multimeter_state.terminal_state;
 	}
 	return dm_returns.get_input_terminal;
 }
 
-static int16_t dm_display_text(const char* txt) {
+static scpimm_error_t dm_display_text(const char* txt) {
 	dm_counters.display_text++;
 	dm_args.display_text.txt = txt;
 
@@ -738,7 +738,7 @@ static int16_t dm_display_text(const char* txt) {
 	return SCPIMM_ERROR_OK;
 }
 
-static int16_t dm_test() {
+static scpimm_error_t dm_test() {
 	dm_counters.test++;
 	return dm_returns.test;
 }

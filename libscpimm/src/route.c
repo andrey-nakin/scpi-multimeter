@@ -23,7 +23,7 @@
 #include "utils.h"
 
 scpi_result_t SCPIMM_route_terminals(scpi_t* const context) {
-	int16_t err;
+	scpimm_error_t err;
 
 	/* default terminal */
 	scpimm_terminal_state_t term = SCPIMM_TERM_FRONT;

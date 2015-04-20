@@ -53,12 +53,12 @@ extern "C" {
     X(SCPIMM_ERROR_IO_PROCESSOR_DOES_NOT_RESPOND, 625, "IO processor does not respond")	\
     X(SCPIMM_ERROR_INTERNAL, 			  555, "Internal error")	\
 
-enum {
+typedef enum {
 #define X(def, val, str) def = val,
 SCPIMM_LIST_OF_ERRORS
 SCPIMM_ERROR_OK = 0
 #undef X
-};
+} scpimm_error_t;
 
 #ifdef	__cplusplus
 }

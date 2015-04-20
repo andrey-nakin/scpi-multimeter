@@ -274,9 +274,9 @@ static void test_initiate_generic_impl(const dm_measurement_type_t mt, const cha
 	read_data_points(sample_count * trigger_count);
 
 	// check "out-of-buffer-length" error
-	receivef("TRIGGER:COUNT %u", 1);
+	receivef("TRIGGER:COUNT %u", 2);
 	ASSERT_NO_SCPI_ERRORS();
-	receivef("SAMPLE:COUNT %u", (unsigned) (SCPIMM_BUF_CAPACITY + 1));
+	receivef("SAMPLE:COUNT %u", SCPIMM_BUF_LEN);
 	ASSERT_NO_SCPI_ERRORS();
 	receivef("INITIATE");
 	ASSERT_SCPI_ERROR(SCPIMM_ERROR_INSUFFICIENT_MEMORY);

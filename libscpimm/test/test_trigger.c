@@ -172,7 +172,7 @@ static void test_count() {
 	CU_ASSERT_EQUAL(ctx->trigger_count_num, MAX_TRIGGER_COUNT);
 	CU_ASSERT_EQUAL(ctx->infinite_trigger_count, FALSE);
 
-	for (i = 1; i <= SCPIMM_BUF_CAPACITY; ++i) {
+	for (i = 1; i <= SCPIMM_BUF_LEN; ++i) {
 		receivef("TRIGGER:COUNT %d", i);
 		ASSERT_NO_SCPI_ERRORS();
 		ASSERT_NO_RESPONSE();
@@ -206,7 +206,7 @@ static void test_countQ() {
 	ASSERT_INT_RESPONSE(MAX_TRIGGER_COUNT);
 
 	ctx->infinite_trigger_count = FALSE;
-	for (i = 1; i <= SCPIMM_BUF_CAPACITY; ++i) {
+	for (i = 1; i <= SCPIMM_BUF_LEN; ++i) {
 		ctx->trigger_count_num = i;
 		receive("TRIGGER:COUNT?");
 		ASSERT_NO_SCPI_ERRORS();

@@ -168,7 +168,7 @@ static void test_set_numeric_param_impl(const char* const func, const scpimm_mod
 	}
 
 	{
-		int16_t err;
+		scpimm_error_t err;
 		const scpimm_interface_t* const intf = scpimm_interface();
 		CHECK_NO_SCPI_ERROR(intf->get_numeric_param_values(mode, context->param, &values));
 	}
@@ -249,7 +249,7 @@ static void test_get_numeric_param_impl(const char* const func, const scpimm_mod
 	}
 
 	{
-		int16_t err;
+		scpimm_error_t err;
 		const scpimm_interface_t* const intf = scpimm_interface();
 		CHECK_NO_SCPI_ERROR(intf->get_numeric_param_values(mode, context->param, &values));
 	}
@@ -377,7 +377,7 @@ static void test_range_value_error(const char* const prefix, const char* const f
 }
 
 static void test_range_impl2(const char* const prefix, const char* const func, const scpimm_mode_t mode) {
-	int16_t err;
+	scpimm_error_t err;
 	const scpimm_interface_t* const intf = scpimm_interface();
 	const double *ranges, *overruns;
 	char value[32];
@@ -456,7 +456,7 @@ static void test_rangeQ_value(const char* const prefix, const char* const func, 
 }
 
 static void test_rangeQ_impl2(const char* const prefix, const char* const func, const scpimm_mode_t mode) {
-	int16_t err;
+	scpimm_error_t err;
 	const scpimm_interface_t* const intf = scpimm_interface();
 	const double *ranges, *overruns;
 	size_t i;

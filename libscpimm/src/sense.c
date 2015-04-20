@@ -31,7 +31,7 @@
 #endif
 
 scpi_result_t SCPIMM_sense_function(scpi_t* context) {
-	int16_t err;
+	scpimm_error_t err;
     const char* param;
     size_t param_len;
     scpimm_mode_t mode;
@@ -103,7 +103,7 @@ scpi_result_t SCPIMM_sense_functionQ(scpi_t* context) {
 	scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
 	const char* res = NULL;
 	scpimm_mode_t mode;
-	const int16_t err = ctx->interface->get_mode(&mode);
+	const scpimm_error_t err = ctx->interface->get_mode(&mode);
 
 	if (SCPIMM_ERROR_OK != err) {
 	    SCPI_ErrorPush(context, err);
@@ -121,7 +121,7 @@ scpi_result_t SCPIMM_sense_functionQ(scpi_t* context) {
 }
 
 static scpi_result_t set_numeric_param(scpi_t* const context, const scpimm_mode_t mode, const scpimm_numeric_param_t param, scpi_bool_t min_max_allowed) {
-	int16_t err;
+	scpimm_error_t err;
     scpi_number_t value;
 	const double* values;
     size_t value_index = 0;
@@ -160,7 +160,7 @@ static scpi_result_t set_numeric_param(scpi_t* const context, const scpimm_mode_
 }
 
 static scpi_result_t query_numeric_param(scpi_t* const context, const scpimm_mode_t mode, const scpimm_numeric_param_t param, scpi_bool_t min_max_allowed) {
-	int16_t err;
+	scpimm_error_t err;
 	const double* values;
     size_t value_index = SIZE_MAX;
 
@@ -194,13 +194,13 @@ static scpi_result_t query_numeric_param(scpi_t* const context, const scpimm_mod
     	CHECK_AND_PUSH_ERROR(SCPIMM_INTERFACE(context)->get_numeric_param(mode, param, &value_index));
     }
 
-    SCPIMM_ResultDouble(context, values[value_index]);
+    SCPI_ResultDouble(context, values[value_index]);
 
     return SCPI_RES_OK;
 }
 
 static scpi_result_t set_bool_param(scpi_t* const context, const scpimm_mode_t mode, const scpimm_bool_param_t param) {
-	int16_t err;
+	scpimm_error_t err;
     scpi_bool_t value;
 
 	if (!SCPI_ParamBool(context, &value, TRUE)) {
@@ -214,7 +214,7 @@ static scpi_result_t set_bool_param(scpi_t* const context, const scpimm_mode_t m
 }
 
 static scpi_result_t query_bool_param(scpi_t* const context, const scpimm_mode_t mode, const scpimm_bool_param_t param) {
-	int16_t err;
+	scpimm_error_t err;
     scpi_bool_t value;
 
     EXPECT_NO_PARAMS(context);
@@ -226,7 +226,7 @@ static scpi_result_t query_bool_param(scpi_t* const context, const scpimm_mode_t
 }
 
 static scpi_result_t query_global_bool_param(scpi_t* const context, const scpimm_bool_param_t param) {
-	int16_t err;
+	scpimm_error_t err;
     scpi_bool_t value;
 
     EXPECT_NO_PARAMS(context);
@@ -250,7 +250,7 @@ static size_t range_index(const double* const ranges, const double* const overru
 }
 
 static scpi_result_t set_range(scpi_t* const context, const scpimm_mode_t mode) {
-	int16_t err;
+	scpimm_error_t err;
     scpi_number_t value;
 	const double *ranges, *overruns;
     size_t value_index = 0;
@@ -289,7 +289,7 @@ static scpi_result_t set_range(scpi_t* const context, const scpimm_mode_t mode) 
 }
 
 static scpi_result_t set_resolution(scpi_t* const context, const scpimm_mode_t mode) {
-	int16_t err;
+	scpimm_error_t err;
     scpi_number_t value;
 	const double* values;
     size_t range_index, resolution_index = 0;
@@ -329,7 +329,7 @@ static scpi_result_t set_resolution(scpi_t* const context, const scpimm_mode_t m
 }
 
 static scpi_result_t query_resolution(scpi_t* const context, const scpimm_mode_t mode) {
-	int16_t err;
+	scpimm_error_t err;
 	const double* values;
     size_t range_index, resolution_index = SIZE_MAX;
     scpimm_interface_t* const intf = SCPIMM_INTERFACE(context);
@@ -359,7 +359,7 @@ static scpi_result_t query_resolution(scpi_t* const context, const scpimm_mode_t
     	CHECK_AND_PUSH_ERROR(intf->get_numeric_param(mode, SCPIMM_PARAM_RESOLUTION, &resolution_index));
     }
 
-    SCPIMM_ResultDouble(context, values[resolution_index]);
+    SCPI_ResultDouble(context, values[resolution_index]);
 
     return SCPI_RES_OK;
 }
@@ -408,7 +408,7 @@ DECL_SENSE_DC_HANDLERS(RESISTANCE_2W, resistance)
 DECL_SENSE_DC_HANDLERS(RESISTANCE_4W, fresistance)
 
 scpi_result_t SCPIMM_sense_zero_auto(scpi_t* const context) {
-	int16_t err;
+	scpimm_error_t err;
     scpimm_interface_t* const intf = SCPIMM_INTERFACE(context);
     const char* param;
     size_t param_len;

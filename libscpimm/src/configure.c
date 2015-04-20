@@ -19,6 +19,7 @@
  */
 
 #include <string.h>
+#include <scpi/config.h>
 #include <scpimm/scpimm.h>
 #include "configure.h"
 #include "dmm.h"
@@ -127,7 +128,7 @@ static scpi_result_t configure_2arg_impl(scpi_t* context, scpimm_mode_t mode) {
 } */
 
 scpi_result_t SCPIMM_do_configure(scpi_t* context, scpimm_mode_t mode, const scpi_number_t* range, const scpi_number_t* resolution) {
-	int16_t err;
+	scpimm_error_t err;
 
 	SCPIMM_stop_mesurement(SCPIMM_CONTEXT(context));
 	SCPIMM_clear_return_buffer(context);
@@ -144,14 +145,16 @@ scpi_result_t SCPIMM_do_configure(scpi_t* context, scpimm_mode_t mode, const scp
 	return SCPI_RES_OK;
 }
 
-static int16_t configureQuery(scpi_t* context) {
+static scpimm_error_t configureQuery(scpi_t* context) {
 	scpimm_mode_t mode;
 	const scpi_bool_t no_params = FALSE; // SCPIMM_MODE_CONTINUITY == mode || SCPIMM_MODE_DIODE == mode;
-	int16_t err;
+	scpimm_error_t err;
 	const char* mode_name;
-    char buf[48], *end;
+    char buf[48], *end, *last = buf + sizeof(buf) / sizeof(buf[0]);
     const double *ranges, *resolutions;
     size_t current_range, current_resolution;
+
+    (void) last;	//	to suppress warning on AVR platforms
 
 	CHECK_SCPIMM_ERROR(SCPIMM_INTERFACE(context)->get_mode(&mode));
 	if (!no_params) {
@@ -170,9 +173,9 @@ static int16_t configureQuery(scpi_t* context) {
 	if (!no_params) {
 		strcat(buf, " ");
 		end = strchr(buf, '\0');
-		end += double_to_str(end, ranges[current_range]);
+		end += SCPI_doubleToStr(ranges[current_range], end, last - end);
 		*end++ = ',';
-		end += double_to_str(end, resolutions[current_resolution]);
+		end += SCPI_doubleToStr(resolutions[current_resolution], end, last - end);
 		*end = '\0';
 	}
 	SCPI_ResultText(context, buf);
@@ -181,7 +184,7 @@ static int16_t configureQuery(scpi_t* context) {
 }
 
 scpi_result_t SCPIMM_configureQ(scpi_t* context) {
-	int16_t err = configureQuery(context);
+	scpimm_error_t err = configureQuery(context);
 	if (SCPIMM_ERROR_OK != err) {
 	    SCPI_ErrorPush(context, err);
     	return SCPI_RES_ERR;

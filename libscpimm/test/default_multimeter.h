@@ -126,7 +126,7 @@ typedef struct {
 } dm_counters_t;
 
 typedef struct {
-	int16_t get_input_terminal,
+	scpimm_error_t get_input_terminal,
 	get_global_bool_param, set_global_bool_param,
 	get_bool_param, set_bool_param,
 	get_numeric_param_values, get_numeric_param, set_numeric_param,

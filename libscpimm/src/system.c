@@ -22,7 +22,7 @@
 #include "scpimm_internal.h"
 #include "utils.h"
 
-static const char* error_translate(int16_t err) {
+static const char* error_translate(scpimm_error_t err) {
     switch (err) {
         case 0: return "No error";
         #define X(def, val, str) case def: return str;
@@ -33,7 +33,7 @@ static const char* error_translate(int16_t err) {
 }
 
 scpi_result_t SCPIMM_system_beeper(scpi_t* context) {
-	int16_t err;
+	scpimm_error_t err;
 	if (SCPIMM_INTERFACE(context)->beep) {
 		CHECK_AND_PUSH_ERROR(SCPIMM_INTERFACE(context)->beep());
 	}
@@ -54,25 +54,25 @@ scpi_result_t SCPIMM_system_beeper_stateQ(scpi_t* context) {
 }
 
 scpi_result_t SCPIMM_system_local(scpi_t* context) {
-	int16_t err;
+	scpimm_error_t err;
 	CHECK_AND_PUSH_ERROR(SCPIMM_set_remote(context, FALSE, FALSE));
     return SCPI_RES_OK;
 }
 
 scpi_result_t SCPIMM_system_remote(scpi_t* context) {
-	int16_t err;
+	scpimm_error_t err;
 	CHECK_AND_PUSH_ERROR(SCPIMM_set_remote(context, TRUE, FALSE));
     return SCPI_RES_OK;
 }
 
 scpi_result_t SCPIMM_system_rwlock(scpi_t* context) {
-	int16_t err;
+	scpimm_error_t err;
 	CHECK_AND_PUSH_ERROR(SCPIMM_set_remote(context, TRUE, TRUE));
     return SCPI_RES_OK;
 }
 
 scpi_result_t SCPIMM_SystemErrorNextQ(scpi_t * context) {
-    int16_t err = SCPI_ErrorPop(context);
+    scpimm_error_t err = (scpimm_error_t) SCPI_ErrorPop(context);
 
     SCPI_ResultInt(context, err);
     SCPI_ResultText(context, error_translate(err));
@@ -80,8 +80,8 @@ scpi_result_t SCPIMM_SystemErrorNextQ(scpi_t * context) {
     return SCPI_RES_OK;
 }
 
-int16_t SCPIMM_set_remote(scpi_t* const context, const scpi_bool_t remote, const scpi_bool_t lock) {
-	int16_t err;
+scpimm_error_t SCPIMM_set_remote(scpi_t* const context, const scpi_bool_t remote, const scpi_bool_t lock) {
+	scpimm_error_t err;
 	scpimm_interface_t* const intf = SCPIMM_INTERFACE(context);
 
 	CHECK_SCPIMM_ERROR(intf->set_global_bool_param(SCPIMM_PARAM_REMOTE, remote));

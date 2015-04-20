@@ -43,7 +43,7 @@ scpi_result_t SCPIMM_display_text(scpi_t* context) {
 	scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
 	const char* text;
 	size_t text_len;
-	int16_t err;
+	scpimm_error_t err;
 
 	if (!SCPI_ParamText(context, &text, &text_len, TRUE)) {
 		return SCPI_RES_ERR;
@@ -72,7 +72,7 @@ scpi_result_t SCPIMM_display_textQ(scpi_t* context) {
 
 scpi_result_t SCPIMM_display_text_clear(scpi_t* context) {
 	if (expectNoParams(context)) {
-		int16_t err;
+		scpimm_error_t err;
 		scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
 
 		ctx->display_text[0] = '\0';

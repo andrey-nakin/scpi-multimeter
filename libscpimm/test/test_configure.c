@@ -39,7 +39,7 @@ static void check_general(const scpimm_mode_t mode) {
 	scpimm_mode_t cur_mode;
 	const scpi_bool_t no_params = FALSE;	//	SCPIMM_MODE_CONTINUITY == mode || SCPIMM_MODE_DIODE == mode;
 	scpimm_context_t* const ctx = SCPIMM_context();
-	int16_t err;
+	scpimm_error_t err;
 
 	// check correctness of intf->set_mode call
     CU_ASSERT_EQUAL(dm_counters.set_mode, CALLED_ONCE);
@@ -122,7 +122,7 @@ static void test_configure_fix_params(const char* function, scpimm_mode_t mode) 
 	size_t rangeIndex;
 	size_t range_indices[4];
 	const double* ranges;
-	int16_t err;
+	scpimm_error_t err;
 
 	CHECK_NO_SCPI_ERROR(scpimm_interface()->get_numeric_param_values(mode, SCPIMM_PARAM_RANGE, &ranges));
 	range_indices[0] = MIN_RANGE_INDEX; range_indices[1] = max_index(ranges); range_indices[2] = MIN_RANGE_INDEX; range_indices[3] = MIN_RANGE_INDEX;
@@ -167,7 +167,7 @@ static void test_configure_custom_range_and_resolution(const char* function, scp
 }
 
 static void test_configure_custom_range(const char* function, scpimm_mode_t mode, const double range, const size_t expected_range_index) {
-	int16_t err;
+	scpimm_error_t err;
 	const double *resolutions;
 	size_t resolution_index;
 
@@ -189,7 +189,7 @@ static void test_configure_custom_range(const char* function, scpimm_mode_t mode
 
 /* configure function with arbitrary range and resolution values */
 static void test_configure_custom_params(const char* function, const scpimm_mode_t mode) {
-	int16_t err;
+	scpimm_error_t err;
 	const double *ranges, *overruns;
 	size_t range_index;
 
@@ -205,7 +205,7 @@ static void test_configure_custom_params(const char* function, const scpimm_mode
 
 /* configure with range/resolutions out of range */
 static void test_configure_out_of_range(const char* function, scpimm_mode_t mode) {
-	int16_t err;
+	scpimm_error_t err;
 	const double *ranges, *overruns, *resolutions;
 	double range, resolution;
 	size_t range_index;
@@ -256,7 +256,7 @@ static void test_configure_out_of_range(const char* function, scpimm_mode_t mode
 }
 
 static void test_configure_units(const char* function, scpimm_mode_t mode, const char* prefs[], const double mults[]) {
-	int16_t err;
+	scpimm_error_t err;
 	const double *ranges;
 	size_t range_index;
 
@@ -302,7 +302,7 @@ static void test_impl(const char* function, scpimm_mode_t mode, const char* pref
 }
 
 static void test_configureQ_impl(const char* function, scpimm_mode_t mode, const char* mode_name) {
-	int16_t err;
+	scpimm_error_t err;
 	const scpi_bool_t no_params = FALSE;	//	SCPIMM_MODE_CONTINUITY == mode || SCPIMM_MODE_DIODE == mode;
 	const double *ranges;
 	size_t range_index;

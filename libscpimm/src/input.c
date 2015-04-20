@@ -24,7 +24,7 @@
 #include "utils.h"
 
 scpi_result_t SCPIMM_do_set_input_impedance_auto(scpi_t* const context, const scpi_bool_t state) {
-	int16_t err;
+	scpimm_error_t err;
 	scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
 	const scpimm_interface_t* const intf = ctx->interface;
 
@@ -42,7 +42,7 @@ scpi_result_t SCPIMM_input_impedance_auto(scpi_t* const context) {
 }
 
 scpi_result_t SCPIMM_input_impedance_autoQ(scpi_t* const context) {
-	int16_t err;
+	scpimm_error_t err;
 	scpi_bool_t value;
 	scpimm_context_t* const ctx = SCPIMM_CONTEXT(context);
 	const scpimm_interface_t* const intf = ctx->interface;

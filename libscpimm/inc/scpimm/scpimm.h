@@ -56,7 +56,7 @@ typedef struct {
 		Mandatory
 		Initializes multimeter. Call once when multimeter is started
 	*/
-	int16_t (*setup)();
+	scpimm_error_t (*setup)();
 
 	/* 
 		Mandatory
@@ -64,22 +64,22 @@ typedef struct {
 		<mode> is one of the SCPIMM_MODE_XXX constants 
 		Return TRUE if mode is set
 	*/
-	int16_t (*set_mode)(scpimm_mode_t mode, const scpimm_mode_params_t* params);
+	scpimm_error_t (*set_mode)(scpimm_mode_t mode, const scpimm_mode_params_t* params);
 
 	/**
 		Mandatory
 	 * Query current mode and its parameters
 	 * mode - variable to put mode into. If NULL, mode is not required by calling side.
 	 */
-	int16_t (*get_mode)(scpimm_mode_t* mode);
+	scpimm_error_t (*get_mode)(scpimm_mode_t* mode);
 
-	int16_t (*get_allowed_resolutions)(scpimm_mode_t mode, size_t range_index, const double** resolutions);
+	scpimm_error_t (*get_allowed_resolutions)(scpimm_mode_t mode, size_t range_index, const double** resolutions);
 
 	/* 
 		Mandatory
 		Start measurement
 	*/
-	int16_t (*start_measure)();
+	scpimm_error_t (*start_measure)();
 
 	/* 
 		Mandatory
@@ -91,74 +91,74 @@ typedef struct {
 		Mandatory
 		Returns relative current time in milliseconds
 	*/
-	int16_t (*get_milliseconds)(uint32_t* tm);
+	scpimm_error_t (*get_milliseconds)(uint32_t* tm);
 
 	/*
 		Mandatory
 		Disables or enables interrupts
 	*/
-	int16_t (*set_interrupt_status)(scpi_bool_t disabled);
+	scpimm_error_t (*set_interrupt_status)(scpi_bool_t disabled);
 
 	/*
 		Mandatory
 		Get boolean value of global measurement parameter
 	*/
-	int16_t (*get_global_bool_param)(scpimm_bool_param_t param, scpi_bool_t* value);
+	scpimm_error_t (*get_global_bool_param)(scpimm_bool_param_t param, scpi_bool_t* value);
 
 	/*
 		Mandatory
 		Set measurement parameter globally, i.e. for all modes
 	*/
-	int16_t (*set_global_bool_param)(scpimm_bool_param_t param, scpi_bool_t value);
+	scpimm_error_t (*set_global_bool_param)(scpimm_bool_param_t param, scpi_bool_t value);
 
 	/*
 		Mandatory
 	*/
-	int16_t (*get_bool_param)(scpimm_mode_t mode, scpimm_bool_param_t param, scpi_bool_t* value);
+	scpimm_error_t (*get_bool_param)(scpimm_mode_t mode, scpimm_bool_param_t param, scpi_bool_t* value);
 
 	/*
 		Mandatory
 	*/
-	int16_t (*set_bool_param)(scpimm_mode_t mode, scpimm_bool_param_t param, scpi_bool_t value);
+	scpimm_error_t (*set_bool_param)(scpimm_mode_t mode, scpimm_bool_param_t param, scpi_bool_t value);
 
 	/*
 		Mandatory
 	*/
-	int16_t (*get_numeric_param_values)(scpimm_mode_t mode, scpimm_numeric_param_t param, const double** values);
+	scpimm_error_t (*get_numeric_param_values)(scpimm_mode_t mode, scpimm_numeric_param_t param, const double** values);
 
 	/*
 		Mandatory
 	*/
-	int16_t (*get_numeric_param)(scpimm_mode_t mode, scpimm_numeric_param_t param, size_t* value_index);
+	scpimm_error_t (*get_numeric_param)(scpimm_mode_t mode, scpimm_numeric_param_t param, size_t* value_index);
 
 	/*
 		Mandatory
 	*/
-	int16_t (*set_numeric_param)(scpimm_mode_t mode, scpimm_numeric_param_t param, size_t value_index);
+	scpimm_error_t (*set_numeric_param)(scpimm_mode_t mode, scpimm_numeric_param_t param, size_t value_index);
 
 	/*
 		Optional
 		Resets multimeter. Call when multimeter is started or *RST command is invoked
 	*/
-	int16_t (*reset)();
+	scpimm_error_t (*reset)();
 
 	/* 
 		Optional
 		Issue a short (up to 500 ms) beep
 	*/
-	int16_t (*beep)();
+	scpimm_error_t (*beep)();
 
 	/*
 		Optional
 		Returns selected input terminal
 	*/
-	int16_t (*get_input_terminal)(scpimm_terminal_state_t* term);
+	scpimm_error_t (*get_input_terminal)(scpimm_terminal_state_t* term);
 
 	/*
 		Optional
 		Displays a text on multimeter's display
 	*/
-	int16_t (*display_text)(const char* txt);
+	scpimm_error_t (*display_text)(const char* txt);
 
 	/*
 		Optional
@@ -170,7 +170,7 @@ typedef struct {
 		Optional
 		Performs a multimeter's internal test
 	*/
-	int16_t (*test)();
+	scpimm_error_t (*test)();
 
 } scpimm_interface_t;
 

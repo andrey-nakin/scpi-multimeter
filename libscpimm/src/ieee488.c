@@ -32,7 +32,7 @@ scpi_result_t SCPIMM_IdnQ(scpi_t* const context) {
 }
 
 scpi_result_t SCPIMM_opcQ(scpi_t* const context) {
-	int16_t err;
+	scpimm_error_t err;
 	CHECK_AND_PUSH_ERROR(SCPIMM_wait_for_idle(SCPIMM_CONTEXT(context)));
     SCPI_ResultInt(context, 1);
     return SCPI_RES_OK;
@@ -40,7 +40,7 @@ scpi_result_t SCPIMM_opcQ(scpi_t* const context) {
 
 scpi_result_t SCPIMM_tstQ(scpi_t* const context) {
 	scpimm_interface_t* const intf = SCPIMM_INTERFACE(context);
-	int16_t err = SCPIMM_ERROR_OK;
+	scpimm_error_t err = SCPIMM_ERROR_OK;
 
 	if (intf->test) {
 		if (SCPIMM_ERROR_OK != (err = intf->test())) {

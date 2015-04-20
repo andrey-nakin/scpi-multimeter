@@ -25,12 +25,11 @@
 #include <scpimm/scpimm.h>
 
 #define SCPIMM_BUF_LEN 512
-#define SCPIMM_BUF_CAPACITY SCPIMM_BUF_LEN
 
 #define SCPIMM_DISPLAY_LEN 12
 
-#define	MAX_SAMPLE_COUNT	50000
-#define	MAX_TRIGGER_COUNT	MAX_SAMPLE_COUNT
+#define	MAX_SAMPLE_COUNT	SCPIMM_BUF_LEN
+#define	MAX_TRIGGER_COUNT	SCPIMM_BUF_LEN
 
 /******************************************************************************
   Types
@@ -63,7 +62,7 @@ typedef struct {
 	uint32_t measurement_timeout;
 
 	scpi_number_t last_measured_value;
-	int16_t measurement_error;
+	scpimm_error_t measurement_error;
 
 } scpimm_context_t;
 
