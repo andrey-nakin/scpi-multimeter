@@ -133,6 +133,14 @@ static void test_version() {
 	ASSERT_RESPONSE("1992.0\r\n");
 }
 
+static void test_error_beep() {
+	dm_reset_counters();
+	receive("SYSTEM:DUMMY");	//	unknown command
+	ASSERT_SCPI_ERROR(SCPIMM_ERROR_UNDEFINED_HEADER);
+	ASSERT_NO_RESPONSE();
+	CU_ASSERT_EQUAL(dm_counters.beep, CALLED_ONCE);
+}
+
 int test_system() {
     CU_pSuite pSuite = NULL;
 
@@ -150,6 +158,7 @@ int test_system() {
     ADD_TEST(test_remote);
     ADD_TEST(test_rwlock);
     ADD_TEST(test_version);
+    ADD_TEST(test_error_beep);
 
     return 0;
 }

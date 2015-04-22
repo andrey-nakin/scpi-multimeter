@@ -173,9 +173,9 @@ static scpimm_error_t configureQuery(scpi_t* context) {
 	if (!no_params) {
 		strcat(buf, " ");
 		end = strchr(buf, '\0');
-		end += SCPI_doubleToStr(ranges[current_range], end, last - end);
+		end += SCPI_DoubleToStr(ranges[current_range], end, last - end);
 		*end++ = ',';
-		end += SCPI_doubleToStr(resolutions[current_resolution], end, last - end);
+		end += SCPI_DoubleToStr(resolutions[current_resolution], end, last - end);
 		*end = '\0';
 	}
 	SCPI_ResultText(context, buf);

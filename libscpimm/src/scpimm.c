@@ -44,6 +44,7 @@
 /******************************************************************************
   Forward declarations
 ******************************************************************************/
+static int error(scpi_t* context, int_fast16_t error);
 static size_t write(scpi_t * context, const char* data, size_t len);
 static scpi_result_t reset(scpi_t * context);
 static scpi_result_t system_versionQ(scpi_t* context);
@@ -201,7 +202,7 @@ static const scpi_command_t scpi_commands[] = {
 static char scpi_input_buffer[SCPI_INPUT_BUFFER_LENGTH];
 
 static scpi_interface_t scpi_interface = {
-    NULL,
+    error,
     write,
 	NULL,
 	NULL,
@@ -272,6 +273,20 @@ scpi_t* SCPI_context() {
 /******************************************************************************
   Internals
 ******************************************************************************/
+
+static int error(scpi_t* const context, const int_fast16_t error) {
+	scpimm_interface_t* const intf = SCPIMM_INTERFACE(context);
+
+	printf("******************************* error %d\n", (int) error);
+	(void) error;	// suppress warning
+
+	if (intf->beep) {
+		printf("******************************* call beep \n");
+		(void) intf->beep();
+	}
+
+	return 0;
+}
 
 static size_t write(scpi_t* const context, const char* data, size_t len) {
 	return SCPIMM_INTERFACE(context)->send((const uint8_t*) data, len);
