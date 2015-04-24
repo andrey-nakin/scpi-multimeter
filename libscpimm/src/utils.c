@@ -39,50 +39,6 @@ scpi_bool_t expectNoParams(scpi_t* context) {
     return TRUE;
 }
 
-size_t double_to_str(char* dest, double v) {
-	char* p = dest;
-	int order = 6;
-	unsigned long ulv;
-
-	if (v < 0.0) {
-		*p++ = '-';
-		v = -v;
-	} else {
-		*p++ = '+';
-	}
-
-	if (v < 1.0e-38) {
-		p += sprintf(p, "0.000000E+00");
-	} else {
-		while (!(v < 1.0e7)) {
-			order++;
-			v /= 10.0;
-		}
-
-		while ((v + 0.0000005) <= 1.0e6) {
-			order--;
-			v *= 10.0;
-		}
-
-		ulv = (unsigned long) (v + 0.5);
-
-		p += sprintf(p, "%d", (int) (ulv / 1000000));
-		*p++ = '.';
-		p += sprintf(p, "%06lu", (unsigned long) (ulv % 1000000));
-
-		*p++ = 'E';
-		if (order >= 0) {
-			*p++ = '+';
-		} else {
-			*p++ = '-';
-			order = -order;
-		}
-		p += sprintf(p, "%02d", order);
-	}
-
-	return p - dest;
-}
-
 size_t min_value_index(const double* const values) {
 	size_t result = SIZE_MAX;
 	double min_value = 0.0;

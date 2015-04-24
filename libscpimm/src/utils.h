@@ -52,7 +52,6 @@
 
 scpi_bool_t expectNoParams(scpi_t* context);
 
-size_t double_to_str(char* dest, double v);
 size_t min_value_index(const double* const values);
 size_t max_value_index(const double* const values);
 size_t less_or_equal_index(const double* values, const double v);

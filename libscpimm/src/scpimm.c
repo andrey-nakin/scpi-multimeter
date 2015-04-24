@@ -277,11 +277,9 @@ scpi_t* SCPI_context() {
 static int error(scpi_t* const context, const int_fast16_t error) {
 	scpimm_interface_t* const intf = SCPIMM_INTERFACE(context);
 
-	printf("******************************* error %d\n", (int) error);
 	(void) error;	// suppress warning
 
 	if (intf->beep) {
-		printf("******************************* call beep \n");
 		(void) intf->beep();
 	}
 

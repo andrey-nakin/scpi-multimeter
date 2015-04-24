@@ -29,11 +29,8 @@
 
 #define DOUBLE_DELTA 1.0e-6
 
-static int scpi_error(scpi_t * context, int_fast16_t error);
-
 int init_suite(void) {
 	SCPIMM_setup(&dm_interface);
-	SCPI_context()->interface->error = scpi_error;
 
     return 0;
 }
@@ -86,13 +83,6 @@ void assert_number_equals(const scpi_number_t* v, const scpi_number_t* expected)
 	}
 }
 */
-
-static int scpi_error(scpi_t * context, int_fast16_t error) {
-	(void) context;
-	(void) error;
-//	printf("SCPI ERROR %d\n", (int) error);
-	return 0;
-}
 
 const scpimm_interface_t* scpimm_interface() {
 	return &dm_interface;

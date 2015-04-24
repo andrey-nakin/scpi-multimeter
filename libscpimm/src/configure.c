@@ -19,7 +19,6 @@
  */
 
 #include <string.h>
-#include <scpi/config.h>
 #include <scpimm/scpimm.h>
 #include "configure.h"
 #include "dmm.h"
