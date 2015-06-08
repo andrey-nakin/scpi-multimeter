@@ -1,5 +1,4 @@
-scpi-multimeter
-===============
+# scpi-multimeter
 
 Open source hardware-independent single-channel SCPI multimeter.
 
@@ -9,8 +8,7 @@ This is a C-library with following components:
 * measurement state machine implementing `MEASure`, `INIT`, `FETCh` and relating commands;
 * support of immediate, bus and external triggers.
 
-Steps to Implement a Multimeter Using SCPIMM Library
-----------------------------------------------------
+## Steps to Implement a Multimeter Using SCPIMM Library
 
 1. Implement callback functions providing access to measurement hardware.
 
@@ -26,6 +24,7 @@ scpimm_error_t set_mode_callback(scpimm_mode_t mode, const scpimm_mode_params_t*
     /* requested mode is not supported by hardware */
     return SCPIMM_ERROR_UNDEFINED_HEADER;
   }
+  return SCPIMM_ERROR_OK;
 }
 ```
 
@@ -39,7 +38,7 @@ size_t send_callback(const uint8_t* data, size_t len) {
 
 3. Populate `scpimm_interface_t` structure that holds pointers to all callbacks used by library.
 
-4. Initialize library.
+4. Initialize library with filled `scpimm_interface_t` structure.
 
 5. Run a loop that reads incoming data from serial port (or another source of data) and passes these data to library.
 
@@ -83,4 +82,5 @@ Library Usages
 --------------
 
 * [`v7-28-arduino`](https://github.com/andrey-nakin/v7-28-arduino) - firmware for Arduino Mega implementing a SCPI multimeter backed by V7-28 digital voltmeter.
+This project can be treated as a reference implementation of SCPIMM multimeter.
 
