@@ -10,7 +10,9 @@ Open source hardware-independent single-channel SCPI multimeter.
 
 ## Steps to Implement a Multimeter Using `SCPIMM` Library
 
-#### Step 1. Implement callback functions providing access to measurement hardware.
+#### Step 1
+
+Implement callback functions providing access to measurement hardware.
 
 For example, code below illustrates a `set_mode` callback function that switches our hardware to desired mode:
   
@@ -28,7 +30,9 @@ scpimm_error_t set_mode_callback(scpimm_mode_t mode, const scpimm_mode_params_t*
 }
 ```
 
-#### Step 2. Implement serial port access callback:
+#### Step 2
+
+Implement serial port access callback:
 
 ```C
 size_t send_callback(const uint8_t* data, size_t len) {
@@ -36,11 +40,17 @@ size_t send_callback(const uint8_t* data, size_t len) {
 }
 ```
 
-#### Step 3. Populate `scpimm_interface_t` structure that holds pointers to all callbacks used by library.
+#### Step 3
 
-#### Step 4. Initialize library with filled `scpimm_interface_t` structure.
+Populate `scpimm_interface_t` structure that holds pointers to all callbacks used by library.
 
-#### Step 5. Run a loop that reads incoming data from serial port (or another source of data) and passes these data to library.
+#### Step 4
+
+Initialize library with filled `scpimm_interface_t` structure.
+
+#### Step 5
+
+Run a loop that reads incoming data from serial port (or another source of data) and passes these data to library.
 
 ### Example
 
