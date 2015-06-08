@@ -42,8 +42,7 @@ size_t send_callback(const uint8_t* data, size_t len) {
 
 5. Run a loop that reads incoming data from serial port (or another source of data) and passes these data to library.
 
-Example
--------
+### Example
 
 Here is a sample code illustrating usage of the library. Library declarations start with either `SCPIMM_` or `scpimm_` prefix.
 
@@ -73,13 +72,11 @@ while ( !is_terminated()) {
 }
 ```
 
-Library Dependencies
---------------------
+## Library Dependencies
 
 * [`scpi-parser`](https://github.com/andrey-nakin/scpi-parser) - generic SCPI parser.
 
-Library Usages
---------------
+## Library Usages
 
 * [`v7-28-arduino`](https://github.com/andrey-nakin/v7-28-arduino) - firmware for Arduino Mega implementing a SCPI multimeter backed by V7-28 digital voltmeter.
 This project can be treated as a reference implementation of SCPIMM multimeter.
