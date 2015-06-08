@@ -10,25 +10,25 @@ Open source hardware-independent single-channel SCPI multimeter.
 
 ## Steps to Implement a Multimeter Using `SCPIMM` Library
 
-1. Implement callback functions providing access to measurement hardware.
+#### Step 1. Implement callback functions providing access to measurement hardware.
 
 For example, code below illustrates a `set_mode` callback function that switches our hardware to desired mode:
   
-		```C
-		scpimm_error_t set_mode_callback(scpimm_mode_t mode, const scpimm_mode_params_t* params) {
-		  if (SCPIMM_MODE_DCV == mode) {
-			/* switch hardware to DC voltage mode */
-		  } else if (SCPIMM_MODE_ACV == mode) {
-			/* switch hardware to AC voltage mode */
-		  } else {
-			/* requested mode is not supported by hardware */
-			return SCPIMM_ERROR_UNDEFINED_HEADER;
-		  }
-		  return SCPIMM_ERROR_OK;
-		}
-		```
+```C
+scpimm_error_t set_mode_callback(scpimm_mode_t mode, const scpimm_mode_params_t* params) {
+  if (SCPIMM_MODE_DCV == mode) {
+	/* switch hardware to DC voltage mode */
+  } else if (SCPIMM_MODE_ACV == mode) {
+	/* switch hardware to AC voltage mode */
+  } else {
+	/* requested mode is not supported by hardware */
+	return SCPIMM_ERROR_UNDEFINED_HEADER;
+  }
+  return SCPIMM_ERROR_OK;
+}
+```
 
-2. Implement serial port access callback:
+#### Step 2. Implement serial port access callback:
 
 ```C
 size_t send_callback(const uint8_t* data, size_t len) {
@@ -36,11 +36,11 @@ size_t send_callback(const uint8_t* data, size_t len) {
 }
 ```
 
-3. Populate `scpimm_interface_t` structure that holds pointers to all callbacks used by library.
+#### Step 3. Populate `scpimm_interface_t` structure that holds pointers to all callbacks used by library.
 
-4. Initialize library with filled `scpimm_interface_t` structure.
+#### Step 4. Initialize library with filled `scpimm_interface_t` structure.
 
-5. Run a loop that reads incoming data from serial port (or another source of data) and passes these data to library.
+#### Step 5. Run a loop that reads incoming data from serial port (or another source of data) and passes these data to library.
 
 ### Example
 
