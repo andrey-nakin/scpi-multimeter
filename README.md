@@ -1,6 +1,6 @@
 # scpi-multimeter
 
-Open source hardware-independent single-channel SCPI multimeter.
+Open source hardware-independent single-channel [SCPI](http://en.wikipedia.org/wiki/Standard_Commands_for_Programmable_Instruments) multimeter.
 
 `SCPIMM` is a C-library containing:
 
