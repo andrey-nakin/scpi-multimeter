@@ -16,22 +16,26 @@ Steps to Implement a Multimeter Using SCPIMM Library
 
 For example, code below illustrates a `set_mode` callback function that switches our hardware to desired mode:
   
-    scpimm_error_t set_mode_callback(scpimm_mode_t mode, const scpimm_mode_params_t* params) {
-      if (SCPIMM_MODE_DCV == mode) {
-        /* switch hardware to DC voltage mode */
-      } else if (SCPIMM_MODE_ACV == mode) {
-        /* switch hardware to AC voltage mode */
-      } else {
-        /* requested mode is not supported by hardware */
-        return SCPIMM_ERROR_UNDEFINED_HEADER;
-      }
-    }
+```C
+scpimm_error_t set_mode_callback(scpimm_mode_t mode, const scpimm_mode_params_t* params) {
+  if (SCPIMM_MODE_DCV == mode) {
+    /* switch hardware to DC voltage mode */
+  } else if (SCPIMM_MODE_ACV == mode) {
+    /* switch hardware to AC voltage mode */
+  } else {
+    /* requested mode is not supported by hardware */
+    return SCPIMM_ERROR_UNDEFINED_HEADER;
+  }
+}
+```
 
 2. Implement serial port access callback:
 
-    size_t send_callback(const uint8_t* data, size_t len) {
-      /* send data to serial port or another destination */
-    }
+```C
+size_t send_callback(const uint8_t* data, size_t len) {
+  /* send data to serial port or another destination */
+}
+```
 
 3. Populate `scpimm_interface_t` structure that holds pointers to all callbacks used by library.
 
