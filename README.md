@@ -94,5 +94,5 @@ while ( !is_terminated() ) {
 ## Library Usages
 
 * [`v7-28-arduino`](https://github.com/andrey-nakin/v7-28-arduino) - firmware for Arduino Mega implementing a SCPI multimeter backed by V7-28 digital voltmeter.
-This project can be treated as a reference implementation of SCPIMM multimeter.
+This project can be treated as a reference usage of SCPIMM library.
 
