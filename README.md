@@ -10,7 +10,7 @@ Open source hardware-independent single-channel [SCPI](http://en.wikipedia.org/w
 ## Library Features
 
 * support of voltage, current and resistance measurements;
-* SCPI commands are compatible with HP 34401A multimeter except for frequency and period measurements;
+* SCPI implementation is compatible with HP 34401A multimeter except for frequency and period measurements;
 * support of asynchronous measurements: measure values may come from another thread or an interrupt handler;
 * support of immediate, bus and external triggers.
 
