@@ -1,7 +1,7 @@
 scpi-multimeter
 ===============
 
-Open source hardware-independent 1-channel SCPI multimeter.
+Open source hardware-independent single-channel SCPI multimeter.
 
 This is a C-library with following components:
 
@@ -16,16 +16,16 @@ Steps to Implement a Multimeter Using SCPIMM Library
 
 For example, code below illustrates a `set_mode` callback function that switches our hardware to desired mode:
   
-  scpimm_error_t set_mode_callback(const scpimm_mode_t mode, const scpimm_mode_params_t* const params) {
-    if (SCPIMM_MODE_DCV == mode) {
-      /* switch hardware to DC voltage mode */
-    } else if (SCPIMM_MODE_ACV == mode) {
-      /* switch hardware to AC voltage mode */
-    } else {
-      /* requested mode is not supported by hardware */
-      return SCPIMM_ERROR_UNDEFINED_HEADER;
+    scpimm_error_t set_mode_callback(const scpimm_mode_t mode, const scpimm_mode_params_t* const params) {
+      if (SCPIMM_MODE_DCV == mode) {
+        /* switch hardware to DC voltage mode */
+      } else if (SCPIMM_MODE_ACV == mode) {
+        /* switch hardware to AC voltage mode */
+      } else {
+        /* requested mode is not supported by hardware */
+        return SCPIMM_ERROR_UNDEFINED_HEADER;
+      }
     }
-  }
 
 2) Implement serial port access callback:
 
