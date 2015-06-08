@@ -12,7 +12,7 @@ This is a C-library with following components:
 Steps to Implement a Multimeter Using SCPIMM Library
 ----------------------------------------------------
 
-1) Implement callback functions providing access to measurement hardware.
+1. Implement callback functions providing access to measurement hardware.
 
 For example, code below illustrates a `set_mode` callback function that switches our hardware to desired mode:
   
@@ -27,22 +27,24 @@ For example, code below illustrates a `set_mode` callback function that switches
       }
     }
 
-2) Implement serial port access callback:
+2. Implement serial port access callback:
 
     size_t send_callback(const uint8_t* data, size_t len) {
       /* send data to serial port or another destination */
     }
 
-3) Populate `scpimm_interface_t` structure that holds pointers to all callbacks used by library.
+3. Populate `scpimm_interface_t` structure that holds pointers to all callbacks used by library.
 
-4) Initialize library.
+4. Initialize library.
 
-5) Run a loop that reads incoming data from serial port (or another source of data) and pass these data to library.
+5. Run a loop that reads incoming data from serial port (or another source of data) and passes these data to library.
 
 Example
 -------
 
-Here is a sample code illustrating usage of the library. Library declaration names start with either `SCPIMM_` or `scpimm_` prefix.
+Here is a sample code illustrating usage of the library. Library declarations start with either `SCPIMM_` or `scpimm_` prefix.
+
+```C
 
     /* fill the structure with callback pointers */
     const scpimm_interface_t interface = {
@@ -67,6 +69,7 @@ Here is a sample code illustrating usage of the library. Library declaration nam
         SCPIMM_yield();
       }
     }
+```
 
 Library Dependencies
 --------------------
