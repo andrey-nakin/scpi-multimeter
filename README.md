@@ -45,30 +45,29 @@ Example
 Here is a sample code illustrating usage of the library. Library declarations start with either `SCPIMM_` or `scpimm_` prefix.
 
 ```C
+/* fill the structure with callback pointers */
+const scpimm_interface_t interface = {
+  .setup = setup_callback,
+  .set_mode = set_mode_callback,
+  .get_mode = get_mode_callback,
+  .send = send_callback,
+  ... /* other callbacks */
+};
 
-    /* fill the structure with callback pointers */
-    const scpimm_interface_t interface = {
-      .setup = setup_callback,
-      .set_mode = set_mode_callback,
-      .get_mode = get_mode_callback,
-      .send = send_callback,
-      ... /* other callbacks */
-    };
+/* initialize SCPIMM library */
+SCPIMM_setup(&interface);
 
-    /* initialize SCPIMM library */
-    SCPIMM_setup(&interface);
-
-    /* main loop */
-    while ( !is_terminated()) {
-      if (data_arrived_from_serial_port()) {
-        const char p = read_char_from_serial_port();
-        /* parse incoming data */
-        SCPIMM_parse_in_buffer(&p, 1);
-      } else {
-        /* run background tasks */
-        SCPIMM_yield();
-      }
-    }
+/* main loop */
+while ( !is_terminated()) {
+  if (data_arrived_from_serial_port()) {
+    const char p = read_char_from_serial_port();
+    /* parse incoming data */
+    SCPIMM_parse_in_buffer(&p, 1);
+  } else {
+    /* run background tasks */
+    SCPIMM_yield();
+  }
+}
 ```
 
 Library Dependencies
