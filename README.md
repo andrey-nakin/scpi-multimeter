@@ -14,19 +14,19 @@ Open source hardware-independent single-channel SCPI multimeter.
 
 For example, code below illustrates a `set_mode` callback function that switches our hardware to desired mode:
   
-```C
-scpimm_error_t set_mode_callback(scpimm_mode_t mode, const scpimm_mode_params_t* params) {
-  if (SCPIMM_MODE_DCV == mode) {
-    /* switch hardware to DC voltage mode */
-  } else if (SCPIMM_MODE_ACV == mode) {
-    /* switch hardware to AC voltage mode */
-  } else {
-    /* requested mode is not supported by hardware */
-    return SCPIMM_ERROR_UNDEFINED_HEADER;
-  }
-  return SCPIMM_ERROR_OK;
-}
-```
+		```C
+		scpimm_error_t set_mode_callback(scpimm_mode_t mode, const scpimm_mode_params_t* params) {
+		  if (SCPIMM_MODE_DCV == mode) {
+			/* switch hardware to DC voltage mode */
+		  } else if (SCPIMM_MODE_ACV == mode) {
+			/* switch hardware to AC voltage mode */
+		  } else {
+			/* requested mode is not supported by hardware */
+			return SCPIMM_ERROR_UNDEFINED_HEADER;
+		  }
+		  return SCPIMM_ERROR_OK;
+		}
+		```
 
 2. Implement serial port access callback:
 
