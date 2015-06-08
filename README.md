@@ -60,8 +60,8 @@ const scpimm_interface_t interface = {
 SCPIMM_setup(&interface);
 
 /* main loop */
-while ( !is_terminated()) {
-  if (data_arrived_from_serial_port()) {
+while ( !is_terminated() ) {
+  if ( data_arrived_from_serial_port() ) {
     const char p = read_char_from_serial_port();
     /* parse incoming data */
     SCPIMM_parse_in_buffer(&p, 1);
