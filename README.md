@@ -16,7 +16,7 @@ Steps to Implement a Multimeter Using SCPIMM Library
 
 For example, code below illustrates a `set_mode` callback function that switches our hardware to desired mode:
   
-    scpimm_error_t set_mode_callback(const scpimm_mode_t mode, const scpimm_mode_params_t* const params) {
+    scpimm_error_t set_mode_callback(scpimm_mode_t mode, const scpimm_mode_params_t* params) {
       if (SCPIMM_MODE_DCV == mode) {
         /* switch hardware to DC voltage mode */
       } else if (SCPIMM_MODE_ACV == mode) {
@@ -29,9 +29,9 @@ For example, code below illustrates a `set_mode` callback function that switches
 
 2) Implement serial port access callback:
 
-  size_t send_callback(const uint8_t* data, const size_t len) {
-    /* send data to serial port or another destination */
-  }
+    size_t send_callback(const uint8_t* data, size_t len) {
+      /* send data to serial port or another destination */
+    }
 
 3) Populate `scpimm_interface_t` structure that holds pointers to all callbacks used by library.
 
@@ -44,29 +44,29 @@ Example
 
 Here is a sample code illustrating usage of the library. Library declaration names start with either `SCPIMM_` or `scpimm_` prefix.
 
-  /* fill the structure with callback pointers */
-  const scpimm_interface_t interface = {
-    .setup = setup_callback,
-    .set_mode = set_mode_callback,
-    .get_mode = get_mode_callback,
-    .send = send_callback,
-    ... /* other callbacks */
-  };
+    /* fill the structure with callback pointers */
+    const scpimm_interface_t interface = {
+      .setup = setup_callback,
+      .set_mode = set_mode_callback,
+      .get_mode = get_mode_callback,
+      .send = send_callback,
+      ... /* other callbacks */
+    };
 
-  /* initialize SCPIMM library */
-  SCPIMM_setup(&interface);
+    /* initialize SCPIMM library */
+    SCPIMM_setup(&interface);
 
-  /* main loop */
-  while ( !is_terminated()) {
-    if (data_arrived_from_serial_port()) {
-      const char p = read_char_from_serial_port();
-      /* parse incoming data */
-      SCPIMM_parse_in_buffer(&p, 1);
-    } else {
-      /* run background tasks */
-      SCPIMM_yield();
+    /* main loop */
+    while ( !is_terminated()) {
+      if (data_arrived_from_serial_port()) {
+        const char p = read_char_from_serial_port();
+        /* parse incoming data */
+        SCPIMM_parse_in_buffer(&p, 1);
+      } else {
+        /* run background tasks */
+        SCPIMM_yield();
+      }
     }
-  }
 
 Library Dependencies
 --------------------
