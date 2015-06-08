@@ -58,7 +58,7 @@ Here is a sample code illustrating usage of the library. Library declarations st
 
 ```C
 /* fill the structure with callback pointers */
-const scpimm_interface_t interface = {
+scpimm_interface_t interface = {
   .setup = setup_callback,
   .set_mode = set_mode_callback,
   .get_mode = get_mode_callback,
