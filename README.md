@@ -5,14 +5,14 @@ Open source hardware-independent single-channel [SCPI](http://en.wikipedia.org/w
 ## Library Content
 
 * implementation of basic SCPI multimeter commands, such as `CONFigure`, `SENSe` and other;
-* measurement state machine implementing `MEASure`, `INIT`, `FETCh` and relating commands;
-* support of immediate, bus and external triggers.
+* measurement state machine implementing `MEASure`, `INIT`, `FETCh` and relating commands.
 
 ## Library Features
 
 * support of voltage, current and resistance measurements;
 * SCPI commands are compatible with HP 34401A multimeter except for frequency and period measurements;
-* support of asynchronous measurements: measure values may come from another thread or hardware interrupt handler;
+* support of asynchronous measurements: measure values may come from another thread or an interrupt handler;
+* support of immediate, bus and external triggers.
 
 ## Steps to Implement a Multimeter Using `SCPIMM` Library
 
