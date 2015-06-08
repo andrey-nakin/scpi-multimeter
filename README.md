@@ -2,13 +2,13 @@
 
 Open source hardware-independent single-channel SCPI multimeter.
 
-This is a C-library with following components:
+`SCPIMM` is a C-library containing:
 
-* implementation of basic SCPI commands;
+* implementation of basic SCPI multimeter commands, such as `CONFigure`, `SENSe` and other;
 * measurement state machine implementing `MEASure`, `INIT`, `FETCh` and relating commands;
 * support of immediate, bus and external triggers.
 
-## Steps to Implement a Multimeter Using SCPIMM Library
+## Steps to Implement a Multimeter Using `SCPIMM` Library
 
 1. Implement callback functions providing access to measurement hardware.
 
