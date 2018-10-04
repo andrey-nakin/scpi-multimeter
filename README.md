@@ -1,5 +1,7 @@
 # scpi-multimeter
 
+[![Project Stats](https://www.openhub.net/p/scpi-multimeter/widgets/project_thin_badge.gif)](https://www.openhub.net/p/scpi-multimeter)
+
 Open source hardware-independent single-channel [SCPI](http://en.wikipedia.org/wiki/Standard_Commands_for_Programmable_Instruments) multimeter.
 
 ## Library Content
